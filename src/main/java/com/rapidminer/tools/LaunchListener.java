@@ -183,7 +183,6 @@ public enum LaunchListener {
 		} catch (UnsupportedOperationException e) {
 			// ignore
 		}
-		socketFile.deleteOnExit();
 
 		Thread listenerThread = new Thread("Launch-Listener") {
 

@@ -39,6 +39,21 @@
         <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>
     </ioobject>
 
+    <!-- Data Tables (IOTables) -->
+    <!-- the name Data Table cannot be there twice! -->
+    <ioobject
+            name="Data table"
+            class="com.rapidminer.adaption.belt.IOTable"
+            reportable="true"
+            icon="data.png">
+
+        <renderer>com.rapidminer.gui.renderer.data.BeltTableDataRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.data.BeltTableMetaDataRenderer</renderer>
+        <!-- New Visualizations.Coming from the HTML5 charts extension-->
+        <renderer>com.rapidminer.extension.html5charts.gui.renderer.BeltTableVisualizationRenderer</renderer>
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>
+    </ioobject>
+
     <!-- Attribute Weights -->
     
     <ioobject 
@@ -798,7 +813,15 @@
         <renderer>com.rapidminer.gui.renderer.DefaultTextRenderer</renderer>
         <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>
     </ioobject>
-    
+
+    <ioobject
+        name="Binary File"
+        class="com.rapidminer.operator.nio.file.BinaryEntryFileObject"
+        reportable="true"
+        icon="document_empty.png">
+        <renderer>com.rapidminer.gui.renderer.AnnotationsRenderer</renderer>
+    </ioobject>
+
     <ioobject
         name="Archive File"
         class="com.rapidminer.operator.nio.file.compression.ArchiveFileObject"

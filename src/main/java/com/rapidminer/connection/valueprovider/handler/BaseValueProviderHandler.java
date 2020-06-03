@@ -22,10 +22,6 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectReader;
-import com.fasterxml.jackson.databind.ObjectWriter;
 import com.rapidminer.connection.ConnectionInformation;
 import com.rapidminer.connection.ConnectionInformationSerializer;
 import com.rapidminer.connection.util.TestExecutionContext;
@@ -47,16 +43,6 @@ import com.rapidminer.tools.ValidationUtil;
  * @since 9.3
  */
 public abstract class BaseValueProviderHandler implements ValueProviderHandler {
-
-	private static final ObjectWriter writer;
-	private static final ObjectReader reader;
-
-	static {
-		ObjectMapper mapper = ConnectionInformationSerializer.getRemoteObjectMapper();
-		JavaType listOfVPP = mapper.getTypeFactory().constructCollectionType(List.class, ValueProviderParameter.class);
-		writer = mapper.writerWithType(listOfVPP);
-		reader = mapper.reader(listOfVPP);
-	}
 
 	private final List<ValueProviderParameter> parameters;
 	private final String type;
@@ -130,7 +116,7 @@ public abstract class BaseValueProviderHandler implements ValueProviderHandler {
 		try {
 			// create a deep copy of the parameter list (including potential default values) using Jackson
 			// a new value provider will start with such a deep copy, see base implementation of createNewProvider(String)
-			return reader.readValue(writer.writeValueAsBytes(parameters));
+			return ConnectionInformationSerializer.INSTANCE.createDeepCopy(parameters);
 		} catch (IOException e) {
 			return Collections.emptyList();
 		}

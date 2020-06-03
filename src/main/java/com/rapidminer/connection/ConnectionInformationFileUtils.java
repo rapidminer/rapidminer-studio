@@ -67,6 +67,8 @@ import com.rapidminer.tools.FileSystemService;
 import com.rapidminer.tools.ListenerTools;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.ParameterService;
+import com.rapidminer.tools.TempFileTools;
+import com.rapidminer.tools.encryption.EncryptionProvider;
 
 
 /**
@@ -230,16 +232,35 @@ public final class ConnectionInformationFileUtils {
 	}
 
 	/**
-	 * Saves this connection information after updating either the configuration or statistics
+	 * Saves this connection information after updating either the configuration or statistics. Will use the {@link
+	 * EncryptionProvider#DEFAULT_CONTEXT} when encrypting values.
 	 * <p>
 	 * <strong>Note:</strong> This might overwrite changes done in the file system.
+	 *
+	 * @deprecated since 9.7, use {@link #save(ConnectionInformation, Path, String)} instead
 	 */
+	@Deprecated
 	public static void save(ConnectionInformation connectionInformation, Path zipFile) throws IOException {
+		save(connectionInformation, zipFile, EncryptionProvider.DEFAULT_CONTEXT);
+	}
+
+	/**
+	 * Saves this connection information after updating either the configuration or statistics. Will use the specified
+	 * encryption context (see {@link EncryptionProvider}).
+	 * <p>
+	 * <strong>Note:</strong> This might overwrite changes done in the file system.
+	 *
+	 * @param connectionInformation the connection to save
+	 * @param zipFile               the target path where the zip should be saved to
+	 * @param encryptionContext     the encryption context that will be used to potentially encrypt values (see {@link
+	 *                              com.rapidminer.tools.encryption.EncryptionProvider})
+	 */
+	public static void save(ConnectionInformation connectionInformation, Path zipFile, String encryptionContext) throws IOException {
 		if (zipFile == null) {
 			throw new NoSuchFileException("Target file was not set");
 		}
 		try (OutputStream out = new FileOutputStream(zipFile.toFile())) {
-			ConnectionInformationSerializer.LOCAL.serialize(connectionInformation, out);
+			ConnectionInformationSerializer.INSTANCE.serialize(connectionInformation, out, encryptionContext);
 		}
 	}
 
@@ -292,13 +313,27 @@ public final class ConnectionInformationFileUtils {
 	}
 
 	/**
-	 * Load a {@link ConnectionInformation} from an existing zip file.
+	 * Load a {@link ConnectionInformation} from an existing zip file. Will use the {@link
+	 * EncryptionProvider#DEFAULT_CONTEXT} when trying to decrypt encrypted values.
 	 *
-	 * @param zipFile
-	 * 		the zip file to load from; must not be {@code null}
+	 * @param zipFile the zip file to load from; must not be {@code null}
+	 * @deprecated since 9.7, use {@link #loadFromZipFile(Path, String)} instead
 	 */
+	@Deprecated
 	public static ConnectionInformation loadFromZipFile(Path zipFile) throws IOException {
-		return ConnectionInformationSerializer.LOCAL.loadConnection(new FileInputStream(zipFile.toFile()));
+		return loadFromZipFile(zipFile, EncryptionProvider.DEFAULT_CONTEXT);
+	}
+
+	/**
+	 * Load a {@link ConnectionInformation} from an existing zip file. Will use the specified encryption context (see
+	 * {@link EncryptionProvider}).
+	 *
+	 * @param zipFile           the zip file to load from; must not be {@code null}
+	 * @param encryptionContext the encryption context that will be used to decrypt values which are encrypted (see {@link
+	 *                          com.rapidminer.tools.encryption.EncryptionProvider})
+	 */
+	public static ConnectionInformation loadFromZipFile(Path zipFile, String encryptionContext) throws IOException {
+		return ConnectionInformationSerializer.INSTANCE.loadConnection(new FileInputStream(zipFile.toFile()), null, encryptionContext);
 	}
 
 	/**
@@ -394,12 +429,11 @@ public final class ConnectionInformationFileUtils {
 	static Path addFileInternally(String name, InputStream inputStream, String md5Hash) throws IOException {
 		final MessageDigest msgDigest = DigestUtils.getMd5Digest();
 		inputStream = new DigestInputStream(inputStream, msgDigest);
-		final Path tempFile = Files.createTempFile("conninfo", "tmp");
+		final Path tempFile = TempFileTools.createTempFile("conninfo", "tmp");
 		try (FileOutputStream fos = new FileOutputStream(tempFile.toFile())) {
 			IOUtils.copy(inputStream, fos);
 		}
 		String testHash = Hex.encodeHexString(msgDigest.digest());
-		tempFile.toFile().deleteOnExit();
 
 		if (md5Hash == null) {
 			md5Hash = testHash;

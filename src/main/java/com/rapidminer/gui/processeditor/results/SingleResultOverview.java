@@ -63,9 +63,9 @@ import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.metadata.MetaData;
 import com.rapidminer.report.Renderable;
 import com.rapidminer.report.Reportable;
-import com.rapidminer.repository.Entry;
 import com.rapidminer.repository.IOObjectEntry;
 import com.rapidminer.repository.RepositoryLocation;
+import com.rapidminer.repository.RepositoryLocationBuilder;
 import com.rapidminer.tools.ReferenceCache;
 import com.rapidminer.tools.Tools;
 
@@ -104,20 +104,19 @@ public class SingleResultOverview extends JPanel {
 				@Override
 				public void run() {
 					try {
-						RepositoryLocation location = null;
+						RepositoryLocation location;
 						if (RepositoryLocation.isAbsolute(repositoryLocation)) {
-							location = new RepositoryLocation(repositoryLocation);
+							location = new RepositoryLocationBuilder().withExpectedDataEntryType(IOObjectEntry.class).buildFromAbsoluteLocation(repositoryLocation);
 						} else {
-							location = new RepositoryLocation(processFolderLocation, repositoryLocation);
+							location = new RepositoryLocationBuilder().withExpectedDataEntryType(IOObjectEntry.class).buildFromParentLocation(processFolderLocation, repositoryLocation);
 						}
-						Entry entry = location.locateEntry();
-						if (entry instanceof IOObjectEntry) {
-							IOObjectEntry data = (IOObjectEntry) entry;
-							ResultObject result = (ResultObject) data.retrieveData(this.getProgressListener());
-							result.setSource(data.getLocation().toString());
+						IOObjectEntry entry = location.locateData();
+						if (entry != null) {
+							ResultObject result = (ResultObject) entry.retrieveData(this.getProgressListener());
+							result.setSource(entry.getLocation().toString());
 							RapidMinerGUI.getMainFrame().getResultDisplay().showResult(result);
 						} else {
-							SwingTools.showSimpleErrorMessage("cannot_fetch_data_from_repository", "Not an IOObject.");
+							SwingTools.showSimpleErrorMessage("cannot_fetch_data_from_repository", "No data found.");
 						}
 					} catch (Exception e1) {
 						SwingTools.showSimpleErrorMessage("cannot_fetch_data_from_repository", e1);

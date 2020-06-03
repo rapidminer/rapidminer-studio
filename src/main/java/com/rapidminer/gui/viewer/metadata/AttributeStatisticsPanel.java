@@ -40,7 +40,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -272,6 +271,12 @@ public class AttributeStatisticsPanel extends JPanel {
 	/** this component is used to fix the alignment for the nominal value panel */
 	private Component nominalValueFiller;
 
+	/** the header for nominal least or binominal negaive */
+	private JLabel labelLeastHeader;
+
+	/** the header for nominal most or binominal positive */
+	private JLabel labelMostHeader;
+
 	/** the {@link AbstractAttributeStatisticsModel} backing the GUI */
 	private AbstractAttributeStatisticsModel model;
 
@@ -389,7 +394,11 @@ public class AttributeStatisticsPanel extends JPanel {
 								if (model.getAttribute().isNumerical()) {
 									updateNumericalElements(model);
 								} else if (model.getAttribute().isNominal()) {
-									updateNominalElements(model);
+									if (model.getAttribute().getValueType() == Ontology.BINOMINAL) {
+										updateBinominalElements(model);
+									} else {
+										updateNominalElements(model);
+									}
 								} else {
 									updateDateTimeElements(model);
 								}
@@ -635,7 +644,7 @@ public class AttributeStatisticsPanel extends JPanel {
 		panelStatsLeast.setLayout(new BoxLayout(panelStatsLeast, BoxLayout.PAGE_AXIS));
 		panelStatsLeast.setOpaque(false);
 
-		JLabel labelLeastHeader = new JLabel(leastLabel);
+		labelLeastHeader = new JLabel(leastLabel);
 		labelLeastHeader.setFont(labelLeastHeader.getFont().deriveFont(FONT_SIZE_LABEL_HEADER));
 		labelLeastHeader.setForeground(Color.GRAY);
 		labelLeastHeader.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -650,7 +659,7 @@ public class AttributeStatisticsPanel extends JPanel {
 		panelStatsMost.setLayout(new BoxLayout(panelStatsMost, BoxLayout.PAGE_AXIS));
 		panelStatsMost.setOpaque(false);
 
-		JLabel labelMostHeader = new JLabel(mostLabel);
+		labelMostHeader = new JLabel(mostLabel);
 		labelMostHeader.setFont(labelMostHeader.getFont().deriveFont(FONT_SIZE_LABEL_HEADER));
 		labelMostHeader.setForeground(Color.GRAY);
 		labelMostHeader.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -862,7 +871,15 @@ public class AttributeStatisticsPanel extends JPanel {
 				updateNumericalElements(model);
 				cardLayout.show(cardStatsPanel, CARD_NUMERICAL);
 			} else if (model.getAttribute().isNominal()) {
-				updateNominalElements(model);
+				if (model.getAttribute().getValueType() == Ontology.BINOMINAL) {
+					updateBinominalElements(model);
+					labelLeastHeader.setText(I18N.getMessage(I18N.getGUIBundle(), "gui.label.attribute_statistics" +
+							".statistics.negative.label"));
+					labelMostHeader.setText(I18N.getMessage(I18N.getGUIBundle(), "gui.label.attribute_statistics" +
+							".statistics.positive.label"));
+				} else {
+					updateNominalElements(model);
+				}
 				cardLayout.show(cardStatsPanel, CARD_NOMINAL);
 			} else {
 				updateDateTimeElements(model);
@@ -1230,6 +1247,24 @@ public class AttributeStatisticsPanel extends JPanel {
 		labelStatsLeast.setToolTipText(least);
 		labelStatsMost.setText(mostTruncated);
 		labelStatsMost.setToolTipText(most);
+		displayNominalValues();
+	}
+
+	/**
+	 * Updates the gui elements for binominal stats.
+	 *
+	 * @param model
+	 * 		the nominal model to use
+	 */
+	private void updateBinominalElements(final AbstractAttributeStatisticsModel model) {
+		String negative = ((NominalAttributeStatisticsModel) model).getNegative();
+		String negativeTruncated = SwingTools.getShortenedDisplayName(negative, 17);
+		String positive = ((NominalAttributeStatisticsModel) model).getPositive();
+		String positiveTruncated = SwingTools.getShortenedDisplayName(positive, 17);
+		labelStatsLeast.setText(negativeTruncated);
+		labelStatsLeast.setToolTipText(negative);
+		labelStatsMost.setText(positiveTruncated);
+		labelStatsMost.setToolTipText(positive);
 		displayNominalValues();
 	}
 

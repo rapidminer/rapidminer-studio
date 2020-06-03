@@ -37,6 +37,7 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -91,7 +92,7 @@ public class ParameterService {
 	public static final String ENVIRONMENT_RAPIDMINER_CONFIG_DIR = "RAPIDMINER_CONFIG_DIR";
 
 	private static boolean initialized = false;
-	private static final List<ParameterChangeListener> PARAMETER_LISTENERS = new LinkedList<>();
+	private static final List<ParameterChangeListener> PARAMETER_LISTENERS = new CopyOnWriteArrayList<>();
 	private static final Map<String, Parameter> PARAMETER_MAP = new TreeMap<>();
 	private static final List<ParameterWriter> PARAMETER_WRITERS = new LinkedList<>();
 

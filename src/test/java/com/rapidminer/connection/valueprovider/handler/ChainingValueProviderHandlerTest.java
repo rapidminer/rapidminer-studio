@@ -22,7 +22,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -33,9 +32,9 @@ import java.util.stream.Collectors;
 
 import org.junit.Test;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rapidminer.connection.ConnectionInformation;
 import com.rapidminer.connection.ConnectionInformationBuilder;
+import com.rapidminer.connection.ConnectionInformationSerializer;
 import com.rapidminer.connection.configuration.ConfigurationParameterImpl;
 import com.rapidminer.connection.configuration.ConnectionConfiguration;
 import com.rapidminer.connection.configuration.ConnectionConfigurationBuilder;
@@ -56,8 +55,6 @@ public class ChainingValueProviderHandlerTest {
 	private static final String PARAMETER_GROUP = "group";
 	private static final String PARAMETER_NAME = "name";
 	private static final String PARAMETER_VALUE = "value";
-
-	private static final ObjectMapper MAPPER = new ObjectMapper();
 
 	private static final String[] VP_NAMES = {"first", "second", "third"};
 
@@ -85,14 +82,14 @@ public class ChainingValueProviderHandlerTest {
 			VALUE_PROVIDERS.stream().map(ValueProvider::getName).collect(Collectors.toList()));
 
 	@Test
-	public void testInjectProvidersSuccessful() {
+	public void testInjectProvidersSuccessful() throws IOException {
 		Map<String, String> injectedValues = ValueProviderHandlerRegistry.getInstance()
 				.injectValues(createConnection(getVPListCopy(), CHAINING), createOperator(), true);
 		assertEquals(Collections.singletonMap(PARAMETER_GROUP + "." + PARAMETER_NAME, PARAMETER_VALUE), injectedValues);
 	}
 
 	@Test
-	public void testInjectProvidersLoop() {
+	public void testInjectProvidersLoop() throws IOException {
 		// one vp is referenced twice; this will result in no injection at all
 		ValueProvider faultyChain = ChainingValueProviderHandler.getInstance().createNewProvider("faulty chain",
 				Arrays.asList(VP_NAMES[0], VP_NAMES[1], VP_NAMES[2], VP_NAMES[0]));
@@ -102,7 +99,7 @@ public class ChainingValueProviderHandlerTest {
 	}
 
 	@Test
-	public void testInjectProvidersWrongProviderInjection() {
+	public void testInjectProvidersWrongProviderInjection() throws IOException {
 		List<ValueProvider> faultyProviders = getVPListCopy();
 		// the second VP actually already has a prefix, and it's not the correct one to inject the third
 		faultyProviders.get(1).getParameterMap().get(MacroValueProviderHandler.PARAMETER_PREFIX).setValue("different");
@@ -112,7 +109,7 @@ public class ChainingValueProviderHandlerTest {
 	}
 
 	@Test
-	public void testMissingHandler() {
+	public void testMissingHandler() throws IOException {
 		List<ValueProvider> faultyProviders = getVPListCopy();
 		// the second VP actually has an unregistered type
 		ValueProvider originalSecond = faultyProviders.get(1);
@@ -138,7 +135,7 @@ public class ChainingValueProviderHandlerTest {
 	}
 
 	@Test
-	public void testDisableParameters() {
+	public void testDisableParameters() throws IOException {
 		// this test is similar to testInjectProvidersSuccessful() but with the parameter of the second vp disabled
 		List<ValueProvider> vpListCopy = getVPListCopy();
 		ValueProviderParameter secondPrefixParameter =
@@ -169,13 +166,10 @@ public class ChainingValueProviderHandlerTest {
 		return new ConnectionInformationBuilder(ccBuilder.build()).build();
 	}
 
-	/** Get a deep clone of the basic list of VPs */
-	private static <T> List<T> getVPListCopy() {
-		try {
-			return MAPPER.readValue(MAPPER.writeValueAsString(ChainingValueProviderHandlerTest.VALUE_PROVIDERS),
-					MAPPER.getTypeFactory().constructCollectionType(List.class, ValueProvider.class));
-		} catch (IOException e) {
-			return new ArrayList<>();
-		}
+	/**
+	 * Get a deep clone of the basic list of VPs
+	 */
+	private static <T> List<ValueProvider> getVPListCopy() throws IOException {
+		return ConnectionInformationSerializer.INSTANCE.createDeepCopy(ChainingValueProviderHandlerTest.VALUE_PROVIDERS);
 	}
 }

@@ -19,7 +19,7 @@
 package com.rapidminer.repository;
 
 /**
- * Exception in case the Connections Folder may not be created on a Server because it is too old
+ * Exception in case the Connections Folder may not be created on an AI Hub because it is too old
  *
  * @author Andreas Timm
  * @since 9.5.0

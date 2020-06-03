@@ -1,13 +1,14 @@
 buildscript {
 	repositories {
-		mavenCentral()
+		gradlePluginPortal()
 	}
 	dependencies {
-		classpath 'org.ajoberstar:grgit:0.3.+'
+		classpath 'org.ajoberstar.grgit:grgit-gradle:4.0.+'
 	}
 }
 
-import org.ajoberstar.grgit.Grgit
+apply plugin: org.ajoberstar.grgit.gradle.GrgitPlugin
+
 
 // Generates a file containing the current Git revision
 task generateGitRevFile() {
@@ -18,9 +19,8 @@ task generateGitRevFile() {
 	outputs.upToDateWhen { false }
 
 	doLast {
-		def repo = Grgit.open(rootProject.file('.'))
 		if (!outputFile.parentFile.isDirectory()) { outputFile.parentFile.mkdirs() }
-		outputFile.text = repo.head().id
+		outputFile.text = grgit.head().id
 	}
 }
 

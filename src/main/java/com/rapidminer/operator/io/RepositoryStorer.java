@@ -27,6 +27,7 @@ import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeRepositoryLocation;
+import com.rapidminer.repository.IOObjectEntry;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryLocation;
 import com.rapidminer.repository.RepositoryManager;
@@ -50,7 +51,7 @@ public class RepositoryStorer extends AbstractWriter<IOObject> {
 	@Override
 	public IOObject write(IOObject ioobject) throws OperatorException {
 		try {
-			RepositoryLocation location = getParameterAsRepositoryLocation(PARAMETER_REPOSITORY_ENTRY);
+			RepositoryLocation location = getParameterAsRepositoryLocationData(PARAMETER_REPOSITORY_ENTRY, IOObjectEntry.class);
 			logConnection(ioobject);
 			return RepositoryManager.getInstance(null).store(ioobject, location, this);
 		} catch (RepositoryException e) {

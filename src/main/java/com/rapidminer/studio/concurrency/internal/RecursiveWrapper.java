@@ -48,7 +48,7 @@ class RecursiveWrapper<T> extends CountedCompleter<Void> {
 
 		private static final long serialVersionUID = -5276047218418452356L;
 
-		WrapperRuntimeException(Exception e){
+		WrapperRuntimeException(Throwable e){
 			super(e);
 		}
 	}
@@ -87,13 +87,10 @@ class RecursiveWrapper<T> extends CountedCompleter<Void> {
 			try {
 				results[start] = callables.get(start).call();
 				// do the same error handling as ForkJoinTask$AdaptedCallable and set sentinel to false
-			} catch (Error | RuntimeException e) {
-				alive.set(false);
-				throw e;
-			} catch (Exception ex) {
+			} catch (Throwable t) {
 				alive.set(false);
 				//Use custom wrapper for easier unwrapping
-				throw new WrapperRuntimeException(ex);
+				throw new WrapperRuntimeException(t);
 			}
 		}
 		propagateCompletion();
@@ -122,7 +119,7 @@ class RecursiveWrapper<T> extends CountedCompleter<Void> {
 		} catch (ProcessStoppedRuntimeException e) {
 			// handle ProcessStoppedRuntimeException as done by StudioConcurrencyContext#collectResults
 			throw e;
-		}catch (WrapperRuntimeException e){
+		} catch (WrapperRuntimeException e){
 			// unwrap own wrapped exceptions and wrap into ExecutionException
 			throw new ExecutionException(e.getCause());
 		} catch (Throwable e) {

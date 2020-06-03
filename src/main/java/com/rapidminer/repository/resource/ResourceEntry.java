@@ -21,14 +21,11 @@ package com.rapidminer.repository.resource;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
-
 import javax.swing.Action;
 
 import com.rapidminer.repository.Entry;
 import com.rapidminer.repository.Folder;
-import com.rapidminer.repository.MalformedRepositoryLocationException;
 import com.rapidminer.repository.RepositoryException;
-import com.rapidminer.repository.RepositoryLocation;
 import com.rapidminer.tools.Tools;
 
 
@@ -59,15 +56,6 @@ public abstract class ResourceEntry implements Entry {
 	@Override
 	public Folder getContainingFolder() {
 		return container;
-	}
-
-	@Override
-	public RepositoryLocation getLocation() {
-		try {
-			return new RepositoryLocation(getRepository().getLocation().toString() + getPath());
-		} catch (MalformedRepositoryLocationException e) {
-			throw new RuntimeException(e);
-		}
 	}
 
 	@Override

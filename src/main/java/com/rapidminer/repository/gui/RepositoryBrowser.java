@@ -43,15 +43,13 @@ import com.rapidminer.gui.look.Colors;
 import com.rapidminer.gui.tools.ExtendedJScrollPane;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.ResourceDockKey;
-import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.gui.tools.components.DropDownPopupButton;
-import com.rapidminer.repository.ConnectionEntry;
+import com.rapidminer.repository.DataEntry;
 import com.rapidminer.repository.Entry;
 import com.rapidminer.repository.Folder;
-import com.rapidminer.repository.IOObjectEntry;
-import com.rapidminer.repository.ProcessEntry;
 import com.rapidminer.repository.RepositoryLocation;
 import com.rapidminer.repository.gui.actions.NewRepositoryAction;
+import com.rapidminer.tools.Tools;
 import com.vlsolutions.swing.docking.DockKey;
 import com.vlsolutions.swing.docking.Dockable;
 
@@ -103,32 +101,22 @@ public class RepositoryBrowser extends JPanel implements Dockable {
 			Entry entry = e.getEntry();
 
 			// skip folder double-clicks
-			if (entry instanceof Folder) {
-				return;
+			if (!(entry instanceof Folder)) {
+				OpenAction.open((DataEntry) entry, true);
 			}
-
-			if (entry instanceof ProcessEntry) {
-				RepositoryTree.openProcess((ProcessEntry) entry);
-			} else if (entry instanceof ConnectionEntry) {
-				OpenAction.showConnectionInformationDialog((ConnectionEntry) entry);
-			} else if (entry instanceof IOObjectEntry) {
-				OpenAction.showAsResult((IOObjectEntry) entry);
-			} else {
-				SwingTools.showVerySimpleErrorMessage("no_data_or_process");
-			}
-
 		});
 
 		setLayout(new BorderLayout());
 
 		furtherActionsMenu.add(ADD_REPOSITORY_ACTION);
+		furtherActionsMenu.addSeparator();
 		furtherActionsMenu.add(tree.CREATE_FOLDER_ACTION);
+		furtherActionsMenu.add(tree.REFRESH_ACTION);
+		furtherActionsMenu.addSeparator();
 		final JMenu sortActionsMenu = new JMenu(SORT_REPOSITORY_ACTION);
 		sortActionsMenu.add(tree.SORT_BY_NAME_ACTION.createMenuItem());
 		sortActionsMenu.add(tree.SORT_BY_LAST_MODIFIED_DATE_ACTION.createMenuItem());
 		furtherActionsMenu.add(sortActionsMenu);
-
-		furtherActionsMenu.add(tree.REFRESH_ACTION);
 		furtherActionsMenu.add(tree.SHOW_PROCESS_IN_REPOSITORY_ACTION);
 
 		JPanel northPanel = new JPanel(new GridBagLayout());
@@ -202,6 +190,22 @@ public class RepositoryBrowser extends JPanel implements Dockable {
 	 */
 	public void addMenuItem(JMenuItem item) {
 		furtherActionsMenu.add(item);
+	}
+
+	/**
+	 * Add a {@link JMenuItem} to the popup-button in the upper right corner of this RepositoryBrowser at the specified
+	 * index.
+	 * <p>
+	 * Internal API, do not call!
+	 * </p>
+	 *
+	 * @param item  the {@link JMenuItem} to be added to this {@link RepositoryBrowser}
+	 * @param index the index at which position it should be added
+	 * @since 9.7
+	 */
+	public void addMenuItemInternal(JMenuItem item, int index) {
+		Tools.requireInternalPermission();
+		furtherActionsMenu.add(item, index);
 	}
 
 	/**

@@ -18,15 +18,16 @@
  */
 package com.rapidminer.gui.operatortree.actions;
 
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.ports.IncompatibleMDClassException;
 import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.OutputPort;
 import com.rapidminer.operator.ports.Port;
+import com.rapidminer.operator.ports.Ports;
 import com.rapidminer.operator.ports.metadata.CompatibilityLevel;
 import com.rapidminer.operator.ports.metadata.MetaData;
 
@@ -52,29 +53,11 @@ public final class ActionUtil {
 		List<Port> toUnlock = new LinkedList<>();
 		try {
 			// disconnect and pass through
-			List<OutputPort> sources = new LinkedList<>();
-			for (InputPort in : op.getInputPorts().getAllPorts()) {
-				if (in.isConnected() && in.getSource().getPorts().getOwner().getOperator().isEnabled()) {
-					sources.add(in.getSource());
-					toUnlock.add(in.getSource());
-					in.getSource().lock();
-				}
-			}
-			for (OutputPort in : sources) {
-				in.disconnect();
-			}
+			List<OutputPort> sources = collectAndLockPorts(op.getInputPorts(), toUnlock);
+			sources.forEach(Port::disconnect);
 
-			List<InputPort> destinations = new LinkedList<>();
-			for (OutputPort out : op.getOutputPorts().getAllPorts()) {
-				if (out.isConnected() && out.getDestination().getPorts().getOwner().getOperator().isEnabled()) {
-					destinations.add(out.getDestination());
-					toUnlock.add(out.getDestination());
-					out.getDestination().lock();
-				}
-			}
-			for (InputPort in : destinations) {
-				in.getSource().disconnect();
-			}
+			List<InputPort> destinations = collectAndLockPorts(op.getOutputPorts(), toUnlock);
+			destinations.forEach(Port::disconnect);
 
 			reconnectPorts(sources, destinations);
 		} finally {
@@ -84,20 +67,33 @@ public final class ActionUtil {
 		}
 	}
 
+	/**
+	 * Collect and lock connected ports
+	 * @since 9.7
+	 */
+	private static <P extends Port<P, ?>> List<P> collectAndLockPorts(Ports<? extends Port<?, P>> ports, List<Port> toUnlock) {
+		// get opposites of connected ports
+		return ports.getAllPorts().stream().filter(Port::isConnected).map(Port::getOpposite)
+				// filter out connections to disabled operators and lock opposites
+				.filter(p -> p.getPorts().getOwner().getOperator().isEnabled()).peek(toUnlock::add).peek(Port::lock)
+				.collect(Collectors.toList());
+	}
+
+	/**
+	 * Reconnect ports where possible, cutting out the disabled operators in the middle
+	 */
 	private static void reconnectPorts(List<OutputPort> sources, List<InputPort> destinations) {
 		for (OutputPort source : sources) {
-			Iterator<InputPort> i = destinations.iterator();
-			while (i.hasNext()) {
-				InputPort dest = i.next();
+			for (InputPort destination : destinations) {
 				MetaData metaData = null;
 				try {
 					metaData = source.getMetaData(MetaData.class);
 				} catch (IncompatibleMDClassException e) {
 					// so it is null and ignored
 				}
-				if (metaData != null && dest.isInputCompatible(metaData, CompatibilityLevel.PRE_VERSION_5)) {
-					source.connectTo(dest);
-					i.remove();
+				if (metaData != null && destination.isInputCompatible(metaData, CompatibilityLevel.PRE_VERSION_5)) {
+					source.connectTo(destination);
+					destinations.remove(destination);
 					break;
 				}
 			}

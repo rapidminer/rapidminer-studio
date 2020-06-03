@@ -42,19 +42,23 @@ import org.junit.Test;
 
 import com.rapidminer.connection.ConnectionInformation;
 import com.rapidminer.connection.ConnectionInformationBuilder;
+import com.rapidminer.connection.ConnectionInformationContainerIOObject;
 import com.rapidminer.connection.configuration.ConnectionConfigurationImpl;
 import com.rapidminer.operator.IOObject;
+import com.rapidminer.repository.BlobEntry;
 import com.rapidminer.repository.ConnectionEntry;
 import com.rapidminer.repository.DataEntry;
 import com.rapidminer.repository.Folder;
+import com.rapidminer.repository.IOObjectEntry;
+import com.rapidminer.repository.ProcessEntry;
 import com.rapidminer.repository.Repository;
 import com.rapidminer.repository.RepositoryException;
-import com.rapidminer.connection.ConnectionInformationContainerIOObject;
 import com.rapidminer.repository.RepositoryTools;
 import com.rapidminer.repository.local.LocalRepository;
 import com.rapidminer.repository.local.LocalRepositoryFolderTest;
 import com.rapidminer.repository.local.SimpleFolder;
 import com.rapidminer.tools.Tools;
+import com.rapidminer.tools.container.Pair;
 
 
 /**
@@ -90,9 +94,26 @@ public class ConcurrentRepositoryTest {
 
 	private static final String TEST_PROCESS = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>";
 
-	private static final String[] EXPECTED_RESOURCE_DATA_ENTRIES = new String[]{"Deals", "Deals-Testset", "Golf",
-			"Golf-Testset", "Iris", "Labor-Negotiations", "Market-Data", "Polynomial", "Products", "Purchases", "Ripley-Set",
-			"Sonar", "Titanic", "Titanic Training", "Titanic Unlabeled", "Transactions", "Weighting"};
+	public static final List<Pair<String, Class<? extends DataEntry>>> EXPECTED_RESOURCE_DATA_ENTRIES = new ArrayList<>();
+	static {
+		EXPECTED_RESOURCE_DATA_ENTRIES.add(new Pair<>("Deals", IOObjectEntry.class));
+		EXPECTED_RESOURCE_DATA_ENTRIES.add(new Pair<>("Deals-Testset", IOObjectEntry.class));
+		EXPECTED_RESOURCE_DATA_ENTRIES.add(new Pair<>("Golf", IOObjectEntry.class));
+		EXPECTED_RESOURCE_DATA_ENTRIES.add(new Pair<>("Golf-Testset", IOObjectEntry.class));
+		EXPECTED_RESOURCE_DATA_ENTRIES.add(new Pair<>("Iris", IOObjectEntry.class));
+		EXPECTED_RESOURCE_DATA_ENTRIES.add(new Pair<>("Labor-Negotiations", IOObjectEntry.class));
+		EXPECTED_RESOURCE_DATA_ENTRIES.add(new Pair<>("Market-Data", IOObjectEntry.class));
+		EXPECTED_RESOURCE_DATA_ENTRIES.add(new Pair<>("Polynomial", IOObjectEntry.class));
+		EXPECTED_RESOURCE_DATA_ENTRIES.add(new Pair<>("Products", IOObjectEntry.class));
+		EXPECTED_RESOURCE_DATA_ENTRIES.add(new Pair<>("Purchases", IOObjectEntry.class));
+		EXPECTED_RESOURCE_DATA_ENTRIES.add(new Pair<>("Ripley-Set", IOObjectEntry.class));
+		EXPECTED_RESOURCE_DATA_ENTRIES.add(new Pair<>("Sonar", IOObjectEntry.class));
+		EXPECTED_RESOURCE_DATA_ENTRIES.add(new Pair<>("Titanic", IOObjectEntry.class));
+		EXPECTED_RESOURCE_DATA_ENTRIES.add(new Pair<>("Titanic Training", IOObjectEntry.class));
+		EXPECTED_RESOURCE_DATA_ENTRIES.add(new Pair<>("Titanic Unlabeled", IOObjectEntry.class));
+		EXPECTED_RESOURCE_DATA_ENTRIES.add(new Pair<>("Transactions", IOObjectEntry.class));
+		EXPECTED_RESOURCE_DATA_ENTRIES.add(new Pair<>("Weighting", IOObjectEntry.class));
+	}
 
 	private Random random = new Random();
 	private CountDownLatch startSignal;
@@ -128,7 +149,7 @@ public class ConcurrentRepositoryTest {
 	public void simpleFolder_DataEntries() throws Exception {
 		Folder reference = getTestResourceFolderAsSimpleFolder();
 		Folder test = getTestResourceFolderAsSimpleFolder();
-		testLoadWithRefresh(test, reference.getDataEntries().size(), reference.getSubfolders().size());
+		testLoadWithRefresh(test, reference.getDataEntries().size(), reference.getSubfolders().size(), Collections.emptyList());
 	}
 
 	@Test
@@ -147,7 +168,7 @@ public class ConcurrentRepositoryTest {
 	 * Loads the folder meanwhile refreshing it randomly and checks if expected entries are present.
 	 */
 	private void testLoadWithRefresh(final Folder folder, Integer expectedDataEntryCount, Integer expectedSubFolderCount,
-									 String... expectedEntries) throws InterruptedException, ExecutionException {
+									 List<Pair<String, Class<? extends DataEntry>>> expectedEntries) throws InterruptedException, ExecutionException {
 		int threadCount = 50;
 		startSignal = new CountDownLatch(1);
 
@@ -170,9 +191,9 @@ public class ConcurrentRepositoryTest {
 
 			// check if expected entries present
 			if (expectedEntries != null) {
-				for (final String entryName : expectedEntries) {
-					containsEntryCalls.put(entryName + " " + i,
-							executorService.submit(folder_containsEntry(folder, entryName)));
+				for (final Pair<String, Class<? extends DataEntry>> entry : expectedEntries) {
+					containsEntryCalls.put(entry.getFirst() + " " + i,
+							executorService.submit(folder_containsEntry(folder, entry.getFirst(), entry.getSecond())));
 				}
 			}
 		}
@@ -235,17 +256,17 @@ public class ConcurrentRepositoryTest {
 			// check processes
 			for (int i = 0; i < processCount; i++) {
 				String name = PROCESS_NAME_PREFIX + i;
-				Assert.assertTrue(name + " not found", repository.containsEntry(name));
+				Assert.assertTrue(name + " not found", repository.containsData(name, ProcessEntry.class));
 			}
 			// check ioobjects
 			for (int i = 0; i < processCount; i++) {
 				String name = IOOBJECT_NAME_PREFIX + i;
-				Assert.assertTrue(name + " not found", repository.containsEntry(name));
+				Assert.assertTrue(name + " not found", repository.containsData(name, IOObjectEntry.class));
 			}
 			// check blob entries
 			for (int i = 0; i < blobEntryCount; i++) {
 				String name = BLOBENTRY_NAME_PREFIX + i;
-				Assert.assertTrue(name + " not found", repository.containsEntry(name));
+				Assert.assertTrue(name + " not found", repository.containsData(name, BlobEntry.class));
 			}
 
 			// check data entries in connections folder
@@ -262,7 +283,7 @@ public class ConcurrentRepositoryTest {
 			// check connection entries
 			for (int i = 0; i < connectionEntryCount; i++) {
 				String name = CONNECTIONENTRY_NAME_PREFIX + i;
-				Assert.assertTrue(name + " not found", connectionsFolder.containsEntry(name));
+				Assert.assertTrue(name + " not found", connectionsFolder.containsData(name, ConnectionEntry.class));
 				// read the content, was it stored like that?
 				Assert.assertTrue(name + " not in the list of connection information entries", foundConnectionInformations.containsKey(name));
 				final ConnectionInformation connectionInformation = foundConnectionInformations.get(name);
@@ -478,9 +499,9 @@ public class ConcurrentRepositoryTest {
 	}
 
 	/**
-	 * Returns a Callable that calls {@link Folder#containsEntry(String)}
+	 * Returns a Callable that calls {@link Folder#containsData(String, Class)}
 	 */
-	private Callable<Boolean> folder_containsEntry(final Folder folder, final String entryName) {
+	private Callable<Boolean> folder_containsEntry(final Folder folder, final String entryName, final Class<? extends DataEntry> expectedDataType) {
 		return new Callable<Boolean>() {
 
 			@Override
@@ -490,8 +511,8 @@ public class ConcurrentRepositoryTest {
 					Thread.sleep(random.nextInt(THREAD_WAIT_THRESHOLD));
 					// System.out.println(Thread.currentThread().getName() + " CONTAINS " +
 					// entryName);
-					folder.containsEntry(entryName);
-					return folder.containsEntry(entryName);
+					folder.containsData(entryName, expectedDataType);
+					return folder.containsData(entryName, expectedDataType);
 				} catch (InterruptedException | RepositoryException e) {
 					Assert.fail(Thread.currentThread().getName() + " " + e.getMessage());
 					return false;

@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
@@ -40,7 +41,7 @@ import com.rapidminer.tools.Tools;
  *
  * @author Ingo Mierswa
  */
-public class ConditionedExampleSet extends AbstractExampleSet {
+public class ConditionedExampleSet extends AbstractExampleSet implements MappingBasedExampleSet {
 
 	private static final long serialVersionUID = 877488093216198777L;
 
@@ -139,6 +140,26 @@ public class ConditionedExampleSet extends AbstractExampleSet {
 			}
 		}
 		return true;
+	}
+
+	@Override
+	public Object getUserData(String key) {
+		return parent.getUserData(key);
+	}
+
+	@Override
+	public Object setUserData(String key, Object value) {
+		return parent.setUserData(key, value);
+	}
+
+	@Override
+	public Map<String, Object> getAllUserData() {
+		return parent.getAllUserData();
+	}
+
+	@Override
+	public void setAllUserData(Map<String, Object> userDataMap) {
+		parent.setAllUserData(userDataMap);
 	}
 
 	@Override
@@ -266,5 +287,20 @@ public class ConditionedExampleSet extends AbstractExampleSet {
 	@Override
 	public boolean isThreadSafeView() {
 		return parent instanceof AbstractExampleSet && ((AbstractExampleSet) parent).isThreadSafeView();
+	}
+
+	@Override
+	public int[] getMappingCopy() {
+		return Arrays.copyOf(mapping, mapping.length);
+	}
+
+	@Override
+	public boolean isParentSimpleOrMapped() {
+		return parent instanceof SimpleExampleSet || parent instanceof MappingBasedExampleSet;
+	}
+
+	@Override
+	public ExampleSet getParentClone() {
+		return (ExampleSet) parent.clone();
 	}
 }

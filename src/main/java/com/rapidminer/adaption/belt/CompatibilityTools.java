@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.rapidminer.belt.column.Column;
-import com.rapidminer.belt.column.ColumnTypes;
+import com.rapidminer.belt.column.ColumnType;
 import com.rapidminer.belt.execution.Context;
 import com.rapidminer.belt.execution.Workload;
 import com.rapidminer.belt.table.Builders;
@@ -62,7 +62,7 @@ public class CompatibilityTools {
 		List<String> datetimeLabels = new ArrayList<>();
 		for (int i = 0; i < table.width(); i++) {
 			Column column = table.column(i);
-			if (ColumnTypes.DATETIME.equals(column.type())) {
+			if (ColumnType.DATETIME.equals(column.type())) {
 				datetimeLabels.add(labels.get(i));
 			}
 		}

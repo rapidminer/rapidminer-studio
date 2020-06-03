@@ -44,6 +44,7 @@ import org.junit.Test;
 import com.rapidminer.connection.configuration.ConnectionConfigurationImpl;
 import com.rapidminer.connection.configuration.ConnectionResources;
 import com.rapidminer.tools.FileSystemService;
+import com.rapidminer.tools.encryption.EncryptionProvider;
 
 
 /**
@@ -95,7 +96,7 @@ public class ConnectionInformationFileUtilsTest {
 	public void save() {
 		// case 1 save(null, null)
 		try {
-			ConnectionInformationFileUtils.save(null, null);
+			ConnectionInformationFileUtils.save(null, null, null);
 			fail("Saving null as ConnectionInformation to file null was not supposed to work");
 		} catch (IOException ioe) {
 			assertEquals("Unexpected message received from the IOException", "Target file was not set", ioe.getMessage());
@@ -117,7 +118,7 @@ public class ConnectionInformationFileUtilsTest {
 		assertTrue(tmpFile.canWrite());
 		assertTrue(tmpFile.delete());
 		try {
-			ConnectionInformationFileUtils.save(null, tmpFile.toPath());
+			ConnectionInformationFileUtils.save(null, tmpFile.toPath(), null);
 			fail("Saving null as ConnectionInformation was not supposed to work");
 		} catch (IOException ioe) {
 			assertEquals("Unexpected message received from the IOException", "Object connection information is null", ioe.getMessage());
@@ -132,13 +133,13 @@ public class ConnectionInformationFileUtilsTest {
 		assertNotNull(ci);
 		final Path zipFile = createTempfile().toPath();
 		try {
-			ConnectionInformationFileUtils.save(ci, zipFile);
+			ConnectionInformationFileUtils.save(ci, zipFile, EncryptionProvider.DEFAULT_CONTEXT);
 		} catch (IOException ioe) {
 			ioe.printStackTrace();
 			fail(ioe.getMessage());
 		}
 		try {
-			ConnectionInformation reloadedCI = ConnectionInformationFileUtils.loadFromZipFile(zipFile);
+			ConnectionInformation reloadedCI = ConnectionInformationFileUtils.loadFromZipFile(zipFile, EncryptionProvider.DEFAULT_CONTEXT);
 			assertEquals("The loaded Connection Information is not equal to the created one!", ci, reloadedCI);
 		} catch (IOException e) {
 			fail(e.getMessage());
@@ -154,13 +155,13 @@ public class ConnectionInformationFileUtilsTest {
 		assertNotNull(ci);
 		final Path tmpFile = createTempfile().toPath();
 		try {
-			ConnectionInformationFileUtils.save(ci, tmpFile);
+			ConnectionInformationFileUtils.save(ci, tmpFile, EncryptionProvider.DEFAULT_CONTEXT);
 		} catch (IOException ioe) {
 			ioe.printStackTrace();
 			fail(ioe.getMessage());
 		}
 		try {
-			ConnectionInformation reloadedCI = ConnectionInformationFileUtils.loadFromZipFile(tmpFile);
+			ConnectionInformation reloadedCI = ConnectionInformationFileUtils.loadFromZipFile(tmpFile, EncryptionProvider.DEFAULT_CONTEXT);
 			assertEquals("The loaded Connection Information is not equal to the created one!", ci.getConfiguration(), reloadedCI.getConfiguration());
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -173,7 +174,7 @@ public class ConnectionInformationFileUtilsTest {
 		// case 5 save(ci, null)
 		try {
 			ConnectionInformation ci = new ConnectionInformationBuilder(new ConnectionConfigurationImpl("test name 1", "test type")).build();
-			ConnectionInformationFileUtils.save(ci, null);
+			ConnectionInformationFileUtils.save(ci, null, null);
 			fail("Saving a ConnectionInformation to a null file was not supposed to work");
 		} catch (IOException ioe) {
 			assertEquals("Unexpected message received from the IOException", "Target file was not set", ioe.getMessage());
@@ -185,9 +186,9 @@ public class ConnectionInformationFileUtilsTest {
 	public void saveCorruptCI() {
 		// case 6 save(corrupt-ci, tmpfile)
 		try {
-			ArrayList<Path> libfiles = new ArrayList<>();
-			libfiles.add(ConnectionResources.RESOURCE_PATH.resolve("missing.file"));
-			ConnectionInformation ci = new ConnectionInformationBuilder(new ConnectionConfigurationImpl("test name 1", "test type")).withLibraryFiles(libfiles).build();
+			ArrayList<Path> libFiles = new ArrayList<>();
+			libFiles.add(ConnectionResources.RESOURCE_PATH.resolve("missing.file"));
+			new ConnectionInformationBuilder(new ConnectionConfigurationImpl("test name 1", "test type")).withLibraryFiles(libFiles).build();
 			fail("Creating a ConnectionInformation with missing library files was not supposed to work");
 		} catch (IllegalArgumentException iae) {
 			assertTrue(iae.getMessage().startsWith("Non-existing paths found"));
@@ -204,7 +205,7 @@ public class ConnectionInformationFileUtilsTest {
 		}
 		Path target = createTempfile().toPath();
 		ConnectionInformationFileUtils.moveTo(source, target);
-		assertTrue("Source file should not exist anymore after moving it but still exists: " + source.toFile().getAbsolutePath(), !source.toFile().exists());
+		assertFalse("Source file should not exist anymore after moving it but still exists: " + source.toFile().getAbsolutePath(), source.toFile().exists());
 		assertTrue("Target file does not exist after move operation but should: " + target.toFile().getAbsolutePath(), target.toFile().exists());
 
 		final String sourceString = IOUtils.toString(ConnectionResources.ENCODING_TEST_RESOURCE, StandardCharsets.UTF_8);
@@ -290,7 +291,7 @@ public class ConnectionInformationFileUtilsTest {
 			ConnectionInformationFileUtils.addFileInternally(name, ConnectionResources.EMPTY_JAR.openStream(), "");
 			fail("File was added despite wrong md5 hash");
 		} catch (IOException e) {
-
+			// expected
 		}
 		assertFalse("Sub directory was falsely created", Files.exists(subdirInCache));
 	}

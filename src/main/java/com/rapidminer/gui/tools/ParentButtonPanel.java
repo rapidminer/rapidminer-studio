@@ -21,14 +21,12 @@ package com.rapidminer.gui.tools;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Graphics;
-import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.LinkedList;
-
 import javax.swing.AbstractButton;
 import javax.swing.Action;
 import javax.swing.BorderFactory;
@@ -41,6 +39,7 @@ import javax.swing.event.PopupMenuListener;
 import com.rapidminer.gui.LoggedAbstractAction;
 import com.rapidminer.gui.tools.components.LinkLocalButton;
 import com.rapidminer.tools.I18N;
+import com.rapidminer.tools.Tools;
 
 
 /**
@@ -93,7 +92,6 @@ public class ParentButtonPanel<T> extends ExtendedJToolBar {
 	public ParentButtonPanel(ParentButtonModel<T> model) {
 		setModel(model);
 		setOpaque(false);
-
 	}
 
 	private final MouseListener borderListener = new MouseAdapter() {
@@ -180,46 +178,33 @@ public class ParentButtonPanel<T> extends ExtendedJToolBar {
 		if (name.length() > MAX_BREADCRUMB_LENGTH) {
 			name = name.substring(0, MAX_BREADCRUMB_LENGTH - BREADCRUMB_ABBREVIATION.length()) + BREADCRUMB_ABBREVIATION;
 		}
-
+		name = Tools.escapeHTML(name);
+		String breadcrumbTip = "gui.button.process_panel.breadcrumbs.any.tip";
 		if (node.equals(currentNode)) {
-			Action action = new LoggedAbstractAction("<span style=\"font-weight: bold; text-decoration: none; color: #000000\">"
-					+ name + "</span>") {
-
-				private static final long serialVersionUID = 1L;
-
-				@Override
-				public void loggedActionPerformed(ActionEvent e) {
-					selectedNode = node;
-					fireAction();
-				}
-			};
-			LinkLocalButton button = new LinkLocalButton(action);
-			button.setToolTipText(I18N.getGUIMessage("gui.button.process_panel.breadcrumbs.current.tip"));
-			button.setBorder(BorderFactory.createEmptyBorder(7, 0, 0, 0));
-			return button;
-		} else {
-			Action action = new LoggedAbstractAction(name) {
-
-				private static final long serialVersionUID = 1L;
-
-				@Override
-				public void loggedActionPerformed(ActionEvent e) {
-					selectedNode = node;
-					fireAction();
-				}
-			};
-			LinkLocalButton button = new LinkLocalButton(action);
-			button.setToolTipText(I18N.getGUIMessage("gui.button.process_panel.breadcrumbs.any.tip"));
-			button.setBorder(BorderFactory.createEmptyBorder(6, 0, 0, 0));
-			return button;
+			name = "<span style=\"font-weight: bold; text-decoration: none; color: #000000\">" + name + "</span>";
+			breadcrumbTip = "gui.button.process_panel.breadcrumbs.current.tip";
 		}
+		Action action = new LoggedAbstractAction(name) {
+
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void loggedActionPerformed(ActionEvent e) {
+				selectedNode = node;
+				fireAction();
+			}
+		};
+		LinkLocalButton button = new LinkLocalButton(action);
+		button.setToolTipText(I18N.getGUIMessage(breadcrumbTip));
+		button.setBorder(BorderFactory.createEmptyBorder(6, 0, 0, 0));
+		return button;
 	}
 
 	private JButton makeDropdownButton(final T node) {
 		final JButton button = new JButton(RIGHT_ARROW);
 		button.setOpaque(false);
 		button.setBorderPainted(false);
-		button.setMargin(new Insets(0, 0, 0, 0));
+		button.setBorder(BorderFactory.createEmptyBorder(2, 0, 0, 0));
 		button.setPreferredSize(new Dimension(16, 16));
 		button.addActionListener(new ActionListener() {
 
@@ -262,7 +247,7 @@ public class ParentButtonPanel<T> extends ExtendedJToolBar {
 		JPopupMenu menu = new JPopupMenu();
 		for (int i = 0; i < model.getNumberOfChildren(node); i++) {
 			final T child = model.getChild(node, i);
-			menu.add(new LoggedAbstractAction(model.toString(child)) {
+			menu.add(new LoggedAbstractAction("<html>" + Tools.escapeHTML(model.toString(child)) + "</html>") {
 
 				private static final long serialVersionUID = 7232177147279985209L;
 
@@ -305,7 +290,7 @@ public class ParentButtonPanel<T> extends ExtendedJToolBar {
 		if (node == null) {
 			return;
 		}
-		if (backward.size() > 0) {
+		if (!backward.isEmpty()) {
 			if (backward.getFirst() != node) {
 				backward.remove(node);
 				backward.addFirst(node);

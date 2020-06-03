@@ -37,12 +37,11 @@ import com.rapidminer.connection.valueprovider.ValueProviderImpl;
 import com.rapidminer.connection.valueprovider.ValueProviderParameter;
 import com.rapidminer.connection.valueprovider.ValueProviderParameterImpl;
 import com.rapidminer.connection.valueprovider.handler.MacroValueProviderHandler;
-import com.rapidminer.repository.Entry;
+import com.rapidminer.repository.ConnectionEntry;
 import com.rapidminer.repository.Folder;
 import com.rapidminer.repository.MalformedRepositoryLocationException;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryLocation;
-import com.rapidminer.repository.resource.ResourceConnectionEntry;
 import com.rapidminer.repository.resource.ResourceFolderTest;
 import com.rapidminer.repository.resource.ResourceRepository;
 
@@ -111,9 +110,9 @@ public class ConnectionModelConverterTest {
 				return true;
 			}
 		};
-		Entry entry = resourceRepo.locate(Folder.CONNECTION_FOLDER_NAME+'/'+ ResourceFolderTest.TEST_CON_NAME);
+		ConnectionEntry entry = resourceRepo.locateData(Folder.CONNECTION_FOLDER_NAME+'/'+ ResourceFolderTest.TEST_CON_NAME, ConnectionEntry.class, true);
 		location = entry.getLocation();
-		connection = ((ConnectionInformationContainerIOObject) ((ResourceConnectionEntry) entry).retrieveData(null)).getConnectionInformation();
+		connection = ((ConnectionInformationContainerIOObject) entry.retrieveData(null)).getConnectionInformation();
 	}
 
 	@Test

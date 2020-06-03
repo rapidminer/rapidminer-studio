@@ -32,6 +32,8 @@ import com.rapidminer.repository.Repository;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryListener;
 import com.rapidminer.repository.RepositoryLocation;
+import com.rapidminer.repository.RepositoryLocationBuilder;
+import com.rapidminer.repository.RepositoryLocationType;
 import com.rapidminer.repository.RepositoryManager;
 import com.rapidminer.repository.gui.LocalRepositoryPanel;
 import com.rapidminer.repository.gui.RepositoryConfigurationPanel;
@@ -55,7 +57,7 @@ public class LocalRepository extends SimpleFolder implements Repository {
 	private File root;
 
 	public enum LocalState {
-		ACCESSIBLE(null), NOT_ACCESSIBLE(I18N.getMessage(I18N.getGUIBundle(), "gui.repository.not_accessible.message"));
+		ACCESSIBLE(I18N.getGUIMessage("gui.repository.local.legacy.label")), NOT_ACCESSIBLE(I18N.getGUIMessage("gui.repository.local.not_accessible_legacy.label"));
 
 		private String state;
 
@@ -172,18 +174,13 @@ public class LocalRepository extends SimpleFolder implements Repository {
 
 	@Override
 	public String getDescription() {
-		return "This is a local repository stored on your local computer at " + getFile() + ".";
-	}
-
-	@Override
-	public Entry locate(String entry) throws RepositoryException {
-		return RepositoryManager.getInstance(null).locate(this, entry, false);
+		return "This is a legacy local repository stored on your local computer at " + getFile() + ".";
 	}
 
 	@Override
 	public RepositoryLocation getLocation() {
 		try {
-			return new RepositoryLocation(getName(), new String[0]);
+			return new RepositoryLocationBuilder().withLocationType(RepositoryLocationType.FOLDER).buildFromPathComponents(getName(), new String[0]);
 		} catch (MalformedRepositoryLocationException e) {
 			throw new RuntimeException(e);
 		}

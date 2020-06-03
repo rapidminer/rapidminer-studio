@@ -34,8 +34,26 @@ public interface ProcessEntry extends DataEntry {
 		return TYPE_NAME;
 	}
 
+	/**
+	 * Retrieves the XML of the process stored here.
+	 * <strong>Important:</strong> The XML may contain secret values, which probably have been encrypted with an
+	 * encryption context! See
+	 * {@link com.rapidminer.tools.encryption.EncryptionProvider} and {@link Repository#getEncryptionContext()} for
+	 * reference. Loading it with a wrong encryption context will cause the decryption of those secret values to fail!
+	 *
+	 * @throws RepositoryException if loading goes wrong
+	 */
 	String retrieveXML() throws RepositoryException;
 
+	/**
+	 * Stores the XML of the process here.
+	 * <strong>Important:</strong> Make sure that the XML has secret values encrypted with the proper encryption context! See
+	 * {@link com.rapidminer.tools.encryption.EncryptionProvider} and {@link Repository#getEncryptionContext()} for
+	 * reference. Otherwise, loading it again later will fail!
+	 *
+	 * @param xml the XML generated with the correct encryption context for this repository
+	 * @throws RepositoryException if storing goes wrong
+	 */
 	void storeXML(String xml) throws RepositoryException;
 
 }

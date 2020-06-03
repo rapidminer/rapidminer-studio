@@ -184,11 +184,7 @@ class RepositoryLocationsEditor<T extends Ports<?>> extends JPanel {
 					if (rowIndex < ports.getNumberOfPorts()) {
 						Port correspondingPort = ports.getPortByIndex(rowIndex);
 						if (correspondingPort.isConnected()) {
-							if (correspondingPort instanceof OutputPort) {
-								return value + " (" + ((OutputPort) correspondingPort).getDestination() + ")";
-							} else {
-								return value + " (" + ((InputPort) correspondingPort).getSource() + ")";
-							}
+							return value + " (" + correspondingPort.getOpposite() + ")";
 						} else {
 							return value + " (disconnected)";
 						}

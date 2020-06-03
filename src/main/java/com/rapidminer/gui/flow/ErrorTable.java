@@ -26,7 +26,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.LinkedList;
 import java.util.List;
-
 import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.Icon;
@@ -55,6 +54,7 @@ import com.rapidminer.gui.tools.ResourceDockKey;
 import com.rapidminer.gui.tools.ResourceMenu;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.gui.tools.ViewToolBar;
+import com.rapidminer.gui.tools.logging.LogViewer;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.ProcessSetupError;
 import com.rapidminer.operator.ports.Port;
@@ -268,9 +268,9 @@ public class ErrorTable extends JPanel implements Dockable, ProcessEditor {
 
 	public static final String ERROR_TABLE_DOCK_KEY = "error_table";
 
-	private final DockKey DOCK_KEY = new ResourceDockKey(ERROR_TABLE_DOCK_KEY);
+	private final DockKey dockKey = new ResourceDockKey(ERROR_TABLE_DOCK_KEY);
 	{
-		DOCK_KEY.setDockGroup(MainFrame.DOCK_GROUP_ROOT);
+		dockKey.putProperty(ResourceDockKey.PROPERTY_KEY_NEXT_TO_DOCKABLE, LogViewer.LOG_VIEWER_DOCK_KEY);
 	}
 
 	private final MainFrame mainFrame;
@@ -373,7 +373,7 @@ public class ErrorTable extends JPanel implements Dockable, ProcessEditor {
 
 	@Override
 	public DockKey getDockKey() {
-		return DOCK_KEY;
+		return dockKey;
 	}
 
 	private void updateErrors() {

@@ -345,6 +345,9 @@ public class AggregationOperator extends AbstractDataProcessing {
 
 	@Override
 	public ExampleSet apply(ExampleSet exampleSet) throws OperatorException {
+		getProgress().setTotal(exampleSet.size());
+		int progressCounter = 0;
+		getProgress().setCompleted(0);
 		// creating data structures for building aggregates
 		List<AggregationFunction> aggregationFunctions = createAggreationFunctions(exampleSet);
 		Attribute[] groupAttributes;
@@ -415,8 +418,6 @@ public class AggregationOperator extends AbstractDataProcessing {
 			// if no grouping, we will directly insert into leaf node
 			leafNode = new LeafAggregationTreeNode(aggregationFunctions);
 		}
-		getProgress().setTotal(exampleSet.size());
-		int progressCounter = 0;
 		for (Example example : exampleSet) {
 			if (groupAttributes.length > 0) {
 				AggregationTreeNode currentNode = rootNode;
@@ -446,7 +447,7 @@ public class AggregationOperator extends AbstractDataProcessing {
 			}
 
 			// Trigger operator progress
-			if (++progressCounter % 100 == 0) {
+			if (++progressCounter % 25 == 0) {
 				getProgress().setCompleted(progressCounter);
 			}
 		}
@@ -572,6 +573,7 @@ public class AggregationOperator extends AbstractDataProcessing {
 		// for recent version table is correct: Deliver example set
 		ExampleSet resultSet = builder.build();
 		resultSet.getAnnotations().addAll(exampleSet.getAnnotations());
+		resultSet.setAllUserData(exampleSet.getAllUserData());
 		return resultSet;
 	}
 

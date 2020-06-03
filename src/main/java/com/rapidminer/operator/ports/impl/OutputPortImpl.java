@@ -19,13 +19,17 @@
 package com.rapidminer.operator.ports.impl;
 
 import com.rapidminer.Process;
+import com.rapidminer.adaption.belt.IOTable;
 import com.rapidminer.operator.DebugMode;
 import com.rapidminer.operator.IOObject;
+import com.rapidminer.operator.OperatorException;
+import com.rapidminer.operator.WrapperOperatorRuntimeException;
 import com.rapidminer.operator.ports.DeliveringPortManager;
+import com.rapidminer.operator.ports.OutputPort;
 import com.rapidminer.operator.ports.OutputPorts;
-import com.rapidminer.operator.ports.Port;
 import com.rapidminer.operator.ports.Ports;
 import com.rapidminer.operator.ports.metadata.MetaData;
+import com.rapidminer.tools.belt.BeltTools;
 
 
 /**
@@ -35,22 +39,24 @@ import com.rapidminer.operator.ports.metadata.MetaData;
 public class OutputPortImpl extends AbstractOutputPort {
 
 	/** Use the factory method {@link OutputPorts#createPort(String)} to create OutputPorts. */
-	protected OutputPortImpl(Ports<? extends Port> owner, String name, boolean simulatesStack) {
+	protected OutputPortImpl(Ports<OutputPort> owner, String name, boolean simulatesStack) {
 		super(owner, name, simulatesStack);
 	}
 
 	@Override
 	public void deliver(IOObject object) {
+		// disallow advanced columns outside operators until the capability provider can handle them
+		if (object instanceof IOTable && BeltTools.hasAdvanced(((IOTable) object).getTable())) {
+			throw new WrapperOperatorRuntimeException(new OperatorException("No advanced columns allowed outside Operators"));
+		}
 
 		// registering history of object
 		if (object != null) {
 			object.appendOperatorToHistory(getPorts().getOwner().getOperator(), this);
 			DeliveringPortManager.setLastDeliveringPort(object, this);
 			// set source if not yet set
-			if (object.getSource() == null) {
-				if (getPorts().getOwner().getOperator() != null) {
-					object.setSource(getPorts().getOwner().getOperator().getName());
-				}
+			if (object.getSource() == null && getPorts().getOwner().getOperator() != null) {
+				object.setSource(getPorts().getOwner().getOperator().getName());
 			}
 		}
 

@@ -40,7 +40,7 @@ import com.rapidminer.connection.ConnectionInformationSerializer;
 import com.rapidminer.connection.configuration.ConnectionConfiguration;
 import com.rapidminer.connection.configuration.ConnectionConfigurationBuilder;
 import com.rapidminer.connection.configuration.ConnectionConfigurationImpl;
-import com.rapidminer.repository.Entry;
+import com.rapidminer.repository.ConnectionEntry;
 import com.rapidminer.repository.Folder;
 import com.rapidminer.repository.Repository;
 import com.rapidminer.repository.RepositoryException;
@@ -88,7 +88,7 @@ public class ResourceFolderTest {
 		setId.invoke(config, TEST_CON_ID);
 		ConnectionInformation connection = new ConnectionInformationBuilder(config).withLibraryFiles(Collections.singletonList(libJDBCPath))
 				.withOtherFiles(Collections.singletonList(readmePath)).build();
-		ConnectionInformationSerializer.LOCAL.serialize(connection, Files.newOutputStream(junitPath.resolve(TEST_CON_NAME + SimpleConnectionEntry.CON_SUFFIX)));
+		ConnectionInformationSerializer.INSTANCE.serialize(connection, Files.newOutputStream(junitPath.resolve(TEST_CON_NAME + SimpleConnectionEntry.CON_SUFFIX)), null);
 	}
 
 	@BeforeClass
@@ -107,10 +107,10 @@ public class ResourceFolderTest {
 	@Test
 	public void readResourceRepository() throws RepositoryException {
 		final Repository testRepo = repositoryManager.getRepository("test");
-		final Entry entry = testRepo.locate(Folder.CONNECTION_FOLDER_NAME + '/' + TEST_CON_NAME);
+		final ConnectionEntry entry = testRepo.locateData(Folder.CONNECTION_FOLDER_NAME + '/' + TEST_CON_NAME, ConnectionEntry.class, true);
 		Assert.assertNotNull(entry);
 		Assert.assertTrue(entry instanceof ResourceConnectionEntry);
-		ConnectionInformation ci = ((ConnectionInformationContainerIOObject) ((ResourceConnectionEntry) entry).retrieveData(null)).getConnectionInformation();
+		ConnectionInformation ci = ((ConnectionInformationContainerIOObject) entry.retrieveData(null)).getConnectionInformation();
 		Assert.assertNotNull(ci);
 		Assert.assertEquals("The type entry of the JSON configuration in the ConnectionInformation object should be '" + TEST_CON_TYPE + "'",
 				TEST_CON_TYPE, ci.getConfiguration().getType());

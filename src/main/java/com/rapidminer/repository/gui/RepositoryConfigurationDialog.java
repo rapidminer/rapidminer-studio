@@ -30,6 +30,7 @@ import com.rapidminer.gui.tools.dialogs.ButtonDialog;
 import com.rapidminer.repository.Repository;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.internal.remote.RemoteRepository;
+import com.rapidminer.repository.versioned.NewVersionedRepository;
 
 
 /**
@@ -46,7 +47,7 @@ public class RepositoryConfigurationDialog extends ButtonDialog {
 	private Repository repository;
 
 	public RepositoryConfigurationDialog(Repository repository) {
-		super(ApplicationFrame.getApplicationFrame(), (repository instanceof RemoteRepository ? "remote" : "")
+		super(ApplicationFrame.getApplicationFrame(), (repository instanceof RemoteRepository ? "remote" : (repository instanceof NewVersionedRepository ? "project" : ""))
 				+ "repositoryconfigdialog", ModalityType.APPLICATION_MODAL, new Object[0]);
 		this.repository = repository;
 		JButton okButton = makeOkButton("repository_configuration_dialog.save");

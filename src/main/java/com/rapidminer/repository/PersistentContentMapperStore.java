@@ -25,10 +25,12 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.logging.Level;
 
 import org.apache.commons.io.FileUtils;
@@ -36,7 +38,11 @@ import org.apache.commons.io.FileUtils;
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.tools.FileSystemService;
+import com.rapidminer.tools.FunctionWithThrowable;
 import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.TempFileTools;
+import com.rapidminer.tools.ValidationUtil;
+import com.rapidminer.tools.io.EmptyDirCleaner;
 
 
 /**
@@ -72,6 +78,52 @@ public enum PersistentContentMapperStore {
 
 	INSTANCE;
 
+	/**
+	 * Interface indicating a content serializer that can write an object of type {@code T} into the store.
+	 *
+	 * @param <T>
+	 * 		the type to be serialized
+	 * @author Jan Czogalla
+	 * @see PersistentContentMapperStore#store(String, Object, ContentSerializer, RepositoryLocation, String)
+	 * @since 9.7
+	 */
+	public interface ContentSerializer<T> {
+		/** Serializes the given object {@code t} to the specified path */
+		void serialize(Path path, T t) throws IOException;
+
+	}
+
+	/**
+	 * Interface indicating a content deserializer that can read an object of type {@code T} from the store.
+	 *
+	 * @param <T>
+	 * @author Jan Czogalla
+	 * @see PersistentContentMapperStore#retrieve(String, ContentDeserializer, RepositoryLocation, String)
+	 * @since 9.7
+	 */
+	public interface ContentDeserializer<T> extends FunctionWithThrowable<Path, T, IOException> {
+		/** Deserializes the object from the specified path */
+		T deserialize(Path path) throws IOException;
+
+		@Override
+		default T applyWithException(Path path) throws IOException {
+			return deserialize(path);
+		}
+	}
+
+	/**
+	 * Default String serializer
+	 * @since 9.7
+	 */
+	public static final ContentSerializer<String> STRING_CONTENT_SERIALIZER = (Path p, String s) ->
+			Files.write(p, s.getBytes(StandardCharsets.UTF_8),
+					StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+	/**
+	 * Default String deserializer
+	 * @since 9.7
+	 */
+	public static final ContentDeserializer<String> STRING_CONTENT_DESERIALIZER = p ->
+			FileUtils.readFileToString(p.toFile(), StandardCharsets.UTF_8);
 
 	private static final String UNSAVED_PATH = ".unsaved";
 
@@ -87,17 +139,6 @@ public enum PersistentContentMapperStore {
 	PersistentContentMapperStore() {
 		storeRepoRootPath = FileSystemService.getUserRapidMinerDir().toPath().resolve(FileSystemService.RAPIDMINER_INTERNAL_CACHE_CONTENT_MAPPER_STORE_FULL);
 		storeNoLocationPath = FileSystemService.getUserRapidMinerDir().toPath().resolve(FileSystemService.RAPIDMINER_INTERNAL_CACHE_CONTENT_MAPPER_STORE_FULL).resolve(UNSAVED_PATH);
-		repositoryManagerListener = new RepositoryManagerListener() {
-			@Override
-			public void repositoryWasAdded(Repository repository) {
-				repository.addRepositoryListener(repositoryListener);
-			}
-
-			@Override
-			public void repositoryWasRemoved(Repository repository) {
-				repository.removeRepositoryListener(repositoryListener);
-			}
-		};
 		repositoryListener = new RepositoryListener() {
 			@Override
 			public void entryAdded(Entry newEntry, Folder parent) {
@@ -126,6 +167,17 @@ public enum PersistentContentMapperStore {
 			@Override
 			public void folderRefreshed(Folder folder) {
 				// ignored
+			}
+		};
+		repositoryManagerListener = new RepositoryManagerListener() {
+			@Override
+			public void repositoryWasAdded(Repository repository) {
+				repository.addRepositoryListener(repositoryListener);
+			}
+
+			@Override
+			public void repositoryWasRemoved(Repository repository) {
+				repository.removeRepositoryListener(repositoryListener);
 			}
 		};
 
@@ -198,8 +250,58 @@ public enum PersistentContentMapperStore {
 	 * 		if something goes wrong during writing to disk
 	 */
 	public void store(String key, String content, RepositoryLocation location, String additionalHash) throws IOException {
-		if (key == null || key.trim().isEmpty()) {
-			throw new IllegalArgumentException("key must not be null or empty!");
+		store(key, content, STRING_CONTENT_SERIALIZER, location, additionalHash);
+	}
+
+	/**
+	 * Stores the given (generic) content for the given {@link RepositoryLocation} under the given key with the provided
+	 * {@link ContentSerializer}.
+	 *
+	 * @param <T>
+	 *		the content type
+	 * @param key
+	 * 		the key, used to later retrieve the content again. Storing again for the same location and the same key will
+	 * 		overwrite any existing content already stored!
+	 * @param content
+	 * 		the content to be persisted. If {@code null}, will simply delete the stored content file
+	 * @param serializer
+	 * 		the content serializer to actually write to disk
+	 * @param location
+	 * 		the repository location for which the content should be persisted
+	 * @throws IOException
+	 * 		if something goes wrong during writing to disk
+	 * @since 9.7
+	 */
+	public <T> void store(String key, T content, ContentSerializer<T> serializer, RepositoryLocation location) throws IOException {
+		store(key, content, serializer, location, null);
+	}
+
+	/**
+	 * Stores the given (generic) content for the given {@link RepositoryLocation} under the given key with the provided
+	 * {@link ContentSerializer}.
+	 *
+	 * @param <T>
+	 *		the content type
+	 * @param key
+	 * 		the key, used to later retrieve the content again. Storing again for the same location and the same key will
+	 * 		overwrite any existing content already stored!
+	 * @param content
+	 * 		the content to be persisted. If {@code null}, will simply delete the stored content file
+	 * @param serializer
+	 * 		the content serializer to actually write to disk
+	 * @param location
+	 * 		the repository location for which the content should be persisted
+	 * @param additionalHash
+	 * 		optional, another identifier if repository location alone is not sufficient, e.g. when you also need to take
+	 * 		the data content into account. Ignored if {@code null}
+	 * @throws IOException
+	 * 		if something goes wrong during writing to disk
+	 * @since 9.7
+	 */
+	public <T> void store(String key, T content, ContentSerializer<T> serializer, RepositoryLocation location, String additionalHash) throws IOException {
+		key = ValidationUtil.requireNonEmptyString(key, "key");
+		if (content != null) {
+			ValidationUtil.requireNonNull(serializer, "serializer");
 		}
 		if (location == null && additionalHash == null) {
 			throw new IllegalArgumentException("location and additionalHash must not be null at the same time!");
@@ -212,9 +314,11 @@ public enum PersistentContentMapperStore {
 			if (!Files.exists(filePath.getParent())) {
 				Files.createDirectories(filePath.getParent());
 			}
-			Files.write(filePath, content.getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+			serializer.serialize(filePath, content);
 		} else {
-			FileUtils.deleteQuietly(filePath.toFile());
+			if (!FileUtils.deleteQuietly(filePath.toFile())) {
+				TempFileTools.registerCleanup(filePath);
+			}
 		}
 	}
 
@@ -268,9 +372,54 @@ public enum PersistentContentMapperStore {
 	 * 		if something goes wrong during reading from disk
 	 */
 	public String retrieve(String key, RepositoryLocation location, String additionalHash) throws IOException {
-		if (key == null || key.trim().isEmpty()) {
-			throw new IllegalArgumentException("key must not be null or empty!");
-		}
+		return retrieve(key, STRING_CONTENT_DESERIALIZER, location, additionalHash);
+	}
+
+	/**
+	 * Retrieves the(generic) content for the given {@link RepositoryLocation} under the given key using the provided
+	 * {@link ContentDeserializer}. Can return {@code null} if nothing was persisted yet.
+	 *
+	 * @param <T>
+	 * 		the content type
+	 * @param key
+	 * 		the key which was used to earlier store the content.
+	 * @param deserializer
+	 * 		the deserializer for the given content key
+	 * @param location
+	 * 		the repository location for which the content should be read
+	 * @return the persisted content or {@code null} if nothing was persisted yet
+	 * @throws IOException
+	 * 		if something goes wrong during reading from disk
+	 * @since 9.7
+	 */
+	public <T> T retrieve(String key, ContentDeserializer<T> deserializer, RepositoryLocation location) throws IOException {
+		return retrieve(key, deserializer, location, null);
+	}
+
+	/**
+	 * Retrieves the(generic) content for the given {@link RepositoryLocation} under the given key using the provided
+	 * {@link ContentDeserializer}. Can return {@code null} if nothing was persisted yet.
+	 *
+	 * @param <T>
+	 * 		the content type
+	 * @param key
+	 * 		the key which was used to earlier store the content.
+	 * @param deserializer
+	 * 		the deserializer for the given content key
+	 * @param location
+	 * 		the repository location for which the content should be read
+	 * @param additionalHash
+	 * 		another identifier if repository location alone is not sufficient, e.g. when you also need to take the data
+	 * 		content into account. Ignored if {@code null}. See {@link #createHash(Object)}, but you can also provide your
+	 * 		own hash
+	 * @return the persisted content or {@code null} if nothing was persisted yet
+	 * @throws IOException
+	 * 		if something goes wrong during reading from disk
+	 * @since 9.7
+	 */
+	public <T> T retrieve(String key, ContentDeserializer<T> deserializer, RepositoryLocation location, String additionalHash) throws IOException {
+		key = ValidationUtil.requireNonEmptyString(key, "key");
+		ValidationUtil.requireNonNull(deserializer, "deserializer");
 		if (location == null && additionalHash == null) {
 			return null;
 		}
@@ -281,7 +430,45 @@ public enum PersistentContentMapperStore {
 		if (!Files.exists(filePath)) {
 			return null;
 		}
-		return FileUtils.readFileToString(filePath.toFile(), StandardCharsets.UTF_8);
+		return deserializer.deserialize(filePath);
+	}
+
+	/**
+	 * Copies all content keys from the old location to the new location. Can be used when duplicating single
+	 * {@link Entry entries} or a {@link Folder}.
+	 *
+	 * @param oldLocation
+	 * 		the old location to copy from
+	 * @param newLocation
+	 * 		the new location to copy to
+	 * @since 9.7
+	 */
+	public void copyContent(RepositoryLocation oldLocation, RepositoryLocation newLocation) {
+		repositoryEntryMovedOrCopied(oldLocation, newLocation, false);
+	}
+
+	/**
+	 * Clears the list of given content keys from the specified {@link RepositoryLocation} and cleans up empty folders afterwards
+	 *
+	 * @param keys
+	 * 		the content keys to remove
+	 * @param location
+	 * 		the location to remove the keys from
+	 * @since 9.7
+	 */
+	public void clearKeys(List<String> keys, RepositoryLocation location) {
+		String pathString = createPath(location, null);
+		Path rootPath = storeRepoRootPath.resolve(pathString);
+		if (!Files.exists(rootPath)) {
+			return;
+		}
+		Predicate<Path> deleteFile = path -> keys != null && keys.contains(path.getFileName().toString());
+
+		try {
+			Files.walkFileTree(rootPath, new EmptyDirCleaner(deleteFile));
+		} catch (IOException e) {
+			// ignore
+		}
 	}
 
 	/**
@@ -289,6 +476,7 @@ public enum PersistentContentMapperStore {
 	 */
 	void init() {
 		RepositoryManager.getInstance(null).addRepositoryManagerListener(repositoryManagerListener);
+		RepositoryManager.getInstance(null).getRepositories().forEach(repo -> repo.addRepositoryListener(repositoryListener));
 	}
 
 
@@ -302,13 +490,8 @@ public enum PersistentContentMapperStore {
 	 * 		the hash generator, never {@code null}
 	 */
 	public <T> void registerHashGenerator(Class<T> objectClass, Function<T, String> generator) {
-		if (objectClass == null) {
-			throw new IllegalArgumentException("objectClass must not be null!");
-		}
-		if (generator == null) {
-			throw new IllegalArgumentException("generator must not be null!");
-		}
-
+		ValidationUtil.requireNonNull(objectClass, "object class");
+		ValidationUtil.requireNonNull(generator, "generator");
 		hashProviderRegistry.putIfAbsent(objectClass, generator);
 	}
 
@@ -398,14 +581,38 @@ public enum PersistentContentMapperStore {
 	 */
 	private void repositoryEntryMoved(Entry newEntry, Folder formerParent, String formerName) {
 		try {
-			RepositoryLocation oldFullLoc = new RepositoryLocation(formerParent.getLocation().getAbsoluteLocation() + RepositoryLocation.SEPARATOR + formerName);
-			Path oldFolder = storeRepoRootPath.resolve(createPath(oldFullLoc, null));
-			if (Files.exists(oldFolder)) {
-				Path newFolder = storeRepoRootPath.resolve(createPath(newEntry.getLocation(), null));
-				FileUtils.moveDirectory(oldFolder.toFile(), newFolder.toFile());
-			}
-		} catch (MalformedRepositoryLocationException | IOException e) {
+			String locString = formerParent.getLocation().getAbsoluteLocation() + RepositoryLocation.SEPARATOR + formerName;
+			RepositoryLocation newEntryLocation = newEntry.getLocation();
+			RepositoryLocation oldFullLoc = new RepositoryLocationBuilder().withLocationType(newEntryLocation.getLocationType()).
+					withExpectedDataEntryType(newEntryLocation.getExpectedDataEntryType()).buildFromAbsoluteLocation(locString);
+			repositoryEntryMovedOrCopied(oldFullLoc, newEntryLocation, true);
+		} catch (MalformedRepositoryLocationException e) {
 			LogService.getRoot().log(Level.WARNING, "com.rapidminer.repository.PersistentContentMapperStore.entry_rename_update_failed", e);
+		}
+	}
+
+	/**
+	 * Moves or copies all content keys from the old location to the new location
+	 *
+	 * @since 9.7
+	 */
+	private void repositoryEntryMovedOrCopied(RepositoryLocation oldLocation, RepositoryLocation newLocation, boolean move) {
+		try {
+			Path oldFolder = storeRepoRootPath.resolve(createPath(oldLocation, null));
+			if (Files.exists(oldFolder)) {
+				Path newFolder = storeRepoRootPath.resolve(createPath(newLocation, null));
+				if (move) {
+					FileUtils.moveDirectory(oldFolder.toFile(), newFolder.toFile());
+				} else {
+					FileUtils.copyDirectory(oldFolder.toFile(), newFolder.toFile());
+				}
+			}
+		} catch (IOException e) {
+			String messageKey = "entry_rename_update_failed";
+			if (!move) {
+				messageKey = "entry_copy_update_failed";
+			}
+			LogService.getRoot().log(Level.WARNING, "com.rapidminer.repository.PersistentContentMapperStore." + messageKey, e);
 		}
 	}
 
@@ -428,9 +635,10 @@ public enum PersistentContentMapperStore {
 		}
 
 		if (location != null) {
-			return location.getRepositoryName() + "/" + location.getPath();
+			return location.getRepositoryName() + "/" + RepositoryTools.getPathWithSuffix(location);
 		} else {
 			return UUID.nameUUIDFromBytes(hash.getBytes()).toString();
 		}
 	}
+
 }

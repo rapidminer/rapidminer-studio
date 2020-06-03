@@ -18,6 +18,10 @@
 */
 package com.rapidminer.gui.actions;
 
+import java.awt.event.ActionEvent;
+import java.io.IOException;
+import java.io.OutputStream;
+
 import com.rapidminer.connection.ConnectionInformationContainerIOObject;
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.tools.ProgressThread;
@@ -25,13 +29,18 @@ import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.gui.tools.dialogs.ConfirmDialog;
 import com.rapidminer.operator.IOObject;
+import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.ResultObject;
+import com.rapidminer.operator.nio.file.FileObject;
+import com.rapidminer.repository.BinaryEntry;
+import com.rapidminer.repository.BlobEntry;
+import com.rapidminer.repository.IOObjectEntry;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryLocation;
+import com.rapidminer.repository.RepositoryLocationBuilder;
 import com.rapidminer.repository.RepositoryManager;
 import com.rapidminer.repository.gui.RepositoryLocationChooser;
-
-import java.awt.event.ActionEvent;
+import com.rapidminer.tools.Tools;
 
 
 /**
@@ -64,15 +73,27 @@ public class StoreInRepositoryAction extends ResourceAction {
 				true, true, true, object instanceof ConnectionInformationContainerIOObject ? RepositoryLocationChooser.ONLY_CONNECTIONS : RepositoryLocationChooser.NO_CONNECTIONS);
 		if (loc != null) {
 			RepositoryLocation location;
+			boolean isBinaryEntry;
 			try {
-				location = new RepositoryLocation(loc);
+				if (object instanceof FileObject) {
+					location = new RepositoryLocationBuilder().withExpectedDataEntryType(BinaryEntry.class).buildFromAbsoluteLocation(loc);
+					isBinaryEntry = true;
+				} else {
+					location = new RepositoryLocationBuilder().withExpectedDataEntryType(IOObjectEntry.class).buildFromAbsoluteLocation(loc);
+					isBinaryEntry = false;
+				}
 			} catch (Exception ex) {
 				SwingTools.showSimpleErrorMessage("malformed_rep_location", ex, loc);
 				return;
 			}
+
 			try {
 				// check for overwrite
-				if (location.locateEntry() != null && SwingTools.showConfirmDialog("overwrite", ConfirmDialog.YES_NO_OPTION, location) != ConfirmDialog.YES_OPTION) {
+				if (isBinaryEntry && !location.getRepository().isSupportingBinaryEntries()) {
+					// deal with legacy repos
+					location.setExpectedDataEntryType(BlobEntry.class);
+				}
+				if (location.locateData() != null && SwingTools.showConfirmDialog("overwrite", ConfirmDialog.YES_NO_OPTION, location) != ConfirmDialog.YES_OPTION) {
 					return;
 				}
 				ProgressThread storePT = new ProgressThread("store_ioobject", false, getI18nName(object)) {
@@ -80,9 +101,23 @@ public class StoreInRepositoryAction extends ResourceAction {
 					@Override
 					public void run() {
 						try {
-							RepositoryManager.getInstance(null).store(object, location, null);
+							if (isBinaryEntry) {
+								OutputStream os;
+								if (location.getRepository().isSupportingBinaryEntries()) {
+									// modern repo -> store as binary entry
+									BinaryEntry newEntry = RepositoryManager.getInstance(null).getOrCreateBinaryEntry(location);
+									os = newEntry.openOutputStream();
+								} else {
+									// old repo -> store as blob entry
+									BlobEntry newEntry = RepositoryManager.getInstance(null).getOrCreateBlob(location);
+									os = newEntry.openOutputStream("application/octet-stream");
+								}
+								Tools.copyStreamSynchronously(((FileObject) object).openStream(), os, true);
+							} else {
+								RepositoryManager.getInstance(null).store(object, location, null);
+							}
 							lastLocation = location;
-						} catch (RepositoryException ex) {
+						} catch (RepositoryException | OperatorException | IOException ex) {
 							SwingTools.showSimpleErrorMessage("cannot_store_obj_at_location", ex, loc);
 						}
 					}

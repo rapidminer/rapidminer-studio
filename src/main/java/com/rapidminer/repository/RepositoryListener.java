@@ -103,7 +103,7 @@ public interface RepositoryListener extends EventListener {
 	 * Fired when a {@link RemoteRepository} has been disconnected. Does nothing by default.
 	 *
 	 * @param repository
-	 * 		the repository that ahs been disconnected
+	 * 		the repository that has been disconnected
 	 * @since 8.2.1
 	 */
 	default void repositoryDisconnected(RemoteRepository repository){}

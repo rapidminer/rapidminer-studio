@@ -44,7 +44,7 @@ public interface RemoteRepositoryFactory extends CustomRepositoryFactory {
 	 * @param name
 	 *            the repository name
 	 * @param repositoryURL
-	 *            the URL of the Server repository
+	 *            the URL of the AI Hub repository
 	 * @param userName
 	 *            the username
 	 * @param password
@@ -60,7 +60,7 @@ public interface RemoteRepositoryFactory extends CustomRepositoryFactory {
 	 * Creates a new {@link RemoteRepository} instance for the provided parameters
 	 *
 	 * @param baseUrl
-	 *            the Server base URL
+	 *            the AI Hub base URL
 	 * @param alias
 	 *            the repository alias
 	 * @param username
@@ -87,7 +87,7 @@ public interface RemoteRepositoryFactory extends CustomRepositoryFactory {
 	 * @param name
 	 *            the repository name
 	 * @param repositoryURL
-	 *            the URL of the Server repository
+	 *            the URL of the AI Hub repository
 	 * @param userName
 	 *            the username
 	 * @param password
@@ -105,7 +105,7 @@ public interface RemoteRepositoryFactory extends CustomRepositoryFactory {
 	 * Creates a new {@link RemoteRepository} instance for the provided parameters
 	 *
 	 * @param baseUrl
-	 *            the Server base URL
+	 *            the AI Hub base URL
 	 * @param alias
 	 *            the repository alias
 	 * @param username

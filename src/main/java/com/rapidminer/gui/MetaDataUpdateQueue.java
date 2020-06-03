@@ -35,6 +35,7 @@ import com.rapidminer.gui.tools.ProgressThreadStateListener;
 import com.rapidminer.gui.tools.UpdateQueue;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.ProcessTools;
 
 
 /**
@@ -126,7 +127,7 @@ public class MetaDataUpdateQueue extends UpdateQueue {
 	 * given {@link Process}. Will do nothing if a validation was not triggered for the process.
 	 */
 	public static void registerMDGeneration(Process process, ProgressThread generation) {
-		MD_GENERATION_CHECKERS.getOrDefault(process, new ArrayList<>()).forEach(l -> l.registerThread(generation));
+		MD_GENERATION_CHECKERS.getOrDefault(ProcessTools.getParentProcess(process), new ArrayList<>()).forEach(l -> l.registerThread(generation));
 	}
 
 	/**

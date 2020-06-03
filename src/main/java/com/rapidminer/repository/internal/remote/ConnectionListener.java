@@ -19,7 +19,7 @@
 package com.rapidminer.repository.internal.remote;
 
 /**
- * Listens to the connections of a RapidMiner Server repository.
+ * Listens to the connections of a RapidMiner AI Hub repository.
  *
  * @author Simon Fischer
  *

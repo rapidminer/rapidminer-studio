@@ -33,6 +33,7 @@ import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -56,13 +57,10 @@ import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
-import com.rapidminer.RepositoryProcessLocation;
-import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.actions.OpenAction;
 import com.rapidminer.gui.actions.ToggleAction;
 import com.rapidminer.gui.dnd.AbstractPatchedTransferHandler;
 import com.rapidminer.gui.dnd.DragListener;
-import com.rapidminer.gui.dnd.RepositoryLocationList;
 import com.rapidminer.gui.dnd.TransferableOperator;
 import com.rapidminer.gui.dnd.TransferableRepositoryEntry;
 import com.rapidminer.gui.tools.ProgressThread;
@@ -70,16 +68,17 @@ import com.rapidminer.gui.tools.ProgressThreadDialog;
 import com.rapidminer.gui.tools.RepositoryGuiTools;
 import com.rapidminer.gui.tools.ResourceActionAdapter;
 import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.gui.tools.SwingTools.ResultRunnable;
 import com.rapidminer.gui.tools.components.ToolTipWindow;
 import com.rapidminer.gui.tools.components.ToolTipWindow.TipProvider;
 import com.rapidminer.gui.tools.components.ToolTipWindow.TooltipLocation;
 import com.rapidminer.gui.tools.dialogs.ConfirmDialog;
 import com.rapidminer.gui.tools.dialogs.SelectionDialog;
+import com.rapidminer.repository.BinaryEntry;
 import com.rapidminer.repository.ConnectionEntry;
 import com.rapidminer.repository.DataEntry;
 import com.rapidminer.repository.Entry;
 import com.rapidminer.repository.Folder;
+import com.rapidminer.repository.MalformedRepositoryLocationException;
 import com.rapidminer.repository.ProcessEntry;
 import com.rapidminer.repository.Repository;
 import com.rapidminer.repository.RepositoryActionCondition;
@@ -91,6 +90,8 @@ import com.rapidminer.repository.RepositoryConnectionsFolderImmutableException;
 import com.rapidminer.repository.RepositoryConnectionsNotSupportedException;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryLocation;
+import com.rapidminer.repository.RepositoryLocationBuilder;
+import com.rapidminer.repository.RepositoryLocationType;
 import com.rapidminer.repository.RepositoryManager;
 import com.rapidminer.repository.RepositoryNotConnectionsFolderException;
 import com.rapidminer.repository.RepositorySortingMethod;
@@ -109,6 +110,7 @@ import com.rapidminer.repository.gui.actions.DeleteRepositoryEntryAction;
 import com.rapidminer.repository.gui.actions.EditConnectionAction;
 import com.rapidminer.repository.gui.actions.OpenEntryAction;
 import com.rapidminer.repository.gui.actions.OpenInFileBrowserAction;
+import com.rapidminer.repository.gui.actions.OpenInOperatingSystemAction;
 import com.rapidminer.repository.gui.actions.PasteEntryRepositoryAction;
 import com.rapidminer.repository.gui.actions.RefreshRepositoryEntryAction;
 import com.rapidminer.repository.gui.actions.RenameRepositoryEntryAction;
@@ -118,13 +120,18 @@ import com.rapidminer.repository.gui.actions.SortByNameAction;
 import com.rapidminer.repository.gui.actions.StoreProcessAction;
 import com.rapidminer.repository.internal.remote.RemoteRepository;
 import com.rapidminer.repository.local.LocalRepository;
+import com.rapidminer.repository.local.SimpleFolder;
+import com.rapidminer.repository.versioned.BasicBinaryEntry;
+import com.rapidminer.repository.versioned.NewFilesystemRepository;
 import com.rapidminer.studio.io.gui.internal.DataImportWizardBuilder;
 import com.rapidminer.studio.io.gui.internal.DataImportWizardUtils;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.PasswordInputCanceledException;
 import com.rapidminer.tools.ProgressListener;
+import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.usagestats.ActionStatisticsCollector;
+import com.rapidminer.versioning.repository.FileTypeHandlerRegistry;
 
 
 /**
@@ -139,6 +146,18 @@ import com.rapidminer.tools.usagestats.ActionStatisticsCollector;
  */
 public class RepositoryTree extends JTree {
 
+	/** what happens when user encounters existing files when moving/copying/inserting multiple files */
+	private static final class UserDecisions {
+
+		private boolean repeatDecision = false;
+		private boolean overwriteIfExists = false;
+		private int lastDecision = 0;
+	}
+
+	private static final int INSERT = 1;
+	private static final int OVERWRITE = 2;
+	private static final int SKIP = 3;
+
 	/**
 	 * @author Nils Woehler, Adrian Wilke
 	 *
@@ -146,6 +165,10 @@ public class RepositoryTree extends JTree {
 	private final class RepositoryTreeTransferhandler extends AbstractPatchedTransferHandler {
 
 		private static final long serialVersionUID = 1L;
+		private static final String EXISTING_ENTRY_DUPLICATE = "existing_entry.insert";
+		private static final String EXISTING_ENTRY_OVERWRITE = "existing_entry.overwrite";
+		private static final String EXISTING_ENTRY_SKIP = "existing_entry.skip";
+		private static final String EXISTING_ENTRY_REPEAT = "existing_entry.repeat";
 
 		// Remember whether the last cut/copy action was a MOVE
 		// A move will result in the entry being deleted upon drop / paste
@@ -218,9 +241,7 @@ public class RepositoryTree extends JTree {
 					Object transferData = ts.getTransferable()
 							.getTransferData(TransferableOperator.LOCAL_TRANSFERRED_REPOSITORY_LOCATION_LIST_FLAVOR);
 					List<RepositoryLocation> locations;
-					if (transferData instanceof RepositoryLocationList) {
-						locations = ((RepositoryLocationList) transferData).getAll();
-					} else if (transferData instanceof RepositoryLocation[]) {
+					if (transferData instanceof RepositoryLocation[]) {
 						locations = Arrays.asList((RepositoryLocation[]) transferData);
 					} else {
 						// should not happen
@@ -229,15 +250,133 @@ public class RepositoryTree extends JTree {
 					return copyOrMoveRepositoryEntries(droppedOnEntry, locations, ts);
 
 				} else if (flavors.contains(DataFlavor.javaFileListFlavor)) {
-					// Import file via wizard
-
 					@SuppressWarnings("unchecked")
 					List<File> files = (List<File>) ts.getTransferable().getTransferData(DataFlavor.javaFileListFlavor);
-					File file = files.get(0);
-					DataImportWizardBuilder builder = new DataImportWizardBuilder();
-					builder.setCallback(DataImportWizardUtils.showInResultsCallback());
-					builder.forFile(file.toPath()).build(owner).getDialog().setVisible(true);
-					return true;
+					Folder folder;
+					if (!(droppedOnEntry instanceof Folder)) {
+						folder = droppedOnEntry.getContainingFolder();
+					} else {
+						folder = (Folder) droppedOnEntry;
+					}
+					if (!folder.isSupportingBinaryEntries()) {
+						if (ts.isDrop()) {
+							// drag & drop
+							File file = files.get(0);
+							DataImportWizardBuilder builder = new DataImportWizardBuilder();
+							builder.setCallback(DataImportWizardUtils.showInResultsCallback());
+							builder.forFile(file.toPath()).build(owner).getDialog().setVisible(true);
+							return true;
+						} else {
+							// copy & paste
+							SwingTools.showVerySimpleErrorMessage("cannot_paste_binary_file_unsupported");
+							return false;
+						}
+					} else {
+						// Allow to drop or copy & paste binary files directly from disk into a repo that supports it!
+						new ProgressThread("import_binary_entry", true) {
+							/** Total progress of progress listener bar */
+							private int progressListenerCompleted = 0;
+							private boolean shownSkipWarning = false;
+
+							/** Step size for single entry operation */
+							private final int PROGRESS_LISTENER_SINGLE_STEP_SIZE = 100;
+
+							@Override
+							public void run() {
+								final UserDecisions userDecisions = new UserDecisions();
+								// Initialize progress listener
+								getProgressListener().setTotal(files.size() * PROGRESS_LISTENER_SINGLE_STEP_SIZE);
+								getProgressListener().setCompleted(progressListenerCompleted);
+
+								for (File file : files) {
+									String name = file.getName();
+									if (FileTypeHandlerRegistry.getRegisteredSuffixes().contains(RepositoryTools.getSuffixFromFilename(name))) {
+										if (!shownSkipWarning) {
+											shownSkipWarning = true;
+											SwingTools.showVerySimpleErrorMessage("binary_repository_import_cannot_import_known_ending", name);
+										}
+										continue;
+									}
+									try {
+										String newEntryName = name;
+
+										// check for overrides
+										RepositoryLocation futureRepoLoc = new RepositoryLocationBuilder().withExpectedDataEntryType(BinaryEntry.class).buildFromParentLocation(folder.getLocation(), name);
+										BinaryEntry oldEntry = futureRepoLoc.locateData();
+										boolean isSingleEntryOperation = files.size() == 1;
+										if (oldEntry != null) {
+											// entry with that full name already exists
+											// ask user how to proceed
+											if (!userDecisions.repeatDecision) {
+
+												final List<String> optionsToSelect = new ArrayList<>(3);
+												optionsToSelect.add(EXISTING_ENTRY_DUPLICATE);
+												optionsToSelect.add(EXISTING_ENTRY_OVERWRITE);
+												optionsToSelect.add(EXISTING_ENTRY_SKIP);
+												final List<String> optionsToCheck = new ArrayList<>(1);
+												if (!isSingleEntryOperation) {
+													optionsToCheck.add(EXISTING_ENTRY_REPEAT);
+												}
+
+												int result = SwingTools.invokeAndWaitWithResult(() -> {
+													SelectionDialog selectionDialog = new SelectionDialog(
+															ProgressThreadDialog.getInstance(), "existing_entry",
+															SelectionDialog.OK_CANCEL_OPTION, new String[]{name},
+															optionsToSelect, optionsToCheck).showDialog();
+
+													if (selectionDialog.isOptionSelected(EXISTING_ENTRY_DUPLICATE)) {
+														userDecisions.lastDecision = INSERT;
+													} else if (selectionDialog.isOptionSelected(EXISTING_ENTRY_OVERWRITE)) {
+														userDecisions.lastDecision = OVERWRITE;
+													} else {
+														userDecisions.lastDecision = SKIP;
+													}
+													if (selectionDialog.isOptionChecked(EXISTING_ENTRY_REPEAT)) {
+														userDecisions.repeatDecision = true;
+													}
+													return selectionDialog.getResult();
+												});
+
+												if (result != SelectionDialog.OK_OPTION) {
+													break;
+												}
+											}
+
+											switch (userDecisions.lastDecision) {
+												case INSERT:
+													userDecisions.overwriteIfExists = false;
+													break;
+												case OVERWRITE:
+													userDecisions.overwriteIfExists = true;
+													break;
+												case SKIP:
+												default:
+													continue;
+											}
+
+											if (userDecisions.overwriteIfExists) {
+												// user has selected overwrite
+												oldEntry.delete();
+											} else {
+												newEntryName = RepositoryManager.getInstance(null).getNewNameForExistingData(folder, name, true);
+											}
+										}
+										BinaryEntry binEntry = folder.createBinaryEntry(newEntryName);
+										Tools.copyStreamSynchronously(Files.newInputStream(file.toPath()), binEntry.openOutputStream(), true);
+									} catch (RepositoryException | MalformedRepositoryLocationException | IOException e) {
+										LogService.getRoot().log(Level.WARNING, "com.rapidminer.repository.RepositoryTree.error_during_binary_drop", e);
+										SwingTools.showSimpleErrorMessage("error_in_binary_repository_import", e, name, e.getMessage());
+									}
+
+									progressListenerCompleted += PROGRESS_LISTENER_SINGLE_STEP_SIZE;
+									getProgressListener().setCompleted(progressListenerCompleted);
+								}
+
+								getProgressListener().complete();
+							}
+						}.start();
+						return true;
+					}
 				} else {
 					// Flavor not supported
 					return false;
@@ -282,17 +421,6 @@ public class RepositoryTree extends JTree {
 			// Execute operations in new thread
 			new ProgressThread("copy_repository_entry", true) {
 
-				final class UserDecisions {
-
-					boolean repeatDecision = false;
-					boolean overwriteIfExists = false;
-					int lastDecision = 0;
-				}
-
-				private static final int INSERT = 1;
-				private static final int OVERWRITE = 2;
-				private static final int SKIP = 3;
-
 				/** Total progress of progress listener bar */
 				private int progressListenerCompleted = 0;
 
@@ -311,7 +439,7 @@ public class RepositoryTree extends JTree {
 					boolean isRepositoryInLocations = false;
 					for (RepositoryLocation location : locations) {
 						try {
-							if (location.locateEntry() instanceof Repository) {
+							if (location.getLocationType() != RepositoryLocationType.DATA_ENTRY && location.locateFolder() instanceof Repository) {
 								isRepositoryInLocations = true;
 							}
 						} catch (RepositoryException e) {
@@ -338,8 +466,10 @@ public class RepositoryTree extends JTree {
 						// Single entry check
 						try {
 							// Entry already exists, overwrite?
-							final String effectiveNewName = location.locateEntry().getName();
-							if (droppedOnFolder.containsEntry(effectiveNewName)) {
+							Entry entry = getEntry(location);
+							final String effectiveNewName = entry.getName();
+							boolean containsEntry = entry instanceof DataEntry ? droppedOnFolder.containsData(effectiveNewName, ((DataEntry)entry).getClass()) : droppedOnFolder.containsFolder(effectiveNewName);
+							if (containsEntry) {
 
 								// Do not confuse user with incorrect selected paths
 								RepositoryTree.this.setSelectionPath(droppedOnPath);
@@ -347,35 +477,31 @@ public class RepositoryTree extends JTree {
 								if (!userDecisions.repeatDecision) {
 
 									final List<String> optionsToSelect = new ArrayList<>(3);
-									optionsToSelect.add("existing_entry.insert");
-									optionsToSelect.add("existing_entry.overwrite");
-									optionsToSelect.add("existing_entry.skip");
+									optionsToSelect.add(EXISTING_ENTRY_DUPLICATE);
+									optionsToSelect.add(EXISTING_ENTRY_OVERWRITE);
+									optionsToSelect.add(EXISTING_ENTRY_SKIP);
 									final List<String> optionsToCheck = new ArrayList<>(1);
 									if (!isSingleEntryOperation) {
-										optionsToCheck.add("existing_entry.repeat");
+										optionsToCheck.add(EXISTING_ENTRY_REPEAT);
 									}
 
-									int result = SwingTools.invokeAndWaitWithResult(new ResultRunnable<Integer>() {
+									int result = SwingTools.invokeAndWaitWithResult(() -> {
+										SelectionDialog selectionDialog = new SelectionDialog(
+												ProgressThreadDialog.getInstance(), "existing_entry",
+												SelectionDialog.OK_CANCEL_OPTION, new String[] { effectiveNewName },
+												optionsToSelect, optionsToCheck).showDialog();
 
-										@Override
-										public Integer run() {
-											SelectionDialog selectionDialog = new SelectionDialog(
-													ProgressThreadDialog.getInstance(), "existing_entry",
-													SelectionDialog.OK_CANCEL_OPTION, new String[] { effectiveNewName },
-													optionsToSelect, optionsToCheck).showDialog();
-
-											if (selectionDialog.isOptionSelected("existing_entry.insert")) {
-												userDecisions.lastDecision = INSERT;
-											} else if (selectionDialog.isOptionSelected("existing_entry.overwrite")) {
-												userDecisions.lastDecision = OVERWRITE;
-											} else {
-												userDecisions.lastDecision = SKIP;
-											}
-											if (selectionDialog.isOptionChecked("existing_entry.repeat")) {
-												userDecisions.repeatDecision = true;
-											}
-											return selectionDialog.getResult();
+										if (selectionDialog.isOptionSelected(EXISTING_ENTRY_DUPLICATE)) {
+											userDecisions.lastDecision = INSERT;
+										} else if (selectionDialog.isOptionSelected(EXISTING_ENTRY_OVERWRITE)) {
+											userDecisions.lastDecision = OVERWRITE;
+										} else {
+											userDecisions.lastDecision = SKIP;
 										}
+										if (selectionDialog.isOptionChecked(EXISTING_ENTRY_REPEAT)) {
+											userDecisions.repeatDecision = true;
+										}
+										return selectionDialog.getResult();
 									});
 
 									if (result != SelectionDialog.OK_OPTION) {
@@ -438,8 +564,7 @@ public class RepositoryTree extends JTree {
 								progressListenerCompleted + PROGRESS_LISTENER_SINGLE_STEP_SIZE);
 
 						if (isMoveOperation(ts, isRepositoryInLocations)) {
-							RepositoryManager.getInstance(null).move(location, target, null,
-									overwriteIfExists, progressListener);
+							RepositoryManager.getInstance(null).move(location, target, null, overwriteIfExists, progressListener);
 
 							// On drag and drop move operation with overwrite, two delete operations
 							// are performed. This results in a selection of a wrong tree element.
@@ -450,8 +575,7 @@ public class RepositoryTree extends JTree {
 							}
 
 						} else {
-							RepositoryManager.getInstance(null).copy(location, target, null,
-									overwriteIfExists, progressListener);
+							RepositoryManager.getInstance(null).copy(location, target, null, overwriteIfExists, progressListener);
 						}
 					} catch (RepositoryConnectionsFolderImmutableException | RepositoryStoreOtherInConnectionsFolderException | RepositoryConnectionsNotSupportedException e) {
 						// this happens when trying to modify/move/delete the connections folder or when trying to store other things inside a connection folder
@@ -579,12 +703,12 @@ public class RepositoryTree extends JTree {
 		 * @throws IllegalArgumentException
 		 *             If an argument is null
 		 */
-		private boolean copyOrMoveCheck(final Entry droppedOnEntry, final RepositoryLocation location,
+		private boolean copyOrMoveCheck(final Entry droppedOnEntry, final RepositoryLocation sourceLocation,
 				final TransferSupport ts) throws RepositoryException {
 
 			if (droppedOnEntry == null) {
 				throw new IllegalArgumentException("Entry must not be null.");
-			} else if (location == null) {
+			} else if (sourceLocation == null) {
 				throw new IllegalArgumentException("RepositoryLocation must not be null.");
 			} else if (ts == null) {
 				throw new IllegalArgumentException("TransferSupport must not be null.");
@@ -607,13 +731,13 @@ public class RepositoryTree extends JTree {
 							"com.rapidminer.repository.RepositoryTree.parameter_missing.target_path");
 					return false;
 				}
-				String sourceAbsolutePath = location.getAbsoluteLocation();
+				String sourceAbsolutePath = sourceLocation.getAbsoluteLocation();
 				if (sourceAbsolutePath == null || sourceAbsolutePath.isEmpty()) {
 					LogService.getRoot().log(Level.WARNING,
 							"com.rapidminer.repository.RepositoryTree.parameter_missing.source_path");
 					return false;
 				}
-				Entry locationEntry = location.locateEntry();
+				Entry locationEntry = getEntry(sourceLocation);
 				if (locationEntry == null) {
 					LogService.getRoot().log(Level.WARNING,
 							"com.rapidminer.repository.RepositoryTree.parameter_missing.repository_location");
@@ -629,26 +753,30 @@ public class RepositoryTree extends JTree {
 							"com.rapidminer.repository.RepositoryTree.parameter_missing.name");
 					return false;
 				}
+				if (locationEntry instanceof BasicBinaryEntry && !((Folder) droppedOnEntry).isSupportingBinaryEntries()) {
+					String key = (droppedOnEntry instanceof SimpleFolder) ? "repository_binary_unsupported_local" : "repository_binary_unsupported";
+			    	SwingTools.showVerySimpleErrorMessage(key);
+					return false;
+				}
 
 				if (isMoveOperation(ts, false)) {
 					// Check for MOVE
 
 					// Make sure same folder moves are forbidden
-					if (sourceAbsolutePath.equals(targetAbsolutePath)) {
+					if (sourceLocation.getLocationType() == targetLocation.getLocationType() && sourceAbsolutePath.equals(targetAbsolutePath)) {
 						SwingTools.showVerySimpleErrorMessage("repository_move_same_folder");
 						return false;
 					}
 
 					// Make sure moving parent folder into subfolder is forbidden
-					if (RepositoryGuiTools.isSuccessor(sourceAbsolutePath, targetAbsolutePath)) {
+					if (sourceLocation.getLocationType() == targetLocation.getLocationType() && RepositoryGuiTools.isSuccessor(sourceAbsolutePath, targetAbsolutePath)) {
 						SwingTools.showVerySimpleErrorMessage("repository_move_into_subfolder");
 						return false;
 					}
 
 					// Entry should be moved into its own parent folder, invalid
-					if (!(location.locateEntry() instanceof Repository)) {
-						String sourceParentLocation = location.locateEntry().getContainingFolder().getLocation()
-								.getAbsoluteLocation();
+					if (!(sourceLocation.getLocationType() != RepositoryLocationType.DATA_ENTRY && sourceLocation.locateFolder() instanceof Repository)) {
+						String sourceParentLocation = sourceLocation.parent().getAbsoluteLocation();
 						if (sourceParentLocation.equals(targetAbsolutePath)) {
 							SwingTools.showVerySimpleErrorMessage("repository_move_same_folder");
 							return false;
@@ -659,13 +787,13 @@ public class RepositoryTree extends JTree {
 					// Check for COPY
 
 					// Make sure same folder moves are forbidden
-					if (sourceAbsolutePath.equals(targetAbsolutePath)) {
+					if (sourceLocation.getLocationType() == targetLocation.getLocationType() && sourceAbsolutePath.equals(targetAbsolutePath)) {
 						SwingTools.showVerySimpleErrorMessage("repository_copy_same_folder");
 						return false;
 					}
 
 					// Make sure moving parent folder into subfolder is forbidden
-					if (RepositoryGuiTools.isSuccessor(sourceAbsolutePath, targetAbsolutePath)) {
+					if (sourceLocation.getLocationType() == targetLocation.getLocationType() && RepositoryGuiTools.isSuccessor(sourceAbsolutePath, targetAbsolutePath)) {
 						SwingTools.showVerySimpleErrorMessage("repository_copy_into_subfolder");
 						return false;
 					}
@@ -807,7 +935,7 @@ public class RepositoryTree extends JTree {
 						true, true), false, false);
 		addRepositoryAction(RenameRepositoryEntryAction.class,
 				new RepositoryActionConditionAdditionallyNotConnections(new Class<?>[]{Entry.class}, false), false, false);
-		addRepositoryAction(EditConnectionAction.class, new RepositoryActionConditionImplStandard(new Class<?>[]{ConnectionEntry.class}, new Class<?>[]{LocalRepository.class, RemoteRepository.class}), false,
+		addRepositoryAction(EditConnectionAction.class, new RepositoryActionConditionImplStandard(new Class<?>[]{ConnectionEntry.class}, new Class<?>[]{LocalRepository.class, RemoteRepository.class, NewFilesystemRepository.class}), false,
 				false);
 		addRepositoryAction(CreateConnectionAction.class, new RepositoryActionConditionRepositoryAndConnections(new Class<?>[]{Folder.class}), false,
 				false);
@@ -826,7 +954,9 @@ public class RepositoryTree extends JTree {
 		addRepositoryAction(RefreshRepositoryEntryAction.class,
 				new RepositoryActionConditionImplStandard(new Class<?>[]{Entry.class}), true, false);
 		addRepositoryAction(OpenInFileBrowserAction.class, new RepositoryActionConditionImplStandard(
-				new Class<?>[]{Entry.class}, new Class<?>[]{LocalRepository.class}), false, false);
+				new Class<?>[]{Entry.class}, new Class<?>[]{LocalRepository.class, NewFilesystemRepository.class}), false, false);
+		addRepositoryAction(OpenInOperatingSystemAction.class, new RepositoryActionConditionImplStandard(
+				new Class<?>[]{BinaryEntry.class}, new Class<?>[]{NewFilesystemRepository.class}), false, false);
 		addRepositoryAction(CheckProcessCompatibility.class,
 				new RepositoryActionConditionImplStandard(new Class<?>[]{ProcessEntry.class}, new Class<?>[]{RemoteRepository.class}), true, true);
 	}
@@ -1164,16 +1294,20 @@ public class RepositoryTree extends JTree {
 	/**
 	 * Selects as much as possible of the selected path to the given location. Returns true if the
 	 * given location references a folder.
+	 * @param expectedDataEntryType can be {@code null}, in which case the {@link DataEntry} class is used
 	 */
-	boolean expandIfExists(RepositoryLocation relativeTo, String location) {
+	boolean expandIfExists(RepositoryLocation relativeTo, String location, RepositoryLocationType locationType, Class<? extends DataEntry> expectedDataEntryType) {
 		RepositoryLocation loc;
 		boolean full = true;
 		if (location != null) {
 			try {
 				if (relativeTo != null) {
-					loc = new RepositoryLocation(relativeTo, location);
+					loc = new RepositoryLocationBuilder().withLocationType(locationType).buildFromParentLocation(relativeTo, location);
 				} else {
-					loc = new RepositoryLocation(location + "/");
+					loc = new RepositoryLocationBuilder().withLocationType(locationType).buildFromAbsoluteLocation(location + "/");
+				}
+				if (expectedDataEntryType != null) {
+					loc.setExpectedDataEntryType(expectedDataEntryType);
 				}
 			} catch (Exception e) {
 				// do nothing
@@ -1188,7 +1322,7 @@ public class RepositoryTree extends JTree {
 		Entry entry = null;
 		while (true) {
 			try {
-				entry = loc.locateEntry();
+				entry = getEntry(loc);
 				if (entry != null) {
 					break;
 				}
@@ -1221,9 +1355,9 @@ public class RepositoryTree extends JTree {
 	 */
 	public void expandAndSelectIfExists(RepositoryLocation location) {
 		if (location.parent() != null) {
-			expandIfExists(location.parent(), location.getName());
+			expandIfExists(location.parent(), location.getName(), location.getLocationType(), location.getExpectedDataEntryType());
 		} else {
-			expandIfExists(location, null);
+			expandIfExists(location, null, location.getLocationType(), location.getExpectedDataEntryType());
 		}
 		scrollPathToVisibleCenter(getSelectionPath());
 	}
@@ -1298,26 +1432,7 @@ public class RepositoryTree extends JTree {
 
 	/** Opens the process held by the given entry (in the background) and opens it. */
 	public static void openProcess(final ProcessEntry processEntry) {
-		RepositoryProcessLocation processLocation = new RepositoryProcessLocation(processEntry.getLocation());
-		if (RapidMinerGUI.getMainFrame().close()) {
-			OpenAction.open(processLocation, true);
-		}
-		/*
-		 * PRE FIX OF BUG 308: When opening process with double click all changes are discarded
-		 * ProgressThread openProgressThread = new ProgressThread("open_process") {
-		 *
-		 * @Override public void run() { try { RepositoryProcessLocation processLocation = new
-		 * RepositoryProcessLocation(processEntry.getLocation()); String xml =
-		 * processEntry.retrieveXML(); try { final Process process = new Process(xml);
-		 * process.setProcessLocation(processLocation); SwingUtilities.invokeLater(new Runnable() {
-		 * public void run() { RapidMinerGUI.getMainFrame().setOpenedProcess(process, true,
-		 * processEntry.getLocation().toString()); } }); } catch (Exception e) {
-		 * RapidMinerGUI.getMainFrame().handleBrokenProxessXML(processLocation, xml, e); } } catch
-		 * (Exception e1) { SwingTools.showSimpleErrorMessage("cannot_fetch_data_from_repository",
-		 * e1); }
-		 *
-		 * } }; openProgressThread.start();
-		 */
+		OpenAction.open(processEntry, true);
 	}
 
 	public Entry getSelectedEntry() {
@@ -1507,6 +1622,30 @@ public class RepositoryTree extends JTree {
 	 */
 	public RepositorySortingMethod getSortingMethod() {
 		return getModel().getSortingMethod();
+	}
+
+	/**
+	 * Returns the entry represented by the given location
+	 *
+	 * @param location the location to resolve
+	 * @return the corresponding entry or {@code null}
+	 * @throws RepositoryException if an error occurs during lookup
+	 * @since 9.7
+	 */
+	private static Entry getEntry(RepositoryLocation location) throws RepositoryException {
+		switch (location.getLocationType()) {
+			case DATA_ENTRY:
+				return location.locateData();
+			case FOLDER:
+				return location.locateFolder();
+			case UNKNOWN:
+			default:
+				Entry entry = location.locateData();
+				if (entry != null) {
+					return entry;
+				}
+				return location.locateFolder();
+		}
 	}
 
 }

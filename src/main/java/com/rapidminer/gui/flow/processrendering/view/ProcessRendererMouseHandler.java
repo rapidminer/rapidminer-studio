@@ -324,11 +324,7 @@ public class ProcessRendererMouseHandler {
 			// Left mouse button pressed on port with alt pressed -> remove connection
 			if (e.isAltDown()) {
 				if (hoveringPort.isConnected()) {
-					if (hoveringPort instanceof OutputPort) {
-						((OutputPort) hoveringPort).disconnect();
-					} else if (hoveringPort instanceof InputPort) {
-						((InputPort) hoveringPort).getSource().disconnect();
-					}
+					hoveringPort.disconnect();
 				}
 				view.repaint();
 			} else {
@@ -761,39 +757,35 @@ public class ProcessRendererMouseHandler {
 	private void verifyAndConnectConnectingPortSourceWithHoveringPort() throws IncompatiblePortsException {
 		final Port connectingPortSource = model.getConnectingPortSource();
 		final Port hoveringPort = model.getHoveringPort();
-		final InputPort input;
-		final OutputPort output;
-		if (hoveringPort instanceof InputPort && connectingPortSource instanceof OutputPort) {
-			input = (InputPort) hoveringPort;
-			output = (OutputPort) connectingPortSource;
-		} else if (hoveringPort instanceof OutputPort && connectingPortSource instanceof InputPort) {
-			input = (InputPort)  connectingPortSource;
-			output = (OutputPort) hoveringPort;
-		} else {
+		if (connectingPortSource == null || !connectingPortSource.canConnectTo(hoveringPort)) {
 			throw new IncompatiblePortsException();
 		}
 
-		Operator destOp = input.getPorts().getOwner().getOperator();
-		Operator sourceOp = output.getPorts().getOwner().getOperator();
+		Operator fromOp = connectingPortSource.getPorts().getOwner().getOperator();
+		Operator toOp = hoveringPort.getPorts().getOwner().getOperator();
 		// outer ports of an operator should not connect to each other
-		if (!destOp.equals(model.getDisplayedChain()) && destOp.equals(sourceOp)) {
+		if (fromOp == toOp && fromOp != model.getDisplayedChain()) {
 			throw new IncompatiblePortsException();
 		}
-		connectConnectingPortSourceWithHoveringPort(input, output, hoveringPort);
+		connectConnectingPortSourceWithHoveringPort(hoveringPort, connectingPortSource);
 	}
 	/**
 	 * Connects the clicked port with the connection source port.
-	 *
-	 * @param input
-	 * @param output
-	 * @param hoveringPort
 	 */
-	private void connectConnectingPortSourceWithHoveringPort(final InputPort input, final OutputPort output,
-			final Port hoveringPort) {
+	private void connectConnectingPortSourceWithHoveringPort(final Port hoveringPort, final Port connectingPortSource) {
 		try {
+			Port output;
+			Port input;
+			if (hoveringPort instanceof OutputPort) {
+				output = hoveringPort;
+				input = connectingPortSource;
+			} else {
+				output = connectingPortSource;
+				input = hoveringPort;
+			}
 			Operator destOp = input.getPorts().getOwner().getOperator();
 			boolean hasConnections = controller.hasConnections(destOp);
-			controller.connect(output, input);
+			controller.connect(connectingPortSource, hoveringPort);
 			// move directly after source if first connection
 			if (!hasConnections) {
 				Operator sourceOp = output.getPorts().getOwner().getOperator();
@@ -802,59 +794,66 @@ public class ProcessRendererMouseHandler {
 							destOp.getExecutionUnit().getOperators().indexOf(sourceOp) + 1);
 				}
 			}
-		} catch (PortException e1) {
-			if (e1.hasRepairOptions()) {
-
-				// calculate popup position
-				Point popupPosition = ProcessDrawUtils.createPortLocation(hoveringPort, model);
-				// correct by zoomFactor
-				double zoomFactor = model.getZoomFactor();
-				popupPosition = new Point((int) (popupPosition.getX() * zoomFactor),
-						(int) (popupPosition.getY() * zoomFactor));
-
-				// take splitted process pane into account and add offset for each process we
-				// have to the left of our current one
-				if (hoveringPort.getPorts() != null) {
-					ExecutionUnit process;
-					if (hoveringPort.getPorts().getOwner().getOperator() == model.getDisplayedChain()) {
-						// this is an inner port
-						process = hoveringPort.getPorts().getOwner().getConnectionContext();
-					} else {
-						// this is an outer port of a nested operator
-						process = hoveringPort.getPorts().getOwner().getOperator().getExecutionUnit();
-					}
-					// iterate over all processes and add widths of processes to the left
-					int counter = 0;
-					for (ExecutionUnit unit : model.getProcesses()) {
-						if (unit == process) {
-							// only add process widths until we have the process which contains
-							// the port
-							break;
-						} else {
-							counter++;
-							popupPosition = new Point((int) (popupPosition.x + model.getProcessWidth(unit)),
-									popupPosition.y);
-						}
-					}
-					// add another wall width as offset if we have multiple processes
-					if (counter > 0) {
-						popupPosition = new Point(popupPosition.x + ProcessDrawer.WALL_WIDTH, popupPosition.y);
-					}
-				}
-
-				if (hoveringPort instanceof InputPort) {
-					popupPosition.setLocation(popupPosition.getX() + 28, popupPosition.getY() - 2);
-				} else {
-					popupPosition.setLocation(popupPosition.getX() - 18, popupPosition.getY() - 2);
-				}
-
-				e1.showRepairPopup(view, popupPosition);
-			} else {
-				JOptionPane.showMessageDialog(null, e1.getMessage(), "Cannot connect", JOptionPane.ERROR_MESSAGE);
+		} catch (PortException e) {
+			if (!e.hasRepairOptions()) {
+				JOptionPane.showMessageDialog(null, e.getMessage(), "Cannot connect", JOptionPane.ERROR_MESSAGE);
+				view.repaint();
+				return;
 			}
+
+			// calculate popup position
+			Point popupPosition = ProcessDrawUtils.createPortLocation(hoveringPort, model);
+			if (popupPosition == null) {
+				popupPosition = new Point();
+			}
+			// correct by zoomFactor
+			double zoomFactor = model.getZoomFactor();
+			popupPosition.setLocation(popupPosition.getX() * zoomFactor, popupPosition.getY() * zoomFactor);
+
+			// take splitted process pane into account and add offset for each process we
+			// have to the left of our current one
+			if (hoveringPort.getPorts() != null) {
+				translatePopupPosition(popupPosition, hoveringPort.getPorts().getOwner());
+			}
+
+			int xOffset = hoveringPort instanceof InputPort ? 28 : -18;
+			popupPosition.translate(xOffset, -2);
+
+			e.showRepairPopup(view, popupPosition);
 			view.repaint();
 		} finally {
 			cancelConnectionDragging();
+		}
+	}
+
+	/**
+	 * Translates the given popup position in regards to the position of the portOwner in case of multiple subprocesses
+	 *
+	 * @since 9.7
+	 */
+	private void translatePopupPosition(Point popupPosition, PortOwner portOwner) {
+		ExecutionUnit process;
+		if (portOwner.getOperator() == model.getDisplayedChain()) {
+			// this is an inner port
+			process = portOwner.getConnectionContext();
+		} else {
+			// this is an outer port of a nested operator
+			process = portOwner.getOperator().getExecutionUnit();
+		}
+		// iterate over all processes and add widths of processes to the left
+		int counter = 0;
+		for (ExecutionUnit unit : model.getProcesses()) {
+			if (unit == process) {
+				// only add process widths until we have the process which contains the port
+				break;
+			} else {
+				counter++;
+				popupPosition.translate((int) model.getProcessWidth(unit), 0);
+			}
+		}
+		// add another wall width as offset if we have multiple processes
+		if (counter > 0) {
+			popupPosition.translate(ProcessDrawer.WALL_WIDTH, 0);
 		}
 	}
 

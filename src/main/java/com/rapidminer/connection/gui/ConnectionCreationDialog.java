@@ -66,14 +66,17 @@ import com.rapidminer.gui.tools.ExtendedJScrollPane;
 import com.rapidminer.gui.tools.ProgressThread;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.SwingTools;
+import com.rapidminer.repository.ConnectionEntry;
 import com.rapidminer.repository.Folder;
 import com.rapidminer.repository.MalformedRepositoryLocationException;
 import com.rapidminer.repository.Repository;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryLocation;
+import com.rapidminer.repository.RepositoryLocationBuilder;
 import com.rapidminer.repository.RepositoryManager;
 import com.rapidminer.repository.RepositoryTools;
 import com.rapidminer.repository.local.LocalRepository;
+import com.rapidminer.repository.versioned.NewFilesystemRepository;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.SystemInfoUtilities;
@@ -349,7 +352,7 @@ public class ConnectionCreationDialog extends JDialog {
 							return;
 						}
 						try {
-							location = new RepositoryLocation(connectionFolder.getLocation(), name);
+							location = new RepositoryLocationBuilder().withExpectedDataEntryType(ConnectionEntry.class).buildFromParentLocation(connectionFolder.getLocation(), name);
 						} catch (MalformedRepositoryLocationException e1) {
 							// should not happen as it is validated before, but you never know
 							SwingTools.invokeLater(() -> {
@@ -370,11 +373,11 @@ public class ConnectionCreationDialog extends JDialog {
 							// now we need to check for duplicates. This is a problem on Windows for the Local Repository
 							// as it will NOT find different capitalization, while on file-system level, it is a duplicate
 							boolean duplicate;
-							if (repo instanceof LocalRepository && SystemInfoUtilities.getOperatingSystem() == SystemInfoUtilities.OperatingSystem.WINDOWS) {
+							if ((repo instanceof LocalRepository || repo instanceof NewFilesystemRepository) && SystemInfoUtilities.getOperatingSystem() == SystemInfoUtilities.OperatingSystem.WINDOWS) {
 								duplicate = connectionFolder.getDataEntries().stream().anyMatch(entry -> name.equalsIgnoreCase(entry.getName()));
 							} else {
 								// on Unix systems, we can just call locate it it will be fine
-								duplicate = location.locateEntry() != null;
+								duplicate = location.locateData() != null;
 							}
 							if (duplicate) {
 								SwingTools.invokeLater(() -> {

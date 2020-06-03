@@ -29,8 +29,7 @@ import java.util.logging.Level;
 
 import com.rapidminer.operator.IOContainer;
 import com.rapidminer.operator.IOObject;
-import com.rapidminer.operator.ports.InputPort;
-import com.rapidminer.operator.ports.OutputPort;
+import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.ports.Port;
 import com.rapidminer.operator.ports.PortException;
 import com.rapidminer.operator.ports.PortExtender;
@@ -39,32 +38,41 @@ import com.rapidminer.operator.ports.Ports;
 import com.rapidminer.tools.AbstractObservable;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
-import com.rapidminer.tools.Observable;
 import com.rapidminer.tools.Observer;
 
 
 /**
- * @author Simon Fischer
+ * @author Simon Fischer, Jan Czogalla
  */
 public abstract class AbstractPorts<T extends Port> extends AbstractObservable<Port> implements Ports<T> {
 
+	/**
+	 * Simple port creator interface
+	 *
+	 * @param <P>
+	 * 		the port type
+	 * @author Jan Czogalla
+	 * @see InputPortImpl#InputPortImpl(Ports, String, boolean)
+	 * @see OutputPortImpl#OutputPortImpl(Ports, String, boolean)
+	 * @since 9.7
+	 */
+	interface PortCreator<P extends Port> {
+		P create(Ports<P> owner, String name, boolean simulateStack);
+	}
+
 	private final List<T> portList = Collections.synchronizedList(new ArrayList<>());
 	private final Map<String, T> portMap = new HashMap<>();
+	private final PortCreator<T> portCreator;
 	private String[] portNames;
 	private boolean portNamesValid = false;
 	private final PortOwner owner;
 
-	private final Observer<Port> delegatingObserver = new Observer<Port>() {
+	private final Observer<Port> delegatingObserver = (observable, arg) -> fireUpdate(arg);
 
-		@Override
-		public void update(Observable<Port> observable, Port arg) {
-			fireUpdate(arg);
-		}
-	};
-
-	public AbstractPorts(PortOwner owner) {
+	public AbstractPorts(PortOwner owner, PortCreator<T> portCreator) {
 		this.owner = owner;
 		portNamesValid = false;
+		this.portCreator = portCreator;
 	}
 
 	private void updatePortNames() {
@@ -78,6 +86,30 @@ public abstract class AbstractPorts<T extends Port> extends AbstractObservable<P
 			}
 			portNamesValid = true;
 		}
+	}
+
+	@Override
+	public T createPort(String name) {
+		return createPort(name, true);
+	}
+
+	@Override
+	public T createPort(String name, boolean add) {
+		return createPortInternal(name, add, true);
+	}
+
+	@Override
+	public T createPassThroughPort(String name) {
+		return createPortInternal(name, true, false);
+	}
+
+	/** @since 9.7 */
+	private T createPortInternal(String name, boolean add, boolean simulateStack) {
+		T port = portCreator.create(this, name, simulateStack);
+		if (add) {
+			addPort(port);
+		}
+		return port;
 	}
 
 	@Override
@@ -97,19 +129,14 @@ public abstract class AbstractPorts<T extends Port> extends AbstractObservable<P
 	public void removePort(T port) throws PortException {
 		if (!portList.contains(port) || port.getPorts() != this) {
 			throw new PortException("Cannot remove " + port + ".");
-		} else {
-			if (port.isConnected()) {
-				if (port instanceof OutputPort) {
-					((OutputPort) port).disconnect();
-				} else {
-					((InputPort) port).getSource().disconnect();
-				}
-			}
-			portList.remove(port);
-			portMap.remove(port.getName());
-			port.removeObserver(delegatingObserver);
-			fireUpdate();
 		}
+		if (port.isConnected()) {
+			port.disconnect();
+		}
+		portList.remove(port);
+		portMap.remove(port.getName());
+		port.removeObserver(delegatingObserver);
+		fireUpdate();
 	}
 
 	@Override
@@ -135,50 +162,42 @@ public abstract class AbstractPorts<T extends Port> extends AbstractObservable<P
 		T port = portMap.get(name);
 		if (port != null) {
 			return port;
-		} else {
-			// LogService.getRoot().fine("Port '"+name+"' does not exist. Checking for extenders.");
-			LogService.getRoot().log(Level.FINE, "com.rapidminer.operator.ports.impl.AbstractPorts.port_does_not_exist",
-					name);
-			if (portExtenders != null) {
-				for (PortExtender extender : portExtenders) {
-					String prefix = extender.getNamePrefix();
-					if (name.startsWith(prefix)) {
-						// LogService.getRoot().fine("Found extender with prefix '"+prefix+"'.
-						// Trying to extend.");
-						LogService.getRoot().log(Level.FINE,
-								"com.rapidminer.operator.ports.impl.AbstractPorts.found_extender", prefix);
-						try {
-							int index = Integer.parseInt(name.substring(prefix.length()));
-							extender.ensureMinimumNumberOfPorts(index); // numbering starts at 1
-							T secondTry = portMap.get(name);
-							if (secondTry == null) {
-								// LogService.getRoot().warning("Port extender "+prefix+" did not
-								// extend to size "+index+".");
-								LogService.getRoot().log(Level.WARNING,
-										"com.rapidminer.operator.ports.impl.AbstractPorts.port_extender_did_not_extend",
-										new Object[] { prefix, index });
-							} else {
-								// LogService.getRoot().fine("Port was created. Ports are now:
-								// "+getAllPorts());
-								LogService.getRoot().log(Level.FINE,
-										"com.rapidminer.operator.ports.impl.AbstractPorts.ports_created", getAllPorts());
-							}
-							return secondTry;
-						} catch (NumberFormatException e) {
-							// LogService.getRoot().log(Level.WARNING,
-							// "Cannot extend "+prefix+": "+e, e);
-							LogService.getRoot().log(Level.WARNING,
-									I18N.getMessage(LogService.getRoot().getResourceBundle(),
-											"com.rapidminer.operator.ports.impl.AbstractPorts.extending_error", prefix, e),
-									e);
-							return null;
-						}
-					}
-				}
-			}
-			// no extender found
+		}
+		LogService.getRoot().log(Level.FINE, "com.rapidminer.operator.ports.impl.AbstractPorts.port_does_not_exist",
+				name);
+		if (portExtenders == null) {
 			return null;
 		}
+		for (PortExtender extender : portExtenders) {
+			String prefix = extender.getNamePrefix();
+			if (!name.startsWith(prefix)) {
+				continue;
+			}
+			LogService.getRoot().log(Level.FINE,
+					"com.rapidminer.operator.ports.impl.AbstractPorts.found_extender", prefix);
+			try {
+				int index = Integer.parseInt(name.substring(prefix.length()));
+				extender.ensureMinimumNumberOfPorts(index); // numbering starts at 1
+				T secondTry = portMap.get(name);
+				if (secondTry == null) {
+					LogService.getRoot().log(Level.WARNING,
+							"com.rapidminer.operator.ports.impl.AbstractPorts.port_extender_did_not_extend",
+							new Object[] { prefix, index });
+				} else {
+					LogService.getRoot().log(Level.FINE,
+							"com.rapidminer.operator.ports.impl.AbstractPorts.ports_created", getAllPorts());
+				}
+				return secondTry;
+			} catch (NumberFormatException e) {
+				LogService.getRoot().log(Level.WARNING,
+						I18N.getMessage(LogService.getRoot().getResourceBundle(),
+								"com.rapidminer.operator.ports.impl.AbstractPorts.extending_error", prefix, e),
+						e);
+				return null;
+			}
+		}
+		// no extender found
+		return null;
 	}
 
 	@Override
@@ -289,8 +308,8 @@ public abstract class AbstractPorts<T extends Port> extends AbstractObservable<P
 
 	@Override
 	public void freeMemory() {
-		for (Port inputPort : getAllPorts()) {
-			inputPort.freeMemory();
+		for (Port port : getAllPorts()) {
+			port.freeMemory();
 		}
 	}
 
@@ -318,5 +337,17 @@ public abstract class AbstractPorts<T extends Port> extends AbstractObservable<P
 			b.append(port);
 		}
 		return b.toString();
+	}
+
+	@Override
+	public void disconnectAll() {
+		disconnectAllBut(null);
+	}
+
+	@Override
+	public void disconnectAllBut(List<Operator> exceptions) {
+		getAllPorts().stream().filter(port -> port.isConnected() &&
+				(exceptions == null || !exceptions.contains(port.getOpposite().getPorts().getOwner().getOperator())))
+				.forEach(Port::disconnect);
 	}
 }

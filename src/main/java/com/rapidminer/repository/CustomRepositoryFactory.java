@@ -46,6 +46,17 @@ public interface CustomRepositoryFactory {
 	boolean enableRepositoryConfiguration();
 
 	/**
+	 * Whether this repo should show up in the "Create / Connect to Repository" dialog. Defaults to {@code true}.
+	 *
+	 * @return {@code true} if it should appear in the radio button list; {@code false} if it should not be creatable
+	 * via the new repo dialog
+	 * @since 9.7
+	 */
+	default boolean showRepositoryConfigurationInNewRepositoryDialog() {
+		return true;
+	}
+
+	/**
 	 * @return the {@link RepositoryConfigurationPanel} for this factory. The method is called only
 	 *         once per opened {@link NewRepositoryDialog}.
 	 */

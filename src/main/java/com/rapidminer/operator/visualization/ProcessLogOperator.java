@@ -50,11 +50,13 @@ import com.rapidminer.parameter.ParameterTypeCategory;
 import com.rapidminer.parameter.ParameterTypeFile;
 import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.parameter.ParameterTypeList;
+import com.rapidminer.parameter.ParameterTypePassword;
 import com.rapidminer.parameter.ParameterTypeString;
 import com.rapidminer.parameter.ParameterTypeValue;
 import com.rapidminer.parameter.ParameterTypeValue.OperatorValueSelection;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.parameter.conditions.EqualTypeCondition;
+import com.rapidminer.tools.encryption.EncryptionProvider;
 
 
 /**
@@ -220,6 +222,10 @@ public class ProcessLogOperator extends Operator {
 					}
 				} else { // nominal
 					String value = parameterType.toString(operator.getParameter(selection.getParameterName()));
+					// force encryption
+					if (parameterType instanceof ParameterTypePassword) {
+						value = parameterType.toXMLString(value, EncryptionProvider.DEFAULT_CONTEXT);
+					}
 					SimpleDataTable table = (SimpleDataTable) getProcess().getDataTable(getName());
 					return table.mapString(column, value);
 				}

@@ -25,6 +25,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
@@ -47,7 +48,7 @@ import com.rapidminer.tools.Ontology;
  *
  * @author Ingo Mierswa, Nils Woehler
  */
-public class SortedExampleSet extends AbstractExampleSet {
+public class SortedExampleSet extends AbstractExampleSet implements MappingBasedExampleSet {
 
 	private static final long serialVersionUID = 3937175786207007275L;
 
@@ -242,6 +243,26 @@ public class SortedExampleSet extends AbstractExampleSet {
 	}
 
 	@Override
+	public Object getUserData(String key) {
+		return parent.getUserData(key);
+	}
+
+	@Override
+	public Object setUserData(String key, Object value) {
+		return parent.setUserData(key, value);
+	}
+
+	@Override
+	public Map<String, Object> getAllUserData() {
+		return parent.getAllUserData();
+	}
+
+	@Override
+	public void setAllUserData(Map<String, Object> userDataMap) {
+		parent.setAllUserData(userDataMap);
+	}
+
+	@Override
 	public int hashCode() {
 		return super.hashCode() ^ Arrays.hashCode(this.mapping);
 	}
@@ -291,5 +312,20 @@ public class SortedExampleSet extends AbstractExampleSet {
 	@Override
 	public boolean isThreadSafeView() {
 		return parent instanceof AbstractExampleSet && ((AbstractExampleSet) parent).isThreadSafeView();
+	}
+
+	@Override
+	public int[] getMappingCopy() {
+		return Arrays.copyOf(mapping, mapping.length);
+	}
+
+	@Override
+	public boolean isParentSimpleOrMapped() {
+		return parent instanceof SimpleExampleSet || parent instanceof MappingBasedExampleSet;
+	}
+
+	@Override
+	public ExampleSet getParentClone() {
+		return (ExampleSet) parent.clone();
 	}
 }

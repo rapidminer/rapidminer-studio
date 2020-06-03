@@ -28,6 +28,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.lang.ref.WeakReference;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 
 import com.rapidminer.adaption.belt.TableViewingTools;
 import com.rapidminer.operator.IOObject;
@@ -39,8 +41,11 @@ import com.rapidminer.operator.tools.RMObjectInputStream;
 import com.rapidminer.repository.Folder;
 import com.rapidminer.repository.IOObjectEntry;
 import com.rapidminer.repository.RepositoryException;
+import com.rapidminer.repository.versioned.IOObjectClassDetector;
 import com.rapidminer.tools.ProgressListener;
 import com.rapidminer.tools.plugin.Plugin;
+
+import sun.misc.ObjectInputFilter.Config;
 
 
 /**
@@ -163,10 +168,17 @@ public class SimpleIOObjectEntry extends SimpleDataEntry implements IOObjectEntr
 	 * 		if reading failed
 	 * @since 9.3
 	 */
-	protected MetaData readMetaDataObject(File metaDataFile) throws IOException, ClassNotFoundException {
+	MetaData readMetaDataObject(File metaDataFile) throws IOException, ClassNotFoundException {
 		try (FileInputStream fis = new FileInputStream(metaDataFile);
 			 ObjectInputStream objectIn = new RMObjectInputStream(fis)) {
+			// lift deserialize restriction
+			AccessController.doPrivileged((PrivilegedAction<Void>) () -> {
+				Config.setObjectInputFilter(objectIn, null);
+				return null;
+			});
 			return (MetaData) objectIn.readObject();
+		} catch (ClassNotFoundException e) {
+			throw new IOException("Deserialized unknown class: " + e, e);
 		}
 	}
 
@@ -295,6 +307,16 @@ public class SimpleIOObjectEntry extends SimpleDataEntry implements IOObjectEntr
 				} catch (ClassNotFoundException e1) {
 					return null;
 				}
+			}
+		}
+		// try using the serialized data next
+		File dataFile = getDataFile();
+		if (dataFile.exists()) {
+			Class<? extends IOObject> readClass = IOObjectClassDetector.findClass(dataFile.toPath());
+			if (readClass != null && readClass != IOObject.class) {
+				dataObjectClass = readClass;
+				putProperty(PROPERTY_IOOBJECT_CLASS, dataObjectClass.getName());
+				return dataObjectClass;
 			}
 		}
 		// if not yet defined, retrieve it from meta data and store in properties

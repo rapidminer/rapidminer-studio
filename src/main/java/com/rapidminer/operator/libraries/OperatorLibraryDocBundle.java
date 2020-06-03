@@ -30,7 +30,9 @@ import java.util.Vector;
  * necessary information to have a nice GUI integration.
  * 
  * @author Sebastian Land
+ * @deprecated since 9.7, but was unused even before
  */
+@Deprecated
 public class OperatorLibraryDocBundle extends OperatorDocBundle {
 
 	private OperatorLibrary library;

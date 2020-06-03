@@ -26,17 +26,18 @@ import com.rapidminer.repository.RepositoryManager;
 
 
 /**
- * Copies an entry to a new parent folder. If destinationLocation references a folder, the entry at
- * oldLocation is copied to that folder. If it references an existing entry and overwriting is not
- * enabled (default case), an exception is raised. If overwriting is enabled the existing entry will
- * be overwritten.
+ * Copies an entry to a new parent folder. If destinationLocation references a folder, the entry at oldLocation is
+ * copied to that folder. If it references an existing entry and overwriting is not enabled (default case), an exception
+ * is raised. If overwriting is enabled the existing entry will be overwritten.
  * <p>
- * If it references a location which does not exist, say, "/root/folder/leaf", but the parent exists
- * (in this case "/root/folder"), a new entry named by the last path component (in this case "leaf")
- * is created.
- * 
+ * If it references a location which does not exist, say, "/root/folder/leaf", but the parent exists (in this case
+ * "/root/folder"), a new entry named by the last path component (in this case "leaf") is created.
+ * <p>
+ * Since version 9.7: To cover situations where both a folder and a file exist with the same name, they will prefer the
+ * file. They will only work on folder level if no file with that name exists.
+ * </p>
+ *
  * @author Nils Woehler
- * 
  */
 public class RepositoryEntryCopyOperator extends AbstractRepositoryEntryRelocationOperator {
 

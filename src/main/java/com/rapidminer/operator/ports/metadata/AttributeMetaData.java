@@ -118,7 +118,9 @@ public class AttributeMetaData implements Serializable {
 				valueSetRelation = SetRelation.EQUAL;
 				valueRange = new Range(exampleSet.getStatistics(att, Statistics.MINIMUM), exampleSet.getStatistics(att,
 						Statistics.MAXIMUM));
-				setMean(new MDReal(exampleSet.getStatistics(att, Statistics.AVERAGE)));
+				if (att.isNumerical()) {
+					setMean(new MDReal(exampleSet.getStatistics(att, Statistics.AVERAGE)));
+				}
 			}
 			if (att.isNominal()) {
 				double modeIndex = exampleSet.getStatistics(att, Statistics.MODE);
@@ -661,6 +663,28 @@ public class AttributeMetaData implements Serializable {
 	public void shrinkValueSet() {
 		int maxSize = getMaximumNumberOfNominalValues();
 		shrinkValueSet(maxSize);
+	}
+
+	/**
+	 * @return whether the value set of this attribute metadata was shrunk
+	 * @since 9.7
+	 */
+	public boolean valueSetWasShrunk() {
+		return shrinkedValueSet;
+	}
+
+	/**
+	 * Set if this attribute's value set was shrunk or not. Has no effect if there is no value set or it was
+	 * already marked as shrunk. If the setting was updated, also updates the owner if it exists.
+	 *
+	 * @since 9.7
+	 */
+	public void valueSetIsShrunk(boolean wasShrunk) {
+		boolean wasShrunkBefore = this.shrinkedValueSet;
+		shrinkedValueSet = valueSet != null && (this.shrinkedValueSet || wasShrunk);
+		if (!wasShrunkBefore && shrinkedValueSet && owner != null) {
+			owner.setNominalDataWasShrinked(true);
+		}
 	}
 
 	/**

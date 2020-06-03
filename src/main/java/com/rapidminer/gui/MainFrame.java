@@ -50,6 +50,7 @@ import com.rapidminer.Process;
 import com.rapidminer.ProcessLocation;
 import com.rapidminer.ProcessStorageListener;
 import com.rapidminer.RapidMiner;
+import com.rapidminer.RepositoryProcessLocation;
 import com.rapidminer.core.io.data.source.DataSourceFactoryRegistry;
 import com.rapidminer.core.license.ProductConstraintManager;
 import com.rapidminer.gui.actions.AboutAction;
@@ -105,6 +106,7 @@ import com.rapidminer.gui.processeditor.results.ResultDisplayTools;
 import com.rapidminer.gui.properties.OperatorPropertyPanel;
 import com.rapidminer.gui.search.action.GlobalSearchAction;
 import com.rapidminer.gui.security.PasswordManager;
+import com.rapidminer.gui.tools.DockingTools;
 import com.rapidminer.gui.tools.ProcessGUITools;
 import com.rapidminer.gui.tools.ProgressThread;
 import com.rapidminer.gui.tools.ResourceAction;
@@ -126,6 +128,8 @@ import com.rapidminer.operator.ProcessSetupError;
 import com.rapidminer.operator.UnknownParameterInformation;
 import com.rapidminer.operator.ports.Port;
 import com.rapidminer.parameter.ParameterType;
+import com.rapidminer.repository.Repository;
+import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryLocation;
 import com.rapidminer.repository.gui.RepositoryBrowser;
 import com.rapidminer.tools.LogService;
@@ -211,7 +215,7 @@ public class MainFrame extends ApplicationFrame implements WindowListener {
 		public void processUpdated(Process process) {
 			setTitle();
 			if (getProcess().getProcessLocation() != null) {
-				MainFrame.this.SAVE_ACTION.setEnabled(processModel.hasChanged());
+				MainFrame.this.SAVE_ACTION.setEnabled(isChanged());
 			}
 			processPanel.getProcessRenderer().repaint();
 		}
@@ -952,7 +956,7 @@ public class MainFrame extends ApplicationFrame implements WindowListener {
 	}
 
 	/**
-	 * @return the toolbar button for running processes on the Server
+	 * @return the toolbar button for running processes on the AI Hub
 	 */
 	public JButton getRunRemoteToolbarButton() {
 		return runRemoteToolbarButton;
@@ -965,14 +969,6 @@ public class MainFrame extends ApplicationFrame implements WindowListener {
 		} else {
 			return process.getProcessState();
 		}
-	}
-
-	/**
-	 * @deprecated Use {@link #getProcess()} instead
-	 */
-	@Deprecated
-	public final Process getExperiment() {
-		return getProcess();
 	}
 
 	public final Process getProcess() {
@@ -1127,17 +1123,6 @@ public class MainFrame extends ApplicationFrame implements WindowListener {
 	}
 
 	/**
-	 * Sets a new process and registers the MainFrame listener. Please note that this method does
-	 * not invoke {@link #processChanged()}. Do so if necessary.
-	 *
-	 * @deprecated Use {@link #setProcess(Process, boolean)} instead
-	 */
-	@Deprecated
-	public void setExperiment(final Process process) {
-		setProcess(process, true);
-	}
-
-	/**
 	 * Sets a (new) process.
 	 *
 	 * @param process
@@ -1167,6 +1152,9 @@ public class MainFrame extends ApplicationFrame implements WindowListener {
 				// window is not yet visible. So to avoid that we set design and then welcome
 				// during startup, avoid applying design if this is the first process we create.
 				perspectiveController.showPerspective(PerspectiveModel.DESIGN);
+				if (PerspectiveModel.DESIGN.equals(perspectiveController.getModel().getSelectedPerspective().getName())) {
+					DockingTools.openDockable(ProcessPanel.PROCESS_PANEL_DOCK_KEY);
+				}
 			}
 		}
 		updateProcessNow();
@@ -1195,6 +1183,17 @@ public class MainFrame extends ApplicationFrame implements WindowListener {
 
 	/** Returns true if the process has changed since the last save. */
 	public boolean isChanged() {
+		// repos that are transient should not allow save of an opened process, therefore we fake no changes here
+		if (getProcess().getProcessLocation() instanceof RepositoryProcessLocation) {
+			try {
+				Repository repo = ((RepositoryProcessLocation) getProcess().getProcessLocation()).getRepositoryLocation().getRepository();
+				if (repo.isTransient()) {
+					return false;
+				}
+			} catch (RepositoryException e) {
+				// ignore, should not happen but does not matter
+			}
+		}
 		return processModel.hasChanged();
 	}
 

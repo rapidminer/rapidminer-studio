@@ -86,10 +86,8 @@ import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.WebServiceTools;
 import com.rapidminer.tools.XMLException;
 import com.rapidminer.tools.XMLSerialization;
-import com.rapidminer.tools.cipher.CipherTools;
-import com.rapidminer.tools.cipher.KeyGenerationException;
-import com.rapidminer.tools.cipher.KeyGeneratorTool;
 import com.rapidminer.tools.config.ConfigurationManager;
+import com.rapidminer.tools.encryption.EncryptionProvider;
 import com.rapidminer.tools.plugin.Plugin;
 import com.rapidminer.tools.update.internal.MigrationManager;
 import com.rapidminer.tools.usagestats.ActionStatisticsCollector;
@@ -653,15 +651,6 @@ public class RapidMiner {
 		return ioObjectCache;
 	}
 
-	/**
-	 * @deprecated Use {@link #readProcessFile(File)} instead
-	 */
-	@Deprecated
-	public static Process readExperimentFile(final File experimentfile)
-			throws XMLException, IOException, InstantiationException, IllegalAccessException {
-		return readProcessFile(experimentfile);
-	}
-
 	public static Process readProcessFile(final File processFile)
 			throws XMLException, IOException, InstantiationException, IllegalAccessException {
 		return readProcessFile(processFile, null);
@@ -675,7 +664,7 @@ public class RapidMiner {
 				LogService.getRoot().log(Level.SEVERE, "com.rapidminer.RapidMiner.reading_process_definition_file_error",
 						processFile);
 			}
-			return new Process(processFile, progressListener);
+			return new Process(processFile, EncryptionProvider.DEFAULT_CONTEXT, progressListener);
 		} catch (XMLException e) {
 			throw new XMLException(processFile.getName() + ":" + e.getMessage(), e);
 		}
@@ -729,6 +718,9 @@ public class RapidMiner {
 			ConnectionInformationFileUtils.initSettings();
 		}
 
+		// init encryption
+		EncryptionProvider.initialize();
+
 		// initializing networking tools
 		GlobalAuthenticator.init();
 		initializeProxy();
@@ -760,16 +752,6 @@ public class RapidMiner {
 		// parse settings xml (before plugins are initialized)
 		SettingsItems.INSTANCE.loadGrouping();
 
-		// generate encryption key if necessary
-		if (!CipherTools.isKeyAvailable()) {
-			RapidMiner.splashMessage("gen_key");
-			try {
-				KeyGeneratorTool.createAndStoreKey();
-			} catch (KeyGenerationException e) {
-				LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
-						"com.rapidminer.RapidMiner.generating_encryption_key_error", e.getMessage()), e);
-			}
-		}
 		UsageStatistics.getInstance(); // initializes as a side effect
 		ActionStatisticsCollector.getInstance().log(ActionStatisticsCollector.TYPE_CONSTANT, ActionStatisticsCollector.VALUE_CONSTANT_START, null);
 		ActionStatisticsCollector.getInstance().log(ActionStatisticsCollector.TYPE_CONSTANT, ActionStatisticsCollector.VALUE_MODE, RapidMiner.getExecutionMode().name());

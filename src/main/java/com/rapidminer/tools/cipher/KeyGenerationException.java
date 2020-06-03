@@ -20,9 +20,12 @@ package com.rapidminer.tools.cipher;
 
 /**
  * This exception will be thrown if a problem during key generation occurs.
- * 
+ *
  * @author Ingo Mierswa
+ * @deprecated since 9.7, use {@link com.rapidminer.tools.encryption.EncryptionProvider} instead for new features
+ * needing encryption!
  */
+@Deprecated
 public class KeyGenerationException extends Exception {
 
 	private static final long serialVersionUID = -251163459747969941L;

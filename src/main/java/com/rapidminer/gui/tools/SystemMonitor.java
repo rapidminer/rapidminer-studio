@@ -29,15 +29,15 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.geom.GeneralPath;
-
 import javax.swing.JPanel;
 import javax.swing.Timer;
 
-import com.rapidminer.gui.MainFrame;
+import com.rapidminer.gui.OperatorDocumentationBrowser;
 import com.rapidminer.gui.look.Colors;
 import com.rapidminer.tools.Tools;
 import com.vlsolutions.swing.docking.DockKey;
 import com.vlsolutions.swing.docking.Dockable;
+import com.vlsolutions.swing.docking.RelativeDockablePosition;
 
 
 /**
@@ -73,10 +73,11 @@ public class SystemMonitor extends JPanel implements Dockable {
 	private static final int DELAY = 1000;
 
 	public static final String SYSTEM_MONITOR_DOCK_KEY = "system_monitor";
-	private final DockKey DOCK_KEY = new ResourceDockKey(SYSTEM_MONITOR_DOCK_KEY);
+	private final DockKey dockKey = new ResourceDockKey(SYSTEM_MONITOR_DOCK_KEY);
 
 	{
-		DOCK_KEY.setDockGroup(MainFrame.DOCK_GROUP_ROOT);
+		dockKey.putProperty(ResourceDockKey.PROPERTY_KEY_NEXT_TO_DOCKABLE, OperatorDocumentationBrowser.OPERATOR_HELP_DOCK_KEY);
+		dockKey.putProperty(ResourceDockKey.PROPERTY_KEY_DEFAULT_FALLBACK_LOCATION, RelativeDockablePosition.BOTTOM_RIGHT);
 	}
 
 	private final long[] memory = new long[NUMBER_OF_MEASUREMENTS];
@@ -190,7 +191,7 @@ public class SystemMonitor extends JPanel implements Dockable {
 
 	@Override
 	public DockKey getDockKey() {
-		return DOCK_KEY;
+		return dockKey;
 	}
 
 	protected final void setBackgroundColor(Color color) {

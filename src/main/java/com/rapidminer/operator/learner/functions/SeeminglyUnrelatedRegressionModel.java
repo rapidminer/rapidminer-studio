@@ -123,10 +123,10 @@ public class SeeminglyUnrelatedRegressionModel extends PredictionModel {
 		return exampleSet;
 	}
 
-	@Override
 	/**
 	 * This method isn't called at all, since we have overridden the calling method.
 	 */
+	@Override
 	public ExampleSet performPrediction(ExampleSet exampleSet, Attribute predictedLabel) throws OperatorException {
 		return null;
 	}
@@ -172,21 +172,20 @@ public class SeeminglyUnrelatedRegressionModel extends PredictionModel {
 
 	@Override
 	public String toString() {
-		StringBuffer result = new StringBuffer();
+		StringBuilder result = new StringBuilder();
 		int j = 0;
 		int coeffIndex = 0;
 		for (String labelName : labelNames) {
-			result.append(Tools.getLineSeparators(2) + labelName + Tools.getLineSeparators(2));
+			result.append(Tools.getLineSeparators(2)).append(labelName).append(Tools.getLineSeparators(2));
 			String[] selectedAttributes = usedAttributeNames.get(j);
 
 			// bias
-			result.append(getCoefficientString(coefficients[coeffIndex], true) + Tools.getLineSeparator());
+			result.append(getCoefficientString(coefficients[coeffIndex], true)).append(Tools.getLineSeparator());
 			coeffIndex++;
 
 			// coefficients
-			for (int i = 0; i < selectedAttributes.length; i++) {
-				result.append(getCoefficientString(coefficients[coeffIndex], false) + " * " + selectedAttributes[i]
-						+ Tools.getLineSeparator());
+			for (String selectedAttribute : selectedAttributes) {
+				result.append(getCoefficientString(coefficients[coeffIndex], false)).append(" * ").append(selectedAttribute).append(Tools.getLineSeparator());
 				coeffIndex++;
 			}
 			j++;
@@ -205,7 +204,7 @@ public class SeeminglyUnrelatedRegressionModel extends PredictionModel {
 	 *             The label name to be inserted
 	 * @param portIndex
 	 *             The input port index of the unrelated ExampleSet holding {@code originalLabelName} as label
-	 * @return
+	 * @return the label name, never {@code null}
 	 */
 	private static String generateLabelName(Set<String> usedLabelNames, String originalLabelName, int portIndex) {
 		String labelName = originalLabelName;

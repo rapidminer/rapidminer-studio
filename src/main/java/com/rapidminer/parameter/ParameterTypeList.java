@@ -19,7 +19,6 @@
 package com.rapidminer.parameter;
 
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.BiFunction;
@@ -31,8 +30,8 @@ import org.w3c.dom.Element;
 import com.rapidminer.MacroHandler;
 import com.rapidminer.io.process.XMLTools;
 import com.rapidminer.operator.Operator;
-import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.XMLException;
+import com.rapidminer.tools.encryption.EncryptionProvider;
 
 
 /**
@@ -151,7 +150,13 @@ public class ParameterTypeList extends CombinedParameterType {
 	}
 
 	@Override
+	@Deprecated
 	public Element getXML(String key, String value, boolean hideDefault, Document doc) {
+		return getXML(key, value, hideDefault, EncryptionProvider.DEFAULT_CONTEXT, doc);
+	}
+
+	@Override
+	public Element getXML(String key, String value, boolean hideDefault, String encryptionContext, Document doc) {
 		Element element = doc.createElement("list");
 		element.setAttribute("key", key);
 		List<String[]> list = null;
@@ -163,39 +168,10 @@ public class ParameterTypeList extends CombinedParameterType {
 		if (list != null) {
 			for (Object object : list) {
 				Object[] entry = (Object[]) object;
-				element.appendChild(valueType.getXML((String) entry[0], entry[1].toString(), false, doc));
+				element.appendChild(valueType.getXML((String) entry[0], entry[1].toString(), false, encryptionContext, doc));
 			}
 		}
 		return element;
-	}
-
-	/** @deprecated Replaced by DOM. */
-	@Override
-	@Deprecated
-	public String getXML(String indent, String key, String value, boolean hideDefault) {
-		StringBuffer result = new StringBuffer();
-		result.append(indent + "<list key=\"" + key + "\">" + Tools.getLineSeparator());
-
-		if (value != null) {
-			List<String[]> list = Parameters.transformString2List(value);
-			Iterator<String[]> i = list.iterator();
-			while (i.hasNext()) {
-				Object[] current = i.next();
-				result.append(valueType.getXML(indent + "  ", (String) current[0], current[1].toString(), false));
-			}
-		} else {
-			List<String[]> defaultValue = getDefaultValue();
-			if (defaultValue != null) {
-				List<String[]> defaultList = defaultValue;
-				Iterator<String[]> i = defaultList.iterator();
-				while (i.hasNext()) {
-					Object[] current = i.next();
-					result.append(valueType.getXML(indent + "  ", (String) current[0], current[1].toString(), false));
-				}
-			}
-		}
-		result.append(indent + "</list>" + Tools.getLineSeparator());
-		return result.toString();
 	}
 
 	@Override

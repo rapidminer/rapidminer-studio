@@ -31,6 +31,7 @@ import com.rapidminer.operator.Operator;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.XMLException;
 import com.rapidminer.tools.container.Pair;
+import com.rapidminer.tools.encryption.EncryptionProvider;
 
 
 /**
@@ -134,7 +135,13 @@ public class ParameterTypeTupel extends CombinedParameterType {
 	}
 
 	@Override
+	@Deprecated
 	public Element getXML(String key, String value, boolean hideDefault, Document doc) {
+		return getXML(key, value, hideDefault, EncryptionProvider.DEFAULT_CONTEXT, doc);
+	}
+
+	@Override
+	public Element getXML(String key, String value, boolean hideDefault, String encryptionContext, Document doc) {
 		Element element = doc.createElement("parameter");
 		element.setAttribute("key", key);
 		String[] tupel;
@@ -145,6 +152,7 @@ public class ParameterTypeTupel extends CombinedParameterType {
 		}
 		StringBuilder valueString = new StringBuilder();
 		boolean first = true;
+		int i = 0;
 		for (String part : tupel) {
 			if (!first) {
 				valueString.append(XML_SEPERATOR_CHAR);
@@ -154,23 +162,16 @@ public class ParameterTypeTupel extends CombinedParameterType {
 			if (part == null) {
 				part = "";
 			}
-			valueString.append(Tools.escape(part, ESCAPE_CHAR, XML_SPECIAL_CHARACTERS));
+			ParameterType parameterType = getParameterTypes()[i];
+			String val = part;
+			// force encryption
+			if (parameterType instanceof ParameterTypePassword) {
+				val = parameterType.toXMLString(val, encryptionContext);
+			}
+			valueString.append(Tools.escape(val, ESCAPE_CHAR, XML_SPECIAL_CHARACTERS));
 		}
 		element.setAttribute("value", valueString.toString());
 		return element;
-	}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public String getXML(String indent, String key, String value, boolean hideDefault) {
-		StringBuffer result = new StringBuffer();
-		String valueString = value;
-		if (value == null) {
-			valueString = transformTupel2String((Pair<String, String>) getDefaultValue());
-		}
-
-		result.append(indent + "<parameter key=\"" + key + "\" value=\"" + valueString + "\" />" + Tools.getLineSeparator());
-		return result.toString();
 	}
 
 	@Override

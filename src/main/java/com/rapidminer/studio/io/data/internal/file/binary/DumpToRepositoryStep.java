@@ -21,19 +21,27 @@ package com.rapidminer.studio.io.data.internal.file.binary;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.Path;
+import java.util.logging.Level;
 import javax.swing.JPanel;
 
+import org.apache.commons.io.IOUtils;
+
+import com.rapidminer.core.io.data.source.FileDataSource;
 import com.rapidminer.core.io.gui.ImportWizard;
+import com.rapidminer.core.io.gui.InvalidConfigurationException;
+import com.rapidminer.core.io.gui.WizardDirection;
 import com.rapidminer.core.io.gui.WizardStep;
 import com.rapidminer.gui.tools.ProgressThread;
 import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.repository.BlobEntry;
-import com.rapidminer.repository.Entry;
+import com.rapidminer.repository.BinaryEntry;
+import com.rapidminer.repository.DataEntry;
 import com.rapidminer.repository.Folder;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryLocation;
 import com.rapidminer.repository.internal.remote.RemoteFolder;
 import com.rapidminer.studio.io.gui.internal.steps.AbstractToRepositoryStep;
+import com.rapidminer.tools.LogService;
 
 
 /**
@@ -50,6 +58,9 @@ public class DumpToRepositoryStep extends AbstractToRepositoryStep<BinaryImportD
 	/** The data source (e.g., a wrapper file). */
 	private final BinaryDataSource source;
 
+	/** Flag used to set the default file name once */
+	private boolean defaultFileNameInitialized;
+
 	private boolean error;
 
 	public DumpToRepositoryStep(BinaryDataSource source, ImportWizard wizard) {
@@ -64,7 +75,7 @@ public class DumpToRepositoryStep extends AbstractToRepositoryStep<BinaryImportD
 
 	@Override
 	protected BinaryImportDestinationChooser initializeChooser(String initialDestination) {
-		return new BinaryImportDestinationChooser(source, initialDestination);
+		return new BinaryImportDestinationChooser(initialDestination);
 	}
 
 	@Override
@@ -80,36 +91,50 @@ public class DumpToRepositoryStep extends AbstractToRepositoryStep<BinaryImportD
 							((RemoteFolder) parent).getRepository().isFileExtensionBlacklisted(originalFilename)) {
 						throw new RepositoryException("File extension blacklisted for " + originalFilename);
 					}
-					parent.createBlobEntry(entryLocation.getName());
-					Entry newEntry = entryLocation.locateEntry();
-					if (newEntry == null) {
-						throw new RepositoryException("Creation of blob entry failed.");
-					}
-					BlobEntry blob = (BlobEntry) newEntry;
+					BinaryEntry binEntry = parent.createBinaryEntry(entryLocation.getName());
 					try (FileInputStream fileInputStream = new FileInputStream(source.getLocation().toFile());
-						 OutputStream outputStream = blob.openOutputStream(getChooser().getMediaType())) {
-						byte[] buffer = new byte[1024 * 20];
-						int length;
-						while ((length = fileInputStream.read(buffer)) != -1) {
-							if (isCancelled()) {
-								break;
-							}
-							outputStream.write(buffer, 0, length);
-						}
-						outputStream.flush();
+						 OutputStream outputStream = binEntry.openOutputStream()) {
+						IOUtils.copy(fileInputStream, outputStream);
 					}
 					if (isCancelled()) {
-						blob.delete();
+						binEntry.delete();
 					}
 				} catch (RepositoryException | IOException e) {
 					error = true;
 					SwingTools.showSimpleErrorMessage(wizard.getDialog(), "import_blob_failed", e, e.getMessage());
+					LogService.getRoot().log(Level.WARNING, "com.rapidminer.studio.io.data.internal.file.binary.DumpToRepositoryStep.import_failed", e);
 				}
 			}
 
 		};
 		importWorker.setIndeterminate(true);
 		return importWorker;
+	}
+
+	@Override
+	public void viewWillBecomeVisible(WizardDirection direction) throws InvalidConfigurationException {
+		wizard.setProgress(100);
+
+		if (!defaultFileNameInitialized) {
+			defaultFileNameInitialized = true;
+			// try to get a file location
+			Path filePath = null;
+			try {
+				// if there is a location it comes from a FileDataSource
+				filePath = wizard.getDataSource(FileDataSource.class).getLocation();
+			} catch (InvalidConfigurationException e) {
+				// is not a data source with a location
+			}
+
+			if (filePath != null) {
+				getChooser().setRepositoryEntryName(filePath.getFileName().toString());
+			}
+		}
+	}
+
+	@Override
+	protected Class<? extends DataEntry> getDataEntryClass() {
+		return BinaryEntry.class;
 	}
 
 	@Override

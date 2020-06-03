@@ -22,8 +22,8 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import com.rapidminer.MacroHandler;
-import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.XMLException;
+import com.rapidminer.tools.encryption.EncryptionProvider;
 
 
 /**
@@ -44,7 +44,13 @@ public abstract class ParameterTypeSingle extends ParameterType {
 	}
 
 	@Override
+	@Deprecated
 	public Element getXML(String key, String value, boolean hideDefault, Document doc) {
+		return getXML(key, value, hideDefault, EncryptionProvider.DEFAULT_CONTEXT, doc);
+	}
+
+	@Override
+	public Element getXML(String key, String value, boolean hideDefault, String encryptionContext, Document doc) {
 		Element element = doc.createElement("parameter");
 		element.setAttribute("key", key);
 		if (value != null) {
@@ -55,7 +61,7 @@ public abstract class ParameterTypeSingle extends ParameterType {
 					return null;
 				}
 			} else {
-				element.setAttribute("value", toXMLString(value));
+				element.setAttribute("value", toXMLString(value, encryptionContext));
 			}
 		} else {
 			if (!hideDefault && getDefaultValue() != null) {
@@ -65,38 +71,6 @@ public abstract class ParameterTypeSingle extends ParameterType {
 			}
 		}
 		return element;
-	}
-
-	@Override
-	public String getXML(String indent, String key, String value, boolean hideDefault) {
-		if (value != null) {
-			if (toString(value).equals(toString(getDefaultValue()))) {
-				if (!hideDefault) {
-					return indent + "<parameter key=\"" + toXMLString(key) + "\"\tvalue=\"" + toXMLString(value) + "\"/>"
-					        + Tools.getLineSeparator();
-				} else {
-					return "";
-				}
-			} else {
-				return indent + "<parameter key=\"" + toXMLString(key) + "\"\tvalue=\"" + toXMLString(value) + "\"/>"
-				        + Tools.getLineSeparator();
-			}
-		} else {
-			if (!hideDefault && getDefaultValue() != null) {
-				return indent + "<parameter key=\"" + toXMLString(key) + "\"\tvalue=\"" + toXMLString(getDefaultValue())
-				        + "\"/>" + Tools.getLineSeparator();
-			} else {
-				return "";
-			}
-		}
-	}
-
-	/**
-	 * Subclasses may override this method to transform the string before writing it to XML.
-	 * {@link ParameterTypePassword} uses this to encrypt the string.
-	 */
-	public String toXMLString(String value) {
-		return value;
 	}
 
 	@Override

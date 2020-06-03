@@ -78,19 +78,23 @@ import com.rapidminer.operator.UnknownParameterInformation;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.operator.execution.FlowData;
 import com.rapidminer.operator.execution.ProcessFlowFilter;
+import com.rapidminer.operator.nio.file.BinaryEntryFileObject;
 import com.rapidminer.operator.nio.file.RepositoryBlobObject;
 import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.OutputPort;
 import com.rapidminer.operator.ports.Port;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.report.ReportStream;
+import com.rapidminer.repository.BinaryEntry;
 import com.rapidminer.repository.BlobEntry;
-import com.rapidminer.repository.Entry;
+import com.rapidminer.repository.DataEntry;
 import com.rapidminer.repository.IOObjectEntry;
 import com.rapidminer.repository.MalformedRepositoryLocationException;
 import com.rapidminer.repository.RepositoryAccessor;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryLocation;
+import com.rapidminer.repository.RepositoryLocationBuilder;
+import com.rapidminer.repository.RepositoryLocationType;
 import com.rapidminer.repository.RepositoryManager;
 import com.rapidminer.studio.internal.ProcessFlowFilterRegistry;
 import com.rapidminer.studio.internal.Resources;
@@ -110,6 +114,7 @@ import com.rapidminer.tools.WrapperLoggingHandler;
 import com.rapidminer.tools.XMLException;
 import com.rapidminer.tools.XMLParserException;
 import com.rapidminer.tools.container.Pair;
+import com.rapidminer.tools.encryption.EncryptionProvider;
 import com.rapidminer.tools.usagestats.ActionStatisticsCollector;
 
 
@@ -135,6 +140,14 @@ import com.rapidminer.tools.usagestats.ActionStatisticsCollector;
  * @author Ingo Mierswa
  */
 public class Process extends AbstractObservable<Process> implements Cloneable {
+
+	/**
+	 * Signals that no encryption context should be used when reading the process XML (aka it is not encrypted). See
+	 * {@link #Process(String, String)}.
+	 *
+	 * @since 9.7
+	 */
+	public static final String NO_ENCRYPTION = null;
 
 	public static final int PROCESS_STATE_UNKNOWN = -1;
 	public static final int PROCESS_STATE_STOPPED = 0;
@@ -213,7 +226,7 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 
 	/**
 	 * Stores IOObjects according to a specified name for a long-term scope like the session of
-	 * RapidMiner or a RapidMiner Server app session
+	 * RapidMiner or a RapidMiner AI Hub app session
 	 */
 	private IOObjectMap ioObjectCache = RapidMiner.getGlobalIOObjectCache();
 
@@ -247,6 +260,7 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 	 */
 	private boolean omitNullResults = true;
 
+
 	// -------------------
 	// Constructors
 	// -------------------
@@ -263,58 +277,148 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 		initContext();
 	}
 
+	/**
+	 * @deprecated since 9.7, use {@link #Process(File, String, ProgressListener)} instead
+	 */
+	@Deprecated
 	public Process(final File file) throws IOException, XMLException {
-		this(file, null);
+		this(file, EncryptionProvider.DEFAULT_CONTEXT, null);
 	}
 
 	/**
-	 * Creates a new process from the given process file. This might have been created with the GUI
-	 * beforehand.
+	 * @deprecated since 9.7, use {@link #Process(File, String, ProgressListener)} instead
 	 */
+	@Deprecated
 	public Process(final File file, final ProgressListener progressListener) throws IOException, XMLException {
+		this(file, EncryptionProvider.DEFAULT_CONTEXT, progressListener);
+	}
+
+	/**
+	 * Creates a new process from the given process file. This might have been created with the GUI beforehand. Will use
+	 * the specified encryption context for decryption.
+	 *
+	 * @param file              the file where the process XML is contained in
+	 * @param encryptionContext the encryption context that will be used to potentially decrypt values (see {@link
+	 *                          com.rapidminer.tools.encryption.EncryptionProvider})
+	 * @param progressListener  notified of load progress. Can be {@code null}
+	 * @since 9.7
+	 */
+	public Process(final File file, final String encryptionContext, final ProgressListener progressListener) throws IOException, XMLException {
 		this.processLocation = new FileProcessLocation(file);
 		initContext();
-		try (FileInputStream fis = new FileInputStream(file); Reader in = new InputStreamReader(fis, "UTF-8")) {
-			readProcess(in, progressListener);
+		try (FileInputStream fis = new FileInputStream(file); Reader in = new InputStreamReader(fis, StandardCharsets.UTF_8)) {
+			readProcess(in, encryptionContext, progressListener);
 		}
 	}
 
 	/**
-	 * Creates a new process from the given XML copying state information not covered by the XML
-	 * from the parameter process.
+	 * Creates a new process from the given XML copying the process location from the parameter process.
+	 *
+	 * @deprecated since 9.7, use {@link #Process(String, String)} followed by {@link #setProcessLocation(ProcessLocation)}
 	 */
+	@Deprecated
 	public Process(final String xml, final Process process) throws IOException, XMLException {
-		this(xml);
 		this.processLocation = process.processLocation;
+		initContext();
+
+		String encryptionContext;
+		try {
+			encryptionContext = processLocation instanceof RepositoryProcessLocation ? ((RepositoryProcessLocation) processLocation).getRepositoryLocation().getRepository().getEncryptionContext() : EncryptionProvider.DEFAULT_CONTEXT;
+		} catch (RepositoryException e) {
+			encryptionContext = EncryptionProvider.DEFAULT_CONTEXT;
+		}
+		try (StringReader in = new StringReader(xml)) {
+			readProcess(in, encryptionContext);
+		}
 	}
 
-	/** Reads an process configuration from an XML String. */
+	/**
+	 * @deprecated since 9.7, use {@link #Process(String, String)}
+	 */
+	@Deprecated
 	public Process(final String xmlString) throws IOException, XMLException {
-		initContext();
-		StringReader in = new StringReader(xmlString);
-		readProcess(in);
-		in.close();
+		this(xmlString, NO_ENCRYPTION);
 	}
 
-	/** Reads an process configuration from the given reader. */
+	/**
+	 * Reads a process configuration from an XML String with the specified encryption context for decryption.
+	 *
+	 * @param xmlString         the XML with potentially encrypted values
+	 * @param encryptionContext the encryption context that will be used to potentially decrypt values (see {@link
+	 *                          com.rapidminer.tools.encryption.EncryptionProvider}). If no encryption needs to be used
+	 *                          (e.g. because the process XML is not encrypted), you can use {@link #NO_ENCRYPTION} as
+	 *                          an argument here
+	 * @since 9.7
+	 */
+	public Process(final String xmlString, final String encryptionContext) throws IOException, XMLException {
+		initContext();
+		try (StringReader in = new StringReader(xmlString)) {
+			readProcess(in, encryptionContext);
+		}
+	}
+
+	/**
+	 * @deprecated since 9.7, use {@link #Process(Reader, String)}
+	 */
+	@Deprecated
 	public Process(final Reader in) throws IOException, XMLException {
-		initContext();
-		readProcess(in);
+		this(in, null);
 	}
 
-	/** Reads an process configuration from the given stream. */
+	/**
+	 * Reads a process configuration from the given reader with the specified encryption context for decryption.
+	 *
+	 * @param in                the reader containing the XML with potentially encrypted values
+	 * @param encryptionContext the encryption context that will be used to potentially decrypt values (see {@link
+	 *                          com.rapidminer.tools.encryption.EncryptionProvider})
+	 * @since 9.7
+	 */
+	public Process(final Reader in, final String encryptionContext) throws IOException, XMLException {
+		initContext();
+		readProcess(in, encryptionContext);
+	}
+
+	/**
+	 * @deprecated since 9.7, use {@link #Process(InputStream, String)}
+	 */
+	@Deprecated
 	public Process(final InputStream in) throws IOException, XMLException {
-		initContext();
-		readProcess(new InputStreamReader(in, XMLImporter.PROCESS_FILE_CHARSET));
+		this(in, null);
 	}
 
-	/** Reads an process configuration from the given URL. */
+	/**
+	 * Reads a process configuration from the given stream with the specified encryption context for decryption.
+	 *
+	 * @param in                the input stream containing the XML with potentially encrypted values
+	 * @param encryptionContext the encryption context that will be used to potentially decrypt values (see {@link
+	 *                          com.rapidminer.tools.encryption.EncryptionProvider})
+	 * @since 9.7
+	 */
+	public Process(final InputStream in, final String encryptionContext) throws IOException, XMLException {
+		this(new InputStreamReader(in, XMLImporter.PROCESS_FILE_CHARSET), encryptionContext);
+	}
+
+	/**
+	 * @deprecated since 9.7, use {@link #Process(URL, String)}
+	 */
+	@Deprecated
 	public Process(final URL url) throws IOException, XMLException {
+		this(url, null);
+	}
+
+	/**
+	 * Reads a process configuration from the given URL with the specified encryption context for decryption.
+	 *
+	 * @param url               the URL which contains the XML with potentially encrypted values
+	 * @param encryptionContext the encryption context that will be used to potentially decrypt values (see {@link
+	 *                          com.rapidminer.tools.encryption.EncryptionProvider})
+	 * @since 9.7
+	 */
+	public Process(final URL url, final String encryptionContext) throws IOException, XMLException {
 		initContext();
 		try (Reader in = new InputStreamReader(WebServiceTools.openStreamFromURL(url), StandardCharsets.UTF_8)) {
-			readProcess(in);
+			readProcess(in, encryptionContext);
 		}
-
 	}
 
 	protected Logger makeLogger() {
@@ -354,26 +458,10 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 		return new Process(this);
 	}
 
-	/**
-	 * @deprecated Use {@link #setProcessState(int)} instead
-	 */
-	@Deprecated
-	public synchronized void setExperimentState(final int state) {
-		setProcessState(state);
-	}
-
 	private void setProcessState(final int state) {
 		int oldState = this.processState;
 		this.processState = state;
 		fireProcessStateChanged(oldState, state);
-	}
-
-	/**
-	 * @deprecated Use {@link #getProcessState()} instead
-	 */
-	@Deprecated
-	public synchronized int getExperimentState() {
-		return getProcessState();
 	}
 
 	public int getProcessState() {
@@ -881,16 +969,6 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 		this.unknownParameterInformation.clear();
 	}
 
-	/**
-	 * Checks for correct number of inner operators, properties, and io.
-	 *
-	 * @deprecated Use {@link #checkProcess(IOContainer)} instead
-	 */
-	@Deprecated
-	public boolean checkExperiment(final IOContainer inputContainer) {
-		return checkProcess(inputContainer);
-	}
-
 	/** Checks for correct number of inner operators, properties, and io. */
 	public boolean checkProcess(final IOContainer inputContainer) {
 		rootOperator.checkAll();
@@ -1016,7 +1094,7 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 			OutputPort port = rootOperator.getSubprocess(0).getInnerSources().getPortByIndex(i);
 			RepositoryLocation loc;
 			try {
-				loc = resolveRepositoryLocation(location);
+				loc = resolveRepositoryLocation(location, RepositoryLocationType.DATA_ENTRY);
 			} catch (MalformedRepositoryLocationException | UserError e1) {
 				if (progressListener != null) {
 					progressListener.complete();
@@ -1024,7 +1102,7 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 				throw new PortUserError(port, 325, e1.getMessage());
 			}
 			try {
-				Entry entry = loc.locateEntry();
+				DataEntry entry = loc.locateData();
 				if (entry == null) {
 					if (progressListener != null) {
 						progressListener.complete();
@@ -1036,6 +1114,12 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 					// only deliver the data if the port is really connected
 					if (port.isConnected()) {
 						port.deliver(((IOObjectEntry) entry).retrieveData(null));
+					}
+				} else if (entry instanceof BinaryEntry) {
+					getLogger().info("Assigning " + loc + " to input port " + port.getSpec() + ".");
+					// only deliver the data if the port is really connected
+					if (port.isConnected()) {
+						port.deliver(new BinaryEntryFileObject(loc));
 					}
 				} else if (entry instanceof BlobEntry) {
 					getLogger().info("Assigning " + loc + " to input port " + port.getSpec() + ".");
@@ -1081,7 +1165,8 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 					InputPort port = rootOperator.getSubprocess(0).getInnerSinks().getPortByIndex(i);
 					RepositoryLocation location;
 					try {
-						location = rootOperator.getProcess().resolveRepositoryLocation(locationStr);
+						location = rootOperator.getProcess().resolveRepositoryLocation(locationStr, RepositoryLocationType.DATA_ENTRY);
+						location.setExpectedDataEntryType(IOObjectEntry.class);
 					} catch (MalformedRepositoryLocationException | UserError e) {
 						throw new PortUserError(port, 325, e.getMessage());
 					}
@@ -1520,22 +1605,62 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 			String homeName = System.getProperty("user.home");
 			if (homeName != null) {
 				File file = new File(new File(homeName), name);
-				getLogger().warning("Process not attached to a file. Resolving against user directory: '" + file + "'.");
+				getLogger().info("Process not attached to a file. Resolving against user directory: '" + file + "'.");
 				return file;
 			} else {
-				getLogger().warning("Process not attached to a file. Trying absolute filename '" + name + "'.");
+				getLogger().info("Process not attached to a file. Trying absolute filename '" + name + "'.");
 				return new File(name);
 			}
 		}
 
 	}
 
-	/** Reads the process setup from the given input stream. */
+	/**
+	 * @deprecated since 9.7, use {@link #readProcess(Reader, String)} instead
+	 */
+	@Deprecated
 	public void readProcess(final Reader in) throws XMLException, IOException {
-		readProcess(in, null);
+		readProcess(in, EncryptionProvider.DEFAULT_CONTEXT);
 	}
 
+	/**
+	 * @deprecated since 9.7, use {@link #readProcess(Reader, String, ProgressListener)} instead
+	 */
+	@Deprecated
 	public void readProcess(final Reader in, final ProgressListener progressListener) throws XMLException, IOException {
+		readProcess(in, EncryptionProvider.DEFAULT_CONTEXT, progressListener);
+	}
+
+	/**
+	 * Reads the process from the given {@link Reader}. Will use the specified encryption context (see {@link
+	 * EncryptionProvider}) to decrypt possible secret values.
+	 *
+	 * @param in                the reader, must not be {@code null}
+	 * @param encryptionContext the encryption context that will be used to potentially decrypt values (see {@link
+	 *                          com.rapidminer.tools.encryption.EncryptionProvider}). If {@code null}, will treat secret
+	 *                          values are unencrypted and thus not attempt to decrypt anything
+	 * @throws XMLException if the XML cannot be parsed
+	 * @throws IOException  if something goes wrong technically
+	 * @since 9.7
+	 */
+	public void readProcess(Reader in, String encryptionContext) throws XMLException, IOException {
+		readProcess(in, encryptionContext, null);
+	}
+
+	/**
+	 * Reads the process from the given {@link Reader}. Will use the specified encryption context (see {@link
+	 * EncryptionProvider}) to decrypt possible secret values.
+	 *
+	 * @param in                the reader, must not be {@code null}
+	 * @param encryptionContext the encryption context that will be used to potentially decrypt values (see {@link
+	 *                          com.rapidminer.tools.encryption.EncryptionProvider}). If {@code null}, will treat secret
+	 *                          values are unencrypted and thus not attempt to decrypt anything
+	 * @param progressListener  the progress listener to be notified of load progress. Can be {@code null}
+	 * @throws XMLException if the XML cannot be parsed
+	 * @throws IOException  if something goes wrong technically
+	 * @since 9.7
+	 */
+	public void readProcess(Reader in, String encryptionContext, ProgressListener progressListener) throws XMLException, IOException {
 		Map<String, Operator> nameMapBackup = operatorNameMap;
 		operatorNameMap = new HashMap<>(); // no invocation of clear (see below)
 
@@ -1549,7 +1674,7 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 				progressListener.setCompleted(20);
 			}
 			unknownParameterInformation.clear();
-			XMLImporter xmlImporter = new XMLImporter(progressListener);
+			XMLImporter xmlImporter = new XMLImporter(progressListener, encryptionContext);
 			xmlImporter.parse(document, this, unknownParameterInformation);
 
 			nameMapBackup = operatorNameMap;
@@ -1612,7 +1737,7 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 		if (rootOperator == null) {
 			return "empty process";
 		} else {
-			return "Process:" + Tools.getLineSeparator() + rootOperator.getXML(true);
+			return "Process:" + Tools.getLineSeparator() + rootOperator.getXML(true, EncryptionProvider.DEFAULT_CONTEXT);
 		}
 	}
 
@@ -1673,17 +1798,35 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 		}
 	}
 
-	/** Resolves a repository location relative to {@link #getRepositoryLocation()}. */
-	public RepositoryLocation resolveRepositoryLocation(final String loc)
+	/**
+	 * Resolves a repository location relative to {@link #getRepositoryLocation()}.
+	 *
+	 * @param loc the location path
+	 * @deprecated since 9.7, use {@link #resolveRepositoryLocation(String, RepositoryLocationType)} instead
+	 */
+	@Deprecated
+	public RepositoryLocation resolveRepositoryLocation(final String loc) throws UserError, MalformedRepositoryLocationException {
+		return resolveRepositoryLocation(loc, RepositoryLocationType.UNKNOWN);
+	}
+
+	/**
+	 * Resolves a repository location relative to {@link #getRepositoryLocation()}. Don't forget to set further
+	 * properties on the returned location, e.g. {@link RepositoryLocation#setExpectedDataEntryType(Class)}!
+	 *
+	 * @param loc          the location path
+	 * @param locationType the type, e.g data or folder
+	 * @since 9.7
+	 */
+	public RepositoryLocation resolveRepositoryLocation(final String loc, RepositoryLocationType locationType)
 			throws UserError, MalformedRepositoryLocationException {
 		if (RepositoryLocation.isAbsolute(loc)) {
-			RepositoryLocation repositoryLocation = new RepositoryLocation(loc);
+			RepositoryLocation repositoryLocation = new RepositoryLocationBuilder().withLocationType(locationType).buildFromAbsoluteLocation(loc);
 			repositoryLocation.setAccessor(getRepositoryAccessor());
 			return repositoryLocation;
 		}
 		RepositoryLocation repositoryLocation = getRepositoryLocation();
 		if (repositoryLocation != null) {
-			RepositoryLocation repositoryLocation2 = new RepositoryLocation(repositoryLocation.parent(), loc);
+			RepositoryLocation repositoryLocation2 = new RepositoryLocationBuilder().withLocationType(locationType).buildFromParentLocation(repositoryLocation.parent(), loc);
 			repositoryLocation2.setAccessor(getRepositoryAccessor());
 			return repositoryLocation2;
 		} else {
@@ -1765,41 +1908,8 @@ public class Process extends AbstractObservable<Process> implements Cloneable {
 		}
 	}
 
-	/**
-	 * Returns the current process file.
-	 *
-	 * @deprecated Use {@link #getProcessFile()} instead
-	 */
-	@Deprecated
-	public File getExperimentFile() {
-		return getProcessFile();
-	}
-
-	/**
-	 * Returns the current process file.
-	 *
-	 * @deprecated Use {@link #getProcessLocation()}
-	 */
-	@Deprecated
-	public File getProcessFile() {
-		if (processLocation instanceof FileProcessLocation) {
-			return ((FileProcessLocation) processLocation).getFile();
-		} else {
-			return null;
-		}
-	}
-
-	/**
-	 * Sets the process file. This file might be used for resolving relative filenames.
-	 *
-	 * @deprecated Please use {@link #setProcessFile(File)} instead.
-	 */
-	@Deprecated
-	public void setExperimentFile(final File file) {
-		setProcessLocation(new FileProcessLocation(file));
-	}
-
 	/** Sets the process file. This file might be used for resolving relative filenames. */
+	@Deprecated
 	public void setProcessFile(final File file) {
 		setProcessLocation(new FileProcessLocation(file));
 	}

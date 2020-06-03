@@ -87,6 +87,19 @@ public abstract class AggregationFunction {
 	public static final String FUNCTION_NAME_LEAST_ONLY_OCCURRING = "least (only occurring)";
 	public static final String FUNCTION_NAME_CONCATENATION = "concatenation";
 
+	/**
+	 * Indicates when to use a map instead of full array for nominal mapping counting
+	 *
+	 * @since 9.7
+	 */
+	public static final int MAX_MAPPING_SIZE = 1000;
+	/**
+	 * Fill ratio of {@link #MAX_MAPPING_SIZE} maps. When a map get's too big, switch back to full array.
+	 *
+	 * @since 9.7
+	 */
+	public static final int MAP_FILL_RATIO = 5;
+
 	private static final List<AggregationFunction> CUSTOMIZABLE_AGGREGATION_FUNCTIONS = new ArrayList<>();
 
 	private static final Map<String, Class<? extends AggregationFunction>> AGGREGATION_FUNCTIONS = new TreeMap<>();

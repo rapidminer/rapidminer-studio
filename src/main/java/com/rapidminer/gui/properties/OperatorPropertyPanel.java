@@ -80,6 +80,7 @@ import com.rapidminer.parameter.Parameters;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.Observer;
 import com.rapidminer.tools.PlatformUtilities;
+import com.rapidminer.tools.Tools;
 import com.vlsolutions.swing.docking.DockKey;
 import com.vlsolutions.swing.docking.Dockable;
 
@@ -381,7 +382,7 @@ public class OperatorPropertyPanel extends PropertyPanel implements Dockable, Pr
 
 	@Override
 	protected void setValue(Operator operator, ParameterType type, String value) {
-		if (value.length() == 0) {
+		if (value.isEmpty()) {
 			value = null;
 		}
 		operator.setParameter(type.getKey(), value);
@@ -515,13 +516,12 @@ public class OperatorPropertyPanel extends PropertyPanel implements Dockable, Pr
 	private void setNameFor(Operator operator) {
 		if (operator != null) {
 			headerLabel.setFont(selectedFont);
-			if (operator.getName().equals(operator.getOperatorDescription().getName())) {
-				headerLabel.setText(operator.getName());
-			} else {
-				headerLabel.setText(operator.getName() + " (" + operator.getOperatorDescription().getName() + ")");
+			String name = Tools.escapeHTML(operator.getName());
+			if (!operator.getName().equals(operator.getOperatorDescription().getName())) {
+				name += " (" + operator.getOperatorDescription().getName() + ")";
 			}
+			headerLabel.setText("<html>" + name + "</html>");
 			headerLabel.setIcon(operator.getOperatorDescription().getSmallIcon());
-
 		} else {
 			headerLabel.setFont(unselectedFont);
 			headerLabel.setText("Select an operator to configure it.");

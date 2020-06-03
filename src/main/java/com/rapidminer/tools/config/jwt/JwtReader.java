@@ -36,7 +36,10 @@ import com.rapidminer.repository.internal.remote.RemoteRepository;
  *
  * @author Jonas Wilms-Pfau
  * @since 8.1.0
+ * @deprecated since 9.7; use {@link com.rapidminer.repository.internal.remote.BaseServerClient#getJwtClaim()
+ * BaseServerClient.getJwtClaim()} instead to get a {@link JwtClaim}.
  */
+@Deprecated
 public class JwtReader {
 
 	/**

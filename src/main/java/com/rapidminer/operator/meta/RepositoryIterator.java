@@ -28,12 +28,14 @@ import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.UserError;
+import com.rapidminer.operator.nio.file.BinaryEntryFileObject;
+import com.rapidminer.operator.nio.file.FileObject;
 import com.rapidminer.operator.nio.file.RepositoryBlobObject;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeRepositoryLocation;
+import com.rapidminer.repository.BinaryEntry;
 import com.rapidminer.repository.BlobEntry;
 import com.rapidminer.repository.DataEntry;
-import com.rapidminer.repository.Entry;
 import com.rapidminer.repository.Folder;
 import com.rapidminer.repository.IOObjectEntry;
 import com.rapidminer.repository.RepositoryException;
@@ -52,6 +54,7 @@ public class RepositoryIterator extends AbstractRepositoryIterator {
 
 	private RepositoryLocation repositoryLocation;
 
+
 	public RepositoryIterator(OperatorDescription description) {
 		super(description);
 	}
@@ -59,107 +62,31 @@ public class RepositoryIterator extends AbstractRepositoryIterator {
 	@Override
 	protected void iterate(Object currentParent, Pattern filter, boolean recursive, int type) throws OperatorException {
 		// transform Repository Entry
-		Entry entry = null;
-		if (currentParent != null && currentParent instanceof RepositoryLocation) {
+		Folder folder;
+		if (currentParent instanceof RepositoryLocation) {
 			repositoryLocation = (RepositoryLocation) currentParent;
 		}
 		try {
-			entry = repositoryLocation.locateEntry();
-			if (entry == null) {
+			folder = repositoryLocation.locateFolder();
+			if (folder == null) {
 				throw new UserError(this, 323, getParameterAsString(PARAMETER_DIRECTORY));
 			}
 		} catch (RepositoryException e) {
 			throw new UserError(this, 323, getParameterAsString(PARAMETER_DIRECTORY));
 		}
 		// calculate total number of iterations
-		getProgress().setTotal(countIterations(entry, recursive) + 1);
+		getProgress().setTotal(countIterations(folder, recursive) + 1);
 		getProgress().setCompleted(1);
+
 		// start to iterate
-		this.iterate(entry, filter, recursive, type);
+		iterateFolder(folder, filter, recursive, type);
+
 		getProgress().complete();
-	}
-
-	private int countIterations(Entry entry, boolean recursive) throws OperatorException {
-		int iterations = 0;
-		try {
-			if (!recursive) {
-				iterations = ((Folder) entry).getDataEntries().size();
-			} else {
-				iterations = ((Folder) entry).getDataEntries().size();
-				for (Entry child : ((Folder) entry).getSubfolders()) {
-					if (child.getType().equals(Folder.TYPE_NAME)) {
-						iterations += countIterations(child, recursive);
-					} else {
-						iterations++;
-					}
-				}
-
-			}
-		} catch (RepositoryException e) {
-			throw new UserError(this, 312, entry.getLocation().getAbsoluteLocation(), e.getCause());
-		}
-		return iterations;
-	}
-
-	private void iterate(Entry currentParent, Pattern filter, boolean recursive, int type) throws OperatorException {
-		getProgress().step();
-		try {
-			Entry entry = currentParent;
-			String entryType = entry.getType();
-			if (entryType.equals(Folder.TYPE_NAME)) {
-
-				List<DataEntry> entries = new ArrayList<>(((Folder) entry).getDataEntries());
-
-				for (Entry child : entries) {
-					iterate(child, filter, recursive, type);
-				}
-				if (recursive) {
-					for (Entry child : ((Folder) entry).getSubfolders()) {
-						iterate(child, filter, recursive, type);
-					}
-				}
-
-			}
-			Folder containingFolder = entry.getContainingFolder();
-			if (entryType.equals(IOObjectEntry.TYPE_NAME) && type == IO_OBJECT) {
-				String fileName = entry.getName();
-				String fullPath = entry.getLocation().getAbsoluteLocation();
-				if (containingFolder != null) {
-					String parentPath = containingFolder.getName();
-					if (matchesFilter(filter, fileName, fullPath, parentPath)) {
-
-						IOObject data = ((IOObjectEntry) entry).retrieveData(null);
-						data.setSource(getName());
-						data.getAnnotations().setAnnotation(Annotations.KEY_SOURCE, entry.getLocation().toString());
-						doWorkForSingleIterationStep(fileName, fullPath, parentPath, data);
-					}
-				}
-			}
-			if (entryType.equals(BlobEntry.TYPE_NAME) && type == BLOB) {
-				String fileName = entry.getName();
-				String fullPath = entry.getLocation().getAbsoluteLocation();
-				if (containingFolder != null) {
-
-					String parentPath = containingFolder.getName();
-					if (matchesFilter(filter, fileName, fullPath, parentPath)) {
-						RepositoryLocation location = entry.getLocation();
-						String source = location.getAbsoluteLocation();
-						RepositoryBlobObject result2 = new RepositoryBlobObject(location);
-						result2.getAnnotations().setAnnotation(Annotations.KEY_SOURCE, source);
-						result2.setSource(getName());
-						result2.getAnnotations().setAnnotation(Annotations.KEY_SOURCE, location.toString());
-						doWorkForSingleIterationStep(fileName, fullPath, parentPath, result2);
-					}
-				}
-			}
-		} catch (RepositoryException e) {
-			throw new UserError(this, 312, currentParent.getLocation().getAbsoluteLocation(), e.getCause());
-		}
 	}
 
 	@Override
 	public void doWork() throws OperatorException {
-		repositoryLocation = getParameterAsRepositoryLocation(PARAMETER_DIRECTORY);
+		repositoryLocation = getParameterAsRepositoryLocationFolder(PARAMETER_DIRECTORY);
 		getProgress().setTotal(1);
 		super.doWork();
 	}
@@ -179,4 +106,81 @@ public class RepositoryIterator extends AbstractRepositoryIterator {
 		return types;
 	}
 
+	private int countIterations(Folder folder, boolean recursive) throws OperatorException {
+		int iterations;
+		try {
+			if (!recursive) {
+				iterations = folder.getDataEntries().size();
+			} else {
+				iterations = folder.getDataEntries().size();
+				for (Folder subfolder : folder.getSubfolders()) {
+					iterations += countIterations(subfolder, recursive);
+				}
+			}
+		} catch (RepositoryException e) {
+			throw new UserError(this, 312, folder.getLocation().getAbsoluteLocation(), e.getCause());
+		}
+		return iterations;
+	}
+
+	private void iterateFolder(Folder folder, Pattern filter, boolean recursive, int type) throws OperatorException {
+		getProgress().step();
+		try {
+			List<DataEntry> entries = new ArrayList<>(folder.getDataEntries());
+
+			for (DataEntry child : entries) {
+				handleData(child, filter, type);
+			}
+			if (recursive) {
+				for (Folder subfolder : folder.getSubfolders()) {
+					iterateFolder(subfolder, filter, recursive, type);
+				}
+			}
+		} catch (RepositoryException e) {
+			throw new UserError(this, 312, folder.getLocation().getAbsoluteLocation(), e.getCause());
+		}
+	}
+
+	private void handleData(DataEntry entry, Pattern filter, int type) throws OperatorException {
+		Folder containingFolder = entry.getContainingFolder();
+		try {
+			if (entry instanceof IOObjectEntry && type == IO_OBJECT) {
+				String fileName = entry.getName();
+				String fullPath = entry.getLocation().getAbsoluteLocation();
+				if (containingFolder != null) {
+					String parentPath = containingFolder.getName();
+					if (matchesFilter(filter, fileName, fullPath, parentPath)) {
+
+						IOObject data = ((IOObjectEntry) entry).retrieveData(null);
+						data.setSource(getName());
+						data.getAnnotations().setAnnotation(Annotations.KEY_SOURCE, entry.getLocation().toString());
+						doWorkForSingleIterationStep(fileName, fullPath, parentPath, data);
+					}
+				}
+			} else if ((entry instanceof BinaryEntry || entry instanceof BlobEntry) && type == BLOB) {
+				String fileName = entry.getName();
+				String fullPath = entry.getLocation().getAbsoluteLocation();
+				if (containingFolder != null) {
+
+					String parentPath = containingFolder.getName();
+					if (matchesFilter(filter, fileName, fullPath, parentPath)) {
+						RepositoryLocation location = entry.getLocation();
+
+						FileObject result;
+						if (entry instanceof BinaryEntry) {
+							result = new BinaryEntryFileObject(location);
+						} else {
+							result = new RepositoryBlobObject(location);
+						}
+						result.getAnnotations().setAnnotation(Annotations.KEY_SOURCE, location.getAbsoluteLocation());
+						result.setSource(getName());
+
+						doWorkForSingleIterationStep(fileName, fullPath, parentPath, result);
+					}
+				}
+			}
+		} catch (RepositoryException e) {
+			throw new UserError(this, 312, containingFolder.getLocation().getAbsoluteLocation(), e.getCause());
+		}
+	}
 }

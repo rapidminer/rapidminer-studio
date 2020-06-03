@@ -29,7 +29,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
-import javax.swing.SwingUtilities;
 
 import com.rapidminer.Process;
 import com.rapidminer.RepositoryProcessLocation;
@@ -41,7 +40,7 @@ import com.rapidminer.repository.IOObjectEntry;
 import com.rapidminer.repository.MalformedRepositoryLocationException;
 import com.rapidminer.repository.ProcessEntry;
 import com.rapidminer.repository.RepositoryException;
-import com.rapidminer.repository.RepositoryLocation;
+import com.rapidminer.repository.RepositoryLocationBuilder;
 import com.rapidminer.repository.resource.ZipStreamResource;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.NonClosingZipInputStream;
@@ -176,8 +175,8 @@ public class Template implements ZipStreamResource {
 	 */
 	public Process makeProcess() throws IOException, XMLException, MalformedRepositoryLocationException {
 		String processLocation = TEMPLATES_PATH + title + "/" + processName;
-		RepositoryProcessLocation repoLocation = new RepositoryProcessLocation(new RepositoryLocation(processLocation));
-		Process process = new Process(repoLocation.getRawXML());
+		RepositoryProcessLocation repoLocation = new RepositoryProcessLocation(new RepositoryLocationBuilder().withExpectedDataEntryType(ProcessEntry.class).buildFromAbsoluteLocation(processLocation));
+		Process process = new Process(repoLocation.getRawXML(), Process.NO_ENCRYPTION);
 		ProcessOriginProcessXMLFilter.setProcessOriginState(process, ProcessOriginState.GENERATED_TEMPLATE);
 		return process;
 	}

@@ -32,7 +32,7 @@ import com.rapidminer.tools.PasswordInputCanceledException;
 
 /**
  *
- * The {@link RemoteScheduler} allows to schedule Process executions on RapidMiner Server.
+ * The {@link RemoteScheduler} allows to schedule Process executions on a RapidMiner AI Hub.
  *
  * @author Nils Woehler
  * @since 6.5.0

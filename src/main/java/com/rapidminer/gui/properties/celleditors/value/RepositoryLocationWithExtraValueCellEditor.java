@@ -35,9 +35,12 @@ import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.parameter.ParameterTypeRepositoryLocation;
+import com.rapidminer.repository.DataEntry;
 import com.rapidminer.repository.Entry;
+import com.rapidminer.repository.Folder;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryLocation;
+
 
 /**
  * Abstract repository location cell editor that is specialized for a special {@link Entry} type and adds a second button
@@ -61,11 +64,20 @@ public abstract class RepositoryLocationWithExtraValueCellEditor extends Reposit
 		}
 
 		@Override
+		@SuppressWarnings("unchecked")
 		public void loggedActionPerformed(ActionEvent e) {
 			RepositoryLocation repositoryLocation;
 			try {
 				if (getTextField() != null) {
-					repositoryLocation = RepositoryLocation.getRepositoryLocation(getTextFieldText(), getOperator());
+					if (Folder.class.isAssignableFrom(getExpectedEntryClass())) {
+						repositoryLocation = RepositoryLocation.getRepositoryLocationFolder(getTextFieldText(), getOperator());
+					} else if (DataEntry.class.isAssignableFrom(getExpectedEntryClass())) {
+						repositoryLocation = RepositoryLocation.getRepositoryLocationData(getTextFieldText(), getOperator(), (Class<? extends DataEntry>) getExpectedEntryClass());
+					} else {
+						// should not happen
+						SwingTools.showVerySimpleErrorMessage("unknown_entry_type", getExpectedEntryClass().getName());
+						return;
+					}
 					if (repositoryLocation != null) {
 						doExtraAction(repositoryLocation);
 					}
@@ -151,11 +163,19 @@ public abstract class RepositoryLocationWithExtraValueCellEditor extends Reposit
 		ProgressThread t = new ProgressThread("check_process_location_available", false, location) {
 
 			@Override
+			@SuppressWarnings("unchecked")
 			public void run() {
 				boolean enabled = true;
 				try {
-					// check whether the lcoation can be found and is of correct type
-					enabled = getExpectedEntryClass().isInstance(RepositoryLocation.getRepositoryLocation(location, getOperator()).locateEntry());
+					// check whether the location can be found and is of correct type
+					if (Folder.class.isAssignableFrom(getExpectedEntryClass())) {
+						enabled = getExpectedEntryClass().isInstance(RepositoryLocation.getRepositoryLocationFolder(location, getOperator()).locateFolder());
+					} else if (DataEntry.class.isAssignableFrom(getExpectedEntryClass())) {
+						enabled = getExpectedEntryClass().isInstance(RepositoryLocation.getRepositoryLocationData(location, getOperator(), (Class<? extends DataEntry>) getExpectedEntryClass()).locateData());
+					} else {
+						// should not happen
+						enabled = false;
+					}
 				} catch (UserError | RepositoryException e) {
 					enabled = false;
 				}

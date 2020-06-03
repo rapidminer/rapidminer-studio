@@ -18,6 +18,12 @@
  */
 package com.rapidminer.repository.resource;
 
+import static com.rapidminer.repository.RepositoryTools.NAME_FILTER;
+import static com.rapidminer.repository.RepositoryTools.ONLY_BLOB_ENTRIES;
+import static com.rapidminer.repository.RepositoryTools.ONLY_CONNECTION_ENTRIES;
+import static com.rapidminer.repository.RepositoryTools.ONLY_IOOBJECT_ENTRIES;
+import static com.rapidminer.repository.RepositoryTools.ONLY_PROCESS_ENTRIES;
+
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Collections;
@@ -27,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Predicate;
 
 import com.rapidminer.connection.ConnectionInformation;
 import com.rapidminer.operator.IOObject;
@@ -34,12 +41,15 @@ import com.rapidminer.operator.Operator;
 import com.rapidminer.repository.BlobEntry;
 import com.rapidminer.repository.ConnectionEntry;
 import com.rapidminer.repository.DataEntry;
-import com.rapidminer.repository.Entry;
 import com.rapidminer.repository.EntryCreator;
 import com.rapidminer.repository.Folder;
 import com.rapidminer.repository.IOObjectEntry;
+import com.rapidminer.repository.MalformedRepositoryLocationException;
 import com.rapidminer.repository.ProcessEntry;
 import com.rapidminer.repository.RepositoryException;
+import com.rapidminer.repository.RepositoryLocation;
+import com.rapidminer.repository.RepositoryLocationBuilder;
+import com.rapidminer.repository.RepositoryLocationType;
 import com.rapidminer.tools.ProgressListener;
 import com.rapidminer.tools.Tools;
 
@@ -74,40 +84,6 @@ public class ResourceFolder extends ResourceEntry implements Folder {
 
 	public ResourceFolder(ResourceFolder parent, String name, String resource, ResourceRepository repository) {
 		super(parent, name, resource, repository);
-	}
-
-	@Override
-	public boolean containsEntry(String name) throws RepositoryException {
-		acquireReadLock();
-		try {
-			if (isLoaded()) {
-				return containsEntryNotThreadSafe(name);
-			}
-		} finally {
-			releaseReadLock();
-		}
-		acquireWriteLock();
-		try {
-			ensureLoaded();
-			return containsEntryNotThreadSafe(name);
-		} finally {
-			releaseWriteLock();
-		}
-
-	}
-
-	private boolean containsEntryNotThreadSafe(String name) {
-		for (Entry entry : data) {
-			if (entry.getName().equals(name)) {
-				return true;
-			}
-		}
-		for (Entry entry : folders) {
-			if (entry.getName().equals(name)) {
-				return true;
-			}
-		}
-		return false;
 	}
 
 	@Override
@@ -152,6 +128,15 @@ public class ResourceFolder extends ResourceEntry implements Folder {
 			return Collections.unmodifiableList(data);
 		} finally {
 			releaseWriteLock();
+		}
+	}
+
+	@Override
+	public RepositoryLocation getLocation() {
+		try {
+			return new RepositoryLocationBuilder().withLocationType(RepositoryLocationType.FOLDER).buildFromAbsoluteLocation(getRepository().getLocation().toString() + getPath());
+		} catch (MalformedRepositoryLocationException e) {
+			throw new RuntimeException(e);
 		}
 	}
 
@@ -259,13 +244,68 @@ public class ResourceFolder extends ResourceEntry implements Folder {
 	}
 
 	@Override
+	public boolean containsFolder(String folderName) throws RepositoryException {
+		acquireReadLock();
+		try {
+			if (isLoaded()) {
+				return containsFolderNotThreadSafe(folderName);
+			}
+		} finally {
+			releaseReadLock();
+		}
+		acquireWriteLock();
+		try {
+			ensureLoaded();
+			return containsFolderNotThreadSafe(folderName);
+		} finally {
+			releaseWriteLock();
+		}
+	}
+
+	@Override
+	public boolean containsData(String dataName, Class<? extends DataEntry> expectedDataType) throws RepositoryException {
+		acquireReadLock();
+		try {
+			if (isLoaded()) {
+				return containsDataNotThreadSafe(dataName, expectedDataType);
+			}
+		} finally {
+			releaseReadLock();
+		}
+		acquireWriteLock();
+		try {
+			ensureLoaded();
+			return containsDataNotThreadSafe(dataName, expectedDataType);
+		} finally {
+			releaseWriteLock();
+		}
+	}
+
+	@Override
+	@Deprecated
+	public boolean containsEntry(String name) throws RepositoryException {
+		return containsData(name, DataEntry.class) || containsFolder(name);
+	}
+
+	@Override
 	public String getDescription() {
 		return getResource();
 	}
 
 	@Override
+	public boolean canRefreshChildFolder(String folderName) throws RepositoryException {
+		return containsFolder(folderName);
+	}
+
+	@Override
+	public boolean canRefreshChildData(String dataName) throws RepositoryException {
+		return containsData(dataName, DataEntry.class);
+	}
+
+	@Override
+	@Deprecated
 	public boolean canRefreshChild(String childName) throws RepositoryException {
-		return containsEntry(childName);
+		return canRefreshChildData(childName) || canRefreshChildFolder(childName);
 	}
 
 	/**
@@ -282,6 +322,29 @@ public class ResourceFolder extends ResourceEntry implements Folder {
 		} finally {
 			releaseWriteLock();
 		}
+	}
+
+	private boolean containsFolderNotThreadSafe(String name) {
+		return folders.stream().anyMatch(f -> NAME_FILTER.test(f, name));
+	}
+
+	private boolean containsDataNotThreadSafe(String name, Class<? extends DataEntry> expectedDataType) {
+		if (ProcessEntry.class.isAssignableFrom(expectedDataType)) {
+			return containsData(name, ONLY_PROCESS_ENTRIES);
+		} else if (ConnectionEntry.class.isAssignableFrom(expectedDataType)) {
+			return containsData(name, ONLY_CONNECTION_ENTRIES);
+		} else if (BlobEntry.class.isAssignableFrom(expectedDataType)) {
+			return containsData(name, ONLY_BLOB_ENTRIES);
+		} else if (IOObjectEntry.class.isAssignableFrom(expectedDataType)) {
+			return containsData(name, ONLY_IOOBJECT_ENTRIES);
+		} else {
+			// either unknown or super type, prevent if anything is named like it to be sure
+			return containsData(name, e -> true);
+		}
+	}
+
+	private boolean containsData(String name, Predicate<DataEntry> instanceCheck) {
+		return data.stream().filter(instanceCheck).anyMatch(d -> NAME_FILTER.test(d, name));
 	}
 
 	private void acquireReadLock() throws RepositoryException {

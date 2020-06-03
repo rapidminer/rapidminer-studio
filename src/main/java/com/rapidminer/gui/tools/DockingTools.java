@@ -19,12 +19,15 @@
 package com.rapidminer.gui.tools;
 
 import java.awt.Container;
+import java.util.logging.Level;
 
 import javax.swing.SwingUtilities;
 
 import com.rapidminer.gui.MainFrame;
 import com.rapidminer.gui.RapidMinerGUI;
+import com.rapidminer.tools.LogService;
 import com.vlsolutions.swing.docking.AutoHideExpandPanel;
+import com.vlsolutions.swing.docking.DockKey;
 import com.vlsolutions.swing.docking.Dockable;
 import com.vlsolutions.swing.docking.DockableContainer;
 import com.vlsolutions.swing.docking.DockableState;
@@ -111,10 +114,31 @@ public class DockingTools {
 		}
 		MainFrame mainFrame = RapidMinerGUI.getMainFrame();
 		Dockable dockable = dockableState.getDockable();
+
+		// since 9.7 we support pre-defined positions, so try to extract and use them if they are there and null was passed
+		DockKey actualDockKey = dockable.getDockKey();
+		if (dockKeyContainer == null) {
+			try {
+				// if null, it stays null, so all good
+				dockKeyContainer = (String) actualDockKey.getProperty(ResourceDockKey.PROPERTY_KEY_NEXT_TO_DOCKABLE);
+			} catch (Exception e) {
+				// coding error, this should not happen
+				LogService.getRoot().log(Level.WARNING, "Cannot open " + dockKey + " next to dockable specified by " + ResourceDockKey.PROPERTY_KEY_NEXT_TO_DOCKABLE, e);
+			}
+		}
+		if (dockablePosition == null) {
+			try {
+				// if null, it stays null, so all good
+				dockablePosition = (RelativeDockablePosition) actualDockKey.getProperty(ResourceDockKey.PROPERTY_KEY_DEFAULT_FALLBACK_LOCATION);
+			} catch (Exception e) {
+				// coding error, this should not happen
+				LogService.getRoot().log(Level.WARNING, "Cannot open " + dockKey + " at default location specified by " + ResourceDockKey.PROPERTY_KEY_DEFAULT_FALLBACK_LOCATION, e);
+			}
+		}
 		if (dockableState.isClosed()) {
 			if (dockKeyContainer != null) {
 				DockableState dockableStateContainer = getDockableState(dockKeyContainer);
-				if (dockableStateContainer != null) {
+				if (dockableStateContainer != null && !dockableStateContainer.isClosed()) {
 					Dockable dockableContainer = dockableStateContainer.getDockable();
 					// Dockable is not closed try to find the container
 					TabbedDockableContainer tabbedContainer = null;

@@ -25,21 +25,17 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
-import java.security.Key;
-import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
-import javax.crypto.KeyGenerator;
 
 import org.apache.commons.lang.RandomStringUtils;
-import org.junit.After;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.rapidminer.tools.cipher.KeyGenerationException;
-import com.rapidminer.tools.cipher.KeyGeneratorTool;
+import com.rapidminer.connection.ConnectionInformationSerializer;
+import com.rapidminer.tools.encryption.EncryptionProvider;
 
 
 /**
@@ -55,27 +51,10 @@ public class ValueProviderParameterTest {
 	private static final String VALUE = RandomStringUtils.randomAlphabetic(5 + RANDOM.nextInt(15));
 	private static final String VALUE2 = RandomStringUtils.randomAlphabetic(2 + RANDOM.nextInt(18));
 
-	private static final String RAPID_MINER_HOME = System.getProperty("rapidminer.user-home");
-	private static final Key USER_KEY;
 
-	static {
-		Key userKey = null;
-		try {
-			userKey = KeyGeneratorTool.getUserKey();
-		} catch (IOException e) {
-			// ignore
-		}
-		USER_KEY = userKey;
-	}
-
-	@After
-	public void restoreValues() {
-		if (RAPID_MINER_HOME == null) {
-			System.clearProperty("rapidminer.user-home");
-		} else {
-			System.setProperty("rapidminer.user-home", RAPID_MINER_HOME);
-		}
-		KeyGeneratorTool.setUserKey(USER_KEY);
+	@BeforeClass
+	public static void setup() {
+		EncryptionProvider.initialize();
 	}
 
 	@Test
@@ -130,106 +109,84 @@ public class ValueProviderParameterTest {
 	}
 
 	@Test
-	public void testSerialization() throws IOException, NoSuchAlgorithmException, KeyGenerationException {
-		KeyGeneratorTool.setUserKey(KeyGeneratorTool.createSecretKey());
+	public void testSerialization() throws IOException {
 		ValueProviderParameter parameter = new ValueProviderParameterImpl(NAME, VALUE, true);
-		ObjectMapper om = new ObjectMapper();
-		String serialized = om.writeValueAsString(parameter);
+		String serialized = ConnectionInformationSerializer.INSTANCE.createJsonFromObject(parameter, EncryptionProvider.DEFAULT_CONTEXT);
 		// Check that serialized version does not contain the plain value
 		assertTrue(serialized.contains(NAME));
 		assertFalse(serialized.contains(VALUE));
 		// Read again
-		ValueProviderParameter deserialized = om.readValue(serialized, ValueProviderParameter.class);
+		ValueProviderParameter deserialized = ConnectionInformationSerializer.INSTANCE.createObjectFromJson(serialized, ValueProviderParameter.class, null, EncryptionProvider.DEFAULT_CONTEXT);
 		assertEquals(VALUE, deserialized.getValue());
 		assertEquals(NAME, deserialized.getName());
 		assertTrue(deserialized.isEncrypted());
 	}
 
 	@Test
-	public void testSerializationNotEnabled() throws IOException, NoSuchAlgorithmException, KeyGenerationException {
-		KeyGeneratorTool.setUserKey(KeyGeneratorTool.createSecretKey());
+	public void testSerializationNotEnabled() throws IOException {
 		ValueProviderParameter parameter = new ValueProviderParameterImpl(NAME, VALUE, true, false);
-		ObjectMapper om = new ObjectMapper();
-		String serialized = om.writeValueAsString(parameter);
+		String serialized = ConnectionInformationSerializer.INSTANCE.createJsonFromObject(parameter, EncryptionProvider.DEFAULT_CONTEXT);
 		// Read again
-		ValueProviderParameter deserialized = om.readValue(serialized, ValueProviderParameter.class);
+		ValueProviderParameter deserialized = ConnectionInformationSerializer.INSTANCE.createObjectFromJson(serialized, ValueProviderParameter.class, null, EncryptionProvider.DEFAULT_CONTEXT);
 		assertEquals(VALUE, deserialized.getValue());
 		assertEquals(NAME, deserialized.getName());
 		assertFalse(deserialized.isEnabled());
 	}
 
 	@Test
-	public void testSerializationOfNull() throws IOException, NoSuchAlgorithmException, KeyGenerationException {
-		KeyGeneratorTool.setUserKey(KeyGeneratorTool.createSecretKey());
+	public void testSerializationOfNull() throws IOException {
 		ValueProviderParameter parameter = new ValueProviderParameterImpl(NAME, null, true);
-		ObjectMapper om = new ObjectMapper();
-		String serialized = om.writeValueAsString(parameter);
-		ValueProviderParameter deserialized = om.readValue(serialized, ValueProviderParameter.class);
+		String serialized = ConnectionInformationSerializer.INSTANCE.createJsonFromObject(parameter, EncryptionProvider.DEFAULT_CONTEXT);
+		ValueProviderParameter deserialized = ConnectionInformationSerializer.INSTANCE.createObjectFromJson(serialized, ValueProviderParameter.class, null, EncryptionProvider.DEFAULT_CONTEXT);
 		assertNull(deserialized.getValue());
 	}
 
 	@Test
-	public void testSerializationWithoutKey() throws IOException, NoSuchAlgorithmException {
-		System.setProperty("rapidminer.user-home", "/dev/null");
-		KeyGeneratorTool.setUserKey(null);
+	public void testSerializationWithNullContext() throws IOException {
 		ValueProviderParameter parameter = new ValueProviderParameterImpl(NAME, VALUE, true);
-		ObjectMapper om = new ObjectMapper();
-		String serialized = om.writeValueAsString(parameter);
-		assertFalse(serialized.contains(VALUE));
-		ValueProviderParameter deserialized = om.readValue(serialized, ValueProviderParameter.class);
-		assertNull(deserialized.getValue());
+		String serialized = ConnectionInformationSerializer.INSTANCE.createJsonFromObject(parameter, null);
+		assertTrue(serialized.contains(VALUE));
+		ValueProviderParameter deserialized = ConnectionInformationSerializer.INSTANCE.createObjectFromJson(serialized, ValueProviderParameter.class, null, null);
+		assertEquals("Deserialized encrypted value different from input value", VALUE, deserialized.getValue());
 	}
 
 	@Test
-	public void testDeserializationWithoutKey() throws IOException, NoSuchAlgorithmException {
+	public void testSerializationWithMissingContext() throws IOException {
 		ValueProviderParameter parameter = new ValueProviderParameterImpl(NAME, VALUE, true);
-		ObjectMapper om = new ObjectMapper();
-		String serialized = om.writeValueAsString(parameter);
+		String serialized = ConnectionInformationSerializer.INSTANCE.createJsonFromObject(parameter, "---does-not-exist---");
 		assertFalse(serialized.contains(VALUE));
-		System.setProperty("rapidminer.user-home", "/dev/null");
-		KeyGeneratorTool.setUserKey(null);
-		ValueProviderParameter deserialized = om.readValue(serialized, ValueProviderParameter.class);
+		ValueProviderParameter deserialized = ConnectionInformationSerializer.INSTANCE.createObjectFromJson(serialized, ValueProviderParameter.class, null, "---does-not-exist---");
 		assertNull(deserialized.getValue());
 	}
 
-
 	@Test
-	public void testDeserializationWithInvalidKey() throws IOException, NoSuchAlgorithmException {
+	public void testDeserializationWithMissingContext() throws IOException {
 		ValueProviderParameter parameter = new ValueProviderParameterImpl(NAME, VALUE, true);
-		ObjectMapper om = new ObjectMapper();
-		String serialized = om.writeValueAsString(parameter);
+		String serialized = ConnectionInformationSerializer.INSTANCE.createJsonFromObject(parameter, "---does-not-exist---");
 		assertFalse(serialized.contains(VALUE));
-		System.setProperty("rapidminer.user-home", "/dev/null");
-		KeyGeneratorTool.setUserKey(KeyGenerator.getInstance("AES").generateKey());
-		ValueProviderParameter deserialized = om.readValue(serialized, ValueProviderParameter.class);
+		ValueProviderParameter deserialized = ConnectionInformationSerializer.INSTANCE.createObjectFromJson(serialized, ValueProviderParameter.class, null, "---does-not-exist---");
 		assertNull(deserialized.getValue());
 	}
 
-
 	@Test
-	public void testSerializationWithInvalidKey() throws IOException, NoSuchAlgorithmException {
-		System.setProperty("rapidminer.user-home", "/dev/null");
-		KeyGeneratorTool.setUserKey(KeyGenerator.getInstance("AES").generateKey());
+	public void testDeserializationWithNullContext() throws IOException {
 		ValueProviderParameter parameter = new ValueProviderParameterImpl(NAME, VALUE, true);
-		ObjectMapper om = new ObjectMapper();
-		String serialized = om.writeValueAsString(parameter);
-		assertFalse(serialized.contains(VALUE));
-		ValueProviderParameter deserialized = om.readValue(serialized, ValueProviderParameter.class);
-		assertNull(deserialized.getValue());
+		String serialized = ConnectionInformationSerializer.INSTANCE.createJsonFromObject(parameter, null);
+		assertTrue(serialized.contains(VALUE));
+		ValueProviderParameter deserialized = ConnectionInformationSerializer.INSTANCE.createObjectFromJson(serialized, ValueProviderParameter.class, null, null);
+		assertEquals("Deserialized encrypted value different from input value", VALUE, deserialized.getValue());
 	}
 
 	@Test
-	public void testWrongOrder() throws IOException, NoSuchAlgorithmException, KeyGenerationException, NoSuchFieldException {
-		KeyGeneratorTool.setUserKey(KeyGeneratorTool.createSecretKey());
+	public void testWrongOrder() throws IOException {
 		ValueProviderParameter parameter = new ValueProviderParameterImpl("name", "value", true);
-		ObjectMapper om = new ObjectMapper();
-		String serialized = om.writeValueAsString(parameter);
+		String serialized = ConnectionInformationSerializer.INSTANCE.createJsonFromObject(parameter, EncryptionProvider.DEFAULT_CONTEXT);
 		assertFalse(serialized.contains(VALUE));
 		String trimmed = serialized.substring(1, serialized.length() - 1);
 		List<String> data = Arrays.asList(trimmed.split(",", 3));
 		Collections.swap(data, 1, 2);
 		String wrongOrder = "{" + String.join(",", data) + "}";
-		ValueProviderParameter deserialized = om.readValue(wrongOrder, ValueProviderParameter.class);
+		ValueProviderParameter deserialized = ConnectionInformationSerializer.INSTANCE.createObjectFromJson(wrongOrder, ValueProviderParameter.class, null, EncryptionProvider.DEFAULT_CONTEXT);
 		assertEquals("value", deserialized.getValue());
 	}
 
@@ -248,13 +205,10 @@ public class ValueProviderParameterTest {
 
 	@Test
 	public void testServerSerialization() throws Exception {
-		KeyGeneratorTool.setUserKey(KeyGeneratorTool.createSecretKey());
 		ValueProviderParameter parameter = new ValueProviderParameterImpl(NAME, VALUE, true);
-		ObjectMapper om = new ObjectMapper();
-		om.addMixIn(ValueProviderParameterImpl.class, ValueProviderParameterImpl.UnencryptedValueMixIn.class);
-		String serialized = om.writeValueAsString(parameter);
+		String serialized = ConnectionInformationSerializer.INSTANCE.createJsonFromObject(parameter, null);
 		assertTrue(serialized.contains(VALUE));
-		ValueProviderParameter read = om.readValue(serialized, ValueProviderParameter.class);
+		ValueProviderParameter read = ConnectionInformationSerializer.INSTANCE.createObjectFromJson(serialized, ValueProviderParameter.class, null, null);
 		assertEquals(parameter, read);
 	}
 }

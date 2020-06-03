@@ -114,7 +114,9 @@ public abstract class AbstractExampleTable implements ExampleTable {
 		if (name == null) {
 			return null;
 		}
-		for (Attribute att : attributes) {
+		//copy to prevent ConcurrentModificationException
+		List<Attribute> attributesCopy = new ArrayList<>(this.attributes);
+		for (Attribute att : attributesCopy) {
 			if (att != null) {
 				if (att.getName().equals(name)) {
 					return att;

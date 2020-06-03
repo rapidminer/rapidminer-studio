@@ -19,6 +19,9 @@
 package com.rapidminer.repository.resource;
 
 import com.rapidminer.repository.DataEntry;
+import com.rapidminer.repository.MalformedRepositoryLocationException;
+import com.rapidminer.repository.RepositoryLocation;
+import com.rapidminer.repository.RepositoryLocationBuilder;
 
 
 /**
@@ -38,12 +41,16 @@ public abstract class ResourceDataEntry extends ResourceEntry implements DataEnt
 	}
 
 	@Override
-	public int getRevision() {
-		return 1;
+	public long getSize() {
+		return -1;
 	}
 
 	@Override
-	public long getSize() {
-		return -1;
+	public RepositoryLocation getLocation() {
+		try {
+			return new RepositoryLocationBuilder().withExpectedDataEntryType(getClass()).buildFromAbsoluteLocation(getRepository().getLocation().toString() + getPath());
+		} catch (MalformedRepositoryLocationException e) {
+			throw new RuntimeException(e);
+		}
 	}
 }

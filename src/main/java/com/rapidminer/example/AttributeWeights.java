@@ -44,6 +44,7 @@ import com.rapidminer.datatable.DataTable;
 import com.rapidminer.datatable.SimpleDataTable;
 import com.rapidminer.datatable.SimpleDataTableRow;
 import com.rapidminer.io.process.XMLTools;
+import com.rapidminer.operator.IOObject;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.math.AverageVector;
 
@@ -341,6 +342,12 @@ public class AttributeWeights extends AverageVector {
 	 */
 	@Override
 	public Object clone() {
+		return copy();
+	}
+
+	/** @since 9.7 */
+	@Override
+	public IOObject copy() {
 		return new AttributeWeights(this);
 	}
 
@@ -376,9 +383,7 @@ public class AttributeWeights extends AverageVector {
 			double weight = Math.abs(getWeight(name));
 			sum += weight;
 		}
-		Iterator<AttributeWeight> w = weightMap.values().iterator();
-		while (w.hasNext()) {
-			AttributeWeight attributeWeight = w.next();
+		for (AttributeWeight attributeWeight : weightMap.values()) {
 			double newWeight = attributeWeight.getWeight();
 			if (sum != 0.0d) {
 				newWeight = Math.abs(newWeight) / sum;

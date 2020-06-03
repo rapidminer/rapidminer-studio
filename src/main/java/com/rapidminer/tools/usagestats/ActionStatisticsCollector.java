@@ -271,6 +271,10 @@ public enum ActionStatisticsCollector {
 	public static final String TYPE_REMOTE_REPOSITORY = "remote_repository";
 	/** remote_repository_saml | status | uuid (since 9.3) */
 	public static final String TYPE_REMOTE_REPOSITORY_SAML = "remote_repository_saml";
+	/** versioned_repository | status | uuid (server + repo) (since 9.7) */
+	public static final String TYPE_PROJECT = "versioned_repository";
+	/** versioned_repository | status | uuid (server + repo) (since 9.7) */
+	public static final String TYPE_PROJECT_SAML = "versioned_repository_saml";
 
 	/** new_import | guessed_date_wrong | guessed|choosen (since 9.1) */
 	public static final String VALUE_GUESSED_DATE_FORMAT_RIGHT = "guessed_date_format_right";
@@ -306,6 +310,18 @@ public enum ActionStatisticsCollector {
 	public static final String VALUE_REMOVED = "removed";
 	public static final String VALUE_AVAILABLE_CONFIGURABLES_CREATION_LOCAL = "available_configurables_creation_local";
 	public static final String VALUE_AVAILABLE_CONFIGURABLES_CREATION_SERVER = "available_configurables_creation_server";
+	public static final String VALUE_HISTORY_PANEL_VIEWED = "history_panel_selected";
+	public static final String VALUE_SNAPSHOT_VIEWED = "snapshot_viewed";
+	public static final String VALUE_COMMIT_AND_PUSH = "commit_and_push";
+	public static final String VALUE_PULL = "pull";
+	public static final String VALUE_DISCARD_LOCAL = "discard_local_changes";
+	public static final String VALUE_RESTORE_FILE = "restore_file";
+	public static final String VALUE_REVERT_TO_COMMIT = "revert_to_commit";
+	public static final String VALUE_VIEW_FILE = "view_file";
+	public static final String VALUE_PROJECT_COUNT = "count_on_startup";
+	public static final String VALUE_PROJECT_GIT_STATUS = "git_status";
+	public static final String ARG_STARTUP = "startup";
+	public static final String ARG_SHUTDOWN = "shutdown";
 	public static final String ARG_REMOTE_REPOSITORY_SEPARATOR  = ARG_SPACER;
 
 	/** conversion constant for bytes to megabytes */

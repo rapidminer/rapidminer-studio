@@ -73,10 +73,10 @@ public abstract class AbstractExampleSet extends ResultObjectAdapter implements 
 	private static final long serialVersionUID = 8596141056047402798L;
 
 	/** Maps attribute names to list of statistics objects. */
-	private final Map<String, List<Statistics>> statisticsMap = new HashMap<String, List<Statistics>>();
+	private final Map<String, List<Statistics>> statisticsMap = new HashMap<>();
 
 	/** Maps the id values on the line index in the example table. */
-	private Map<Double, int[]> idMap = new HashMap<Double, int[]>();
+	private Map<Double, int[]> idMap = new HashMap<>();
 
 	/** This method overrides the implementation of ResultObjectAdapter and returns "ExampleSet". */
 	@Override
@@ -351,17 +351,18 @@ public abstract class AbstractExampleSet extends ResultObjectAdapter implements 
 	}
 
 	/**
-	 * Clones the example set by invoking a single argument clone constructor. Please note that a
-	 * cloned example set has no information about the attribute statistics. That means, that
-	 * attribute statistics must be (re-)calculated after the clone was created.
+	 * Clones the example set by invoking a single argument clone constructor. Please note that a cloned example set has
+	 * no information about the attribute statistics. That means, that attribute statistics must be (re-)calculated
+	 * after the clone was created.
 	 */
 	@Override
 	public ExampleSet clone() {
 		try {
 			Class<? extends AbstractExampleSet> clazz = getClass();
-			Constructor<? extends AbstractExampleSet> cloneConstructor = clazz.getConstructor(new Class[] { clazz });
-			AbstractExampleSet result = cloneConstructor.newInstance(new Object[] { this });
+			Constructor<? extends AbstractExampleSet> cloneConstructor = clazz.getConstructor(new Class[]{clazz});
+			AbstractExampleSet result = cloneConstructor.newInstance(new Object[]{this});
 			result.idMap = this.idMap;
+			result.setAllUserData(this.getAllUserData());
 			return result;
 		} catch (IllegalAccessException e) {
 			throw new RuntimeException("Cannot clone ExampleSet: " + e.getMessage());
@@ -561,4 +562,5 @@ public abstract class AbstractExampleSet extends ResultObjectAdapter implements 
 	public boolean isThreadSafeView() {
 		return false;
 	}
+
 }

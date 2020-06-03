@@ -53,12 +53,13 @@ import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeConnectionLocation;
 import com.rapidminer.parameter.conditions.PortConnectedCondition;
 import com.rapidminer.repository.ConnectionEntry;
-import com.rapidminer.repository.Entry;
+import com.rapidminer.repository.DataEntry;
 import com.rapidminer.repository.MalformedRepositoryLocationException;
 import com.rapidminer.repository.RepositoryEntryNotFoundException;
 import com.rapidminer.repository.RepositoryEntryWrongTypeException;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryLocation;
+import com.rapidminer.repository.RepositoryLocationBuilder;
 import com.rapidminer.tools.I18N;
 
 
@@ -219,7 +220,7 @@ public class ConnectionInformationSelector {
 		} catch (UserError e) {
 			throw new RepositoryException(e.getMessage());
 		}
-		Entry entry = location.locateEntry();
+		DataEntry entry = location.locateData();
 		if (entry == null) {
 			throw new RepositoryEntryNotFoundException(location);
 		}
@@ -414,7 +415,7 @@ public class ConnectionInformationSelector {
 			if (md != null && md.getAnnotations() != null) {
 				String source = md.getAnnotations().getAnnotation(Annotations.KEY_SOURCE);
 				if (source != null) {
-					return new RepositoryLocation(source);
+					return new RepositoryLocationBuilder().withExpectedDataEntryType(ConnectionEntry.class).buildFromAbsoluteLocation(source);
 				}
 			}
 		} catch (IncompatibleMDClassException | MalformedRepositoryLocationException e) {
@@ -425,7 +426,7 @@ public class ConnectionInformationSelector {
 
 	/**
 	 * Extracts a {@link ConnectionInformationContainerIOObject} from the given {@link RepositoryLocation} if possible.
-	 * If the associated {@link Entry} is not a {@link ConnectionEntry}, no (valid) data is stored there or a {@link RepositoryException}
+	 * If the associated {@link DataEntry} is not a {@link ConnectionEntry}, no (valid) data is stored there or a {@link RepositoryException}
 	 * occurs, this method will tjrow a corresponding {@link UserError}.
 	 *
 	 * @param location
@@ -437,7 +438,7 @@ public class ConnectionInformationSelector {
 	private ConnectionInformationContainerIOObject extractConnectionFromLocation(RepositoryLocation location) throws UserError {
 		ConnectionInformationContainerIOObject container;
 		try {
-			Entry entry = location.locateEntry();
+			DataEntry entry = location.locateData();
 			if (!(entry instanceof ConnectionEntry)) {
 				throw new UserError(null, "connection.wrong_entry_type");
 			}
@@ -454,8 +455,8 @@ public class ConnectionInformationSelector {
 
 	/** Resolves the repository location. Will make a distinction between an operater and a simple parameter handler */
 	private RepositoryLocation getRepoLocationFromParameter() throws UserError {
-		return RepositoryLocation.getRepositoryLocation(handler.getParameterAsString(getParameterKey()),
-				handler instanceof Operator ? (Operator) handler : null);
+		return RepositoryLocation.getRepositoryLocationData(handler.getParameterAsString(getParameterKey()),
+				handler instanceof Operator ? (Operator) handler : null, ConnectionEntry.class);
 	}
 
 	/**

@@ -47,6 +47,7 @@ import com.rapidminer.operator.Operator;
 import com.rapidminer.parameter.ParameterHandler;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.tools.I18N;
+import com.rapidminer.tools.encryption.EncryptionProvider;
 
 
 /**
@@ -146,7 +147,7 @@ public class SettingsPropertyPanel extends PropertyPanel {
 		if (value == null) {
 			return null;
 		} else {
-			return type.transformNewValue(value);
+			return type.transformNewValue(value, EncryptionProvider.DEFAULT_CONTEXT);
 		}
 	}
 

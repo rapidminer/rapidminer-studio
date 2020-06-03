@@ -118,6 +118,8 @@ public class SOMDimensionalityReductionModel extends AbstractModel {
 				progress.setCompleted(progressCounter);
 			}
 		}
-		return builder.withRoles(newSpecialAttributes).build();
+		ExampleSet build = builder.withRoles(newSpecialAttributes).build();
+		build.setAllUserData(exampleSet.getAllUserData());
+		return build;
 	}
 }

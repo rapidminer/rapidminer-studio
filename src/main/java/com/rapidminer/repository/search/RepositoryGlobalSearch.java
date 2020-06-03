@@ -18,11 +18,25 @@
  */
 package com.rapidminer.repository.search;
 
+import org.apache.lucene.document.Document;
+
 import com.rapidminer.RapidMiner;
 import com.rapidminer.parameter.ParameterTypeBoolean;
+import com.rapidminer.repository.BinaryEntry;
+import com.rapidminer.repository.BlobEntry;
+import com.rapidminer.repository.ConnectionEntry;
+import com.rapidminer.repository.DataEntry;
+import com.rapidminer.repository.Folder;
+import com.rapidminer.repository.IOObjectEntry;
+import com.rapidminer.repository.MalformedRepositoryLocationException;
+import com.rapidminer.repository.ProcessEntry;
+import com.rapidminer.repository.RepositoryLocation;
+import com.rapidminer.repository.RepositoryLocationBuilder;
+import com.rapidminer.repository.RepositoryLocationType;
 import com.rapidminer.search.GlobalSearchIndexer;
 import com.rapidminer.search.GlobalSearchManager;
 import com.rapidminer.search.GlobalSearchRegistry;
+import com.rapidminer.search.GlobalSearchUtilities;
 import com.rapidminer.search.GlobalSearchable;
 
 
@@ -37,6 +51,8 @@ public class RepositoryGlobalSearch implements GlobalSearchable {
 
 	public static final String CATEGORY_ID = "repository";
 	public static final String FIELD_CONNECTION_TYPE = "connection_type";
+	/** @since 9.7 */
+	public static final String ID_SEPARATOR = "|";
 
 	/** property controlling whether full repository indexing is enabled */
 	public static final String PROPERTY_FULL_REPOSITORY_INDEXING = "rapidminer.search.repository.enable_full_indexing";
@@ -57,5 +73,66 @@ public class RepositoryGlobalSearch implements GlobalSearchable {
 	@Override
 	public GlobalSearchManager getSearchManager() {
 		return manager;
+	}
+
+	/**
+	 * Maps an {@link com.rapidminer.repository.Entry#getType()} to the {@link DataEntry} (sub-)type.
+	 *
+	 * @param type the type string, must not be {@code null}
+	 * @return the data entry class, or {@code null} if it is a folder
+	 * @since 9.7
+	 */
+	public static Class<? extends DataEntry> getDataEntryTypeForTypeString(String type) {
+		switch (type) {
+			case ProcessEntry.TYPE_NAME:
+				return ProcessEntry.class;
+			case IOObjectEntry.TYPE_NAME:
+				return IOObjectEntry.class;
+			case ConnectionEntry.TYPE_NAME:
+				return ConnectionEntry.class;
+			case BinaryEntry.TYPE_NAME:
+				return BinaryEntry.class;
+			case BlobEntry.TYPE_NAME:
+				return BlobEntry.class;
+			case Folder.TYPE_NAME:
+				return null;
+			default:
+				return DataEntry.class;
+		}
+	}
+
+	/**
+	 * Creates the unique ID that is used as the {@link GlobalSearchUtilities#FIELD_UNIQUE_ID} for repository entry
+	 * search documents. Consists of the absolute repository path, as well as the {@link
+	 * com.rapidminer.repository.Entry#getType()}.
+	 *
+	 * @param absoluteRepoPath the path, must not be {@code null}
+	 * @param entryType        the type, must not be {@code null}
+	 * @return the id string, never {@code null}
+	 * @since 9.7
+	 */
+	public static String createUniqueIdForRepoItem(String absoluteRepoPath, String entryType) {
+		return absoluteRepoPath + ID_SEPARATOR + entryType;
+	}
+
+	/**
+	 * Creates the {@link RepositoryLocation} with all relevant parameters (location type, expected data type) set.
+	 *
+	 * @param document the document, must not be {@code null}
+	 * @return the location, never {@code null}
+	 * @throws MalformedRepositoryLocationException if creation of the location goes wrong, should not happen
+	 * @since 9.7
+	 */
+	public static RepositoryLocation getRepositoryLocationForDocument(Document document) throws MalformedRepositoryLocationException {
+		String[] idSplit = document.get(GlobalSearchUtilities.FIELD_UNIQUE_ID).split("\\" + ID_SEPARATOR);
+		String loc = idSplit[0];
+		String type = idSplit[1];
+		Class<? extends DataEntry> dataEntryType = RepositoryGlobalSearch.getDataEntryTypeForTypeString(type);
+		if (dataEntryType == null) {
+			// folder
+			return new RepositoryLocationBuilder().withFailIfDuplicateIOObjectExists(false).withLocationType(RepositoryLocationType.FOLDER).buildFromAbsoluteLocation(loc);
+		} else {
+			return new RepositoryLocationBuilder().withFailIfDuplicateIOObjectExists(false).withExpectedDataEntryType(dataEntryType).buildFromAbsoluteLocation(loc);
+		}
 	}
 }

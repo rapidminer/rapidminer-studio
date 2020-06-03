@@ -18,8 +18,6 @@
  */
 package com.rapidminer.gui.tools;
 
-import javax.swing.GrayFilter;
-import javax.swing.ImageIcon;
 import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -28,6 +26,8 @@ import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.awt.image.ImageObserver;
 import java.net.URL;
+import javax.swing.GrayFilter;
+import javax.swing.ImageIcon;
 
 
 /**
@@ -51,7 +51,7 @@ public class ScaledImageIcon extends ImageIcon {
     /**
      * A not serializable image representation in the final size. The original is kept in super.getImage()
      */
-    private transient BufferedImage image;
+    private transient BufferedImage cachedImage;
 
 	/**
 	 * Creates a new scaled {@link ImageIcon} from the given URL with the given logical height and width.
@@ -73,6 +73,24 @@ public class ScaledImageIcon extends ImageIcon {
 		}
 		this.height = height;
 		this.width = width;
+	}
+
+	/**
+	 * Creates a new scaled {@link ImageIcon} from the given URL with the given logical height
+	 * and calculates the width based on the factor between the logical and actual height.
+	 *
+	 * @param url
+	 * 		the image URL
+	 * @param height
+	 * 		the height of the image
+	 */
+	public ScaledImageIcon(URL url, int height) {
+		super(url);
+		if (height < 1) {
+			throw new IllegalArgumentException("Height must be positive and non-zero!");
+		}
+		this.height = height;
+		this.width = super.getIconWidth() * height / super.getIconHeight();
 	}
 
 
@@ -148,7 +166,7 @@ public class ScaledImageIcon extends ImageIcon {
      */
     @Override
     public Image getImage() {
-        if (image == null) {
+        if (cachedImage == null) {
             ImageObserver observer = getImageObserver();
 
             BufferedImage bufferedImage = new BufferedImage(getIconWidth(), getIconHeight(), BufferedImage.TYPE_INT_ARGB);
@@ -156,9 +174,9 @@ public class ScaledImageIcon extends ImageIcon {
             g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
             g.drawImage(super.getImage(), 0, 0, getIconWidth(), getIconHeight(), observer);
             g.dispose();
-            image = bufferedImage;
+            cachedImage = bufferedImage;
         }
-        return image;
+        return cachedImage;
     }
 
     /**

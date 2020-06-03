@@ -41,10 +41,13 @@ import com.rapidminer.parameter.ParameterTypeRepositoryLocation;
 import com.rapidminer.parameter.ParameterTypeString;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.parameter.conditions.EqualTypeCondition;
+import com.rapidminer.repository.BinaryEntry;
 import com.rapidminer.repository.BlobEntry;
-import com.rapidminer.repository.Entry;
+import com.rapidminer.repository.DataEntry;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryLocation;
+import com.rapidminer.repository.RepositoryLocationBuilder;
+import com.rapidminer.repository.RepositoryTools;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.WebServiceTools;
 
@@ -118,7 +121,7 @@ public class LoadFileOperator extends Operator {
 					break;
 				case SOURCE_TYPE_REPOSITORY:
 					// check if entry exists
-					Entry entry = getEntry();
+					DataEntry entry = getEntry();
 					source = entry.getLocation().getAbsoluteLocation();
 					fileName = entry.getName();
 					break;
@@ -153,7 +156,16 @@ public class LoadFileOperator extends Operator {
 				break;
 			case SOURCE_TYPE_REPOSITORY:
 				// check if entry exists
-				result = new RepositoryBlobObject(getEntry().getLocation());
+				DataEntry entry = getEntry();
+				if (entry instanceof BinaryEntry) {
+					RepositoryLocation binLoc = new RepositoryLocationBuilder().withExpectedDataEntryType(BinaryEntry.class).
+							buildFromAbsoluteLocation(entry.getLocation().getAbsoluteLocation());
+					result = new BinaryEntryFileObject(binLoc);
+				} else {
+					RepositoryLocation blobLoc = new RepositoryLocationBuilder().withExpectedDataEntryType(BlobEntry.class).
+							buildFromAbsoluteLocation(entry.getLocation().getAbsoluteLocation());
+					result = new RepositoryBlobObject(blobLoc);
+				}
 				break;
 			default:
 				// cannot happen
@@ -199,20 +211,20 @@ public class LoadFileOperator extends Operator {
 	 * @throws UserError if the parameter is not set or invalid
 	 * @since 9.6
 	 */
-	private Entry getEntry() throws UserError{
-		RepositoryLocation location = getParameterAsRepositoryLocation(PARAMETER_REPOSITORY_LOCATION);
+	private DataEntry getEntry() throws UserError{
+		RepositoryLocation location = getParameterAsRepositoryLocationData(PARAMETER_REPOSITORY_LOCATION, DataEntry.class);
 		String absoluteLocation = location.getAbsoluteLocation();
 
 		// check if entry exists
-		Entry entry;
+		DataEntry entry;
 		try {
-			entry = location.locateEntry();
+			entry = location.locateData();
 		} catch (RepositoryException e) {
 			throw new UserError(this, "319", e, absoluteLocation);
 		}
 		if (entry == null) {
 			throw new UserError(this, "312", absoluteLocation, "entry does not exist");
-		} else if (!(entry instanceof BlobEntry)) {
+		} else if (!(entry instanceof BlobEntry || entry instanceof BinaryEntry)) {
 			throw new UserError(this, "942", absoluteLocation, "blob", entry.getType());
 		}
 		return entry;
@@ -239,6 +251,7 @@ public class LoadFileOperator extends Operator {
 		ParameterTypeRepositoryLocation parameterTypeRepositoryLocation = new ParameterTypeRepositoryLocation(
 				PARAMETER_REPOSITORY_LOCATION, "repository entry to open", true);
 		parameterTypeRepositoryLocation.setExpert(false);
+		parameterTypeRepositoryLocation.setRepositoryFilter(RepositoryTools.ONLY_BLOB_AND_BINARY_ENTRIES);
 		parameterTypeRepositoryLocation.registerDependencyCondition(new EqualTypeCondition(this, PARAMETER_SOURCE_TYPE,
 				SOURCE_TYPES, true, SOURCE_TYPE_REPOSITORY));
 		parameterTypes.add(parameterTypeRepositoryLocation);

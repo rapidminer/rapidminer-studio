@@ -22,7 +22,10 @@ import java.io.File;
 
 import com.rapidminer.repository.DataEntry;
 import com.rapidminer.repository.Folder;
+import com.rapidminer.repository.MalformedRepositoryLocationException;
 import com.rapidminer.repository.RepositoryException;
+import com.rapidminer.repository.RepositoryLocation;
+import com.rapidminer.repository.RepositoryLocationBuilder;
 
 
 /**
@@ -58,16 +61,20 @@ public abstract class SimpleDataEntry extends SimpleEntry implements DataEntry {
 	}
 
 	@Override
-	public int getRevision() {
-		return 1;
-	}
-
-	@Override
 	public void delete() throws RepositoryException {
 		if (getDataFile().exists()) {
 			getDataFile().delete();
 		}
 		super.delete();
+	}
+
+	@Override
+	public RepositoryLocation getLocation() {
+		try {
+			return new RepositoryLocationBuilder().withExpectedDataEntryType(getClass()).buildFromParentLocation(getContainingFolder().getLocation(), getName());
+		} catch (MalformedRepositoryLocationException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	/**

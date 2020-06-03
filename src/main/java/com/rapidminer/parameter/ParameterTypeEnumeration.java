@@ -33,6 +33,7 @@ import com.rapidminer.io.process.XMLTools;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.XMLException;
+import com.rapidminer.tools.encryption.EncryptionProvider;
 
 
 /**
@@ -78,7 +79,13 @@ public class ParameterTypeEnumeration extends CombinedParameterType {
 	}
 
 	@Override
+	@Deprecated
 	public Element getXML(String key, String value, boolean hideDefault, Document doc) {
+		return getXML(key, value, hideDefault, EncryptionProvider.DEFAULT_CONTEXT, doc);
+	}
+
+	@Override
+	public Element getXML(String key, String value, boolean hideDefault, String encryptionContext, Document doc) {
 		Element element = doc.createElement("enumeration");
 		element.setAttribute("key", key);
 		String[] list;
@@ -88,15 +95,9 @@ public class ParameterTypeEnumeration extends CombinedParameterType {
 			list = transformString2Enumeration(getDefaultValueAsString());
 		}
 		for (String string : list) {
-			element.appendChild(type.getXML(type.getKey(), string, false, doc));
+			element.appendChild(type.getXML(type.getKey(), string, false, encryptionContext, doc));
 		}
 		return element;
-	}
-
-	@Override
-	@Deprecated
-	public String getXML(String indent, String key, String value, boolean hideDefault) {
-		return "";
 	}
 
 	@Override

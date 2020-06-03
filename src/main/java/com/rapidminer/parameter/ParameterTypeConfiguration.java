@@ -31,6 +31,7 @@ import com.rapidminer.MacroHandler;
 import com.rapidminer.gui.wizards.ConfigurationListener;
 import com.rapidminer.gui.wizards.ConfigurationWizardCreator;
 import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.encryption.EncryptionProvider;
 
 
 /**
@@ -149,22 +150,19 @@ public class ParameterTypeConfiguration extends ParameterType {
 		return null;
 	}
 
-	/**
-	 * Returns an empty string since this parameter cannot be used in XML description but is only
-	 * used for GUI purposes.
-	 */
-	@Override
-	public String getXML(String indent, String key, String value, boolean hideDefault) {
-		return "";
-	}
-
 	@Override
 	public boolean isNumerical() {
 		return false;
 	}
 
 	@Override
+	@Deprecated
 	public Element getXML(String key, String value, boolean hideDefault, Document doc) {
+		return getXML(key, value, hideDefault, EncryptionProvider.DEFAULT_CONTEXT, doc);
+	}
+
+	@Override
+	public Element getXML(String key, String value, boolean hideDefault, String encryptionContext, Document doc) {
 		return null;
 	}
 

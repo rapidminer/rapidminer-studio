@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.function.Predicate;
 
 import com.rapidminer.gui.actions.OpenAction;
+import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.parameter.ParameterTypeConnectionLocation;
 import com.rapidminer.repository.ConnectionEntry;
 import com.rapidminer.repository.Entry;
@@ -54,7 +55,11 @@ public class ConnectionLocationValueCellEditor extends RepositoryLocationWithExt
 
 	@Override
 	protected void doExtraAction(RepositoryLocation repositoryLocation) {
-		OpenAction.open(repositoryLocation.getAbsoluteLocation(), true);
+		try {
+			OpenAction.open(getExpectedEntryClass().cast(repositoryLocation.locateData()), true);
+		} catch (Exception e) {
+			SwingTools.showSimpleErrorMessage("while_loading", e, repositoryLocation.getAbsoluteLocation(), e.getMessage());
+		}
 	}
 
 	@Override

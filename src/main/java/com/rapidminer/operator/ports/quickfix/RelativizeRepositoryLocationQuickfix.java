@@ -21,6 +21,7 @@ package com.rapidminer.operator.ports.quickfix;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.UserError;
+import com.rapidminer.repository.DataEntry;
 import com.rapidminer.repository.RepositoryLocation;
 
 
@@ -46,7 +47,8 @@ public class RelativizeRepositoryLocationQuickfix extends AbstractQuickFix {
 	public void apply() {
 		RepositoryLocation absLoc;
 		try {
-			absLoc = operator.getParameterAsRepositoryLocation(key);
+			// whether data or folder makes no difference here
+			absLoc = operator.getParameterAsRepositoryLocationData(key, DataEntry.class);
 			final RepositoryLocation processLoc = operator.getProcess().getRepositoryLocation() != null
 					? operator.getProcess().getRepositoryLocation().parent() : null;
 			if (processLoc == null) {

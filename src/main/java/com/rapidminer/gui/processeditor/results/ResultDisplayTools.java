@@ -35,7 +35,8 @@ import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 
-import com.rapidminer.adaption.belt.TableViewingTools;
+import com.rapidminer.adaption.belt.IOTable;
+import com.rapidminer.belt.table.Table;
 import com.rapidminer.core.license.ProductConstraintManager;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.set.MappedExampleSet;
@@ -54,6 +55,10 @@ import com.rapidminer.license.violation.LicenseConstraintViolation;
 import com.rapidminer.operator.IOContainer;
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.ResultObject;
+import com.rapidminer.operator.nio.file.BinaryEntryFileObject;
+import com.rapidminer.repository.RepositoryTools;
+import com.rapidminer.repository.gui.BinaryEntryResultRendererRegistry;
+import com.rapidminer.repository.gui.RendererProvider;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.usagestats.ActionStatisticsCollector;
@@ -116,7 +121,6 @@ public class ResultDisplayTools {
 	 */
 	public static JPanel createVisualizationComponent(IOObject result, final IOContainer resultContainer,
 													  String usedResultName, final boolean showCards) {
-		result = TableViewingTools.replaceTable(result);
 		final String resultName = RendererService.getName(result.getClass());
 		ButtonBarCardPanel visualisationComponent;
 		Collection<Renderer> renderers = RendererService.getRenderersExcludingLegacyRenderers(resultName);
@@ -129,96 +133,43 @@ public class ResultDisplayTools {
 		// constructing panel of renderers
 		visualisationComponent = new ButtonBarCardPanel(NO_CARD_KEYS, showCards);
 		final ButtonBarCardPanel cardPanel = visualisationComponent;
-		// check license limit for ExampleSet rows
+		// check license limit for ExampleSet/IOTable rows
 		final List<LicenseConstraintViolation<Integer, Integer>> violationList = new ArrayList<>();
 		if (result instanceof ExampleSet) {
-			LicenseConstraintViolation<Integer, Integer> violation = LicenseManagerRegistry.INSTANCE.get()
-					.checkConstraintViolation(ProductConstraintManager.INSTANCE.getProduct(),
-							LicenseConstants.DATA_ROW_CONSTRAINT, ((ExampleSet) result).size(), false);
+			LicenseConstraintViolation<Integer, Integer> violation = checkRowLimitViolation(((ExampleSet) result).size());
 			if (violation != null) {
 				result = downsample((ExampleSet) result, violation.getConstraintValue());
-				violationList.add(violation);
-				ActionStatisticsCollector.INSTANCE.log(ActionStatisticsCollector.TYPE_ROW_LIMIT,
-						ActionStatisticsCollector.VALUE_ROW_LIMIT_DIALOG, "results_banner");
+				addViolation(violation, violationList);
+			}
+		} else if (result instanceof IOTable) {
+			LicenseConstraintViolation<Integer, Integer> violation = checkRowLimitViolation(((IOTable) result).getTable().height());
+			if (violation != null) {
+				result = downsample((IOTable) result, violation.getConstraintValue());
+				addViolation(violation, violationList);
 			}
 		}
 		final IOObject resultObject = result;
-		for (final Renderer renderer : renderers) {
-			String cardKey = toCardName(renderer.getName());
-			final ResourceCard card = new ResourceCard(cardKey, "result_view." + cardKey);
-
-			// create a placeholder panel which shows "under construction" so the results can be
-			// displayed immediately
-			final JPanel inConstructionPanel = new JPanel(new BorderLayout());
-			String humanName = I18N.getGUIMessageOrNull("gui.cards.result_view." + cardKey + ".title");
-			if (humanName == null) {
-				humanName = cardKey;
-			}
-			JLabel waitLabel = new JLabel(I18N.getGUILabel("result_construction", humanName));
-			waitLabel.setIcon(WAIT_ICON);
-			waitLabel.setHorizontalTextPosition(SwingConstants.TRAILING);
-			waitLabel.setHorizontalAlignment(SwingConstants.CENTER);
-			inConstructionPanel.add(waitLabel, BorderLayout.CENTER);
-			cardPanel.addCard(card, inConstructionPanel);
-			try {
-				ProgressThread resultThread = new ProgressThread("creating_result_tab", false, humanName) {
-
-					@Override
-					public void run() {
-						getProgressListener().setTotal(100);
-						getProgressListener().setCompleted(1);
-
-						final Component rendererComponent = renderer.getVisualizationComponent(resultObject,
-								resultContainer);
-						getProgressListener().setCompleted(60);
-
-						if (rendererComponent != null) {
-
-							if (rendererComponent instanceof JComponent) {
-								((JComponent) rendererComponent).setBorder(null);
-							}
-							getProgressListener().setCompleted(80);
-
-							SwingUtilities.invokeLater(() -> {
-								// update container
-								// renderer is finished, remove placeholder
-								inConstructionPanel.removeAll();
-
-								// add license information if necessary
-								if (!violationList.isEmpty()) {
-									JPanel warnPanel = new ResultLimitPanel(rendererComponent.getBackground(),
-											violationList.get(0));
-									inConstructionPanel.add(warnPanel, BorderLayout.NORTH);
-								}
-
-								// add real renderer
-								inConstructionPanel.add(rendererComponent, BorderLayout.CENTER);
-
-								inConstructionPanel.revalidate();
-								inConstructionPanel.repaint();
-							});
-							getProgressListener().complete();
-						}
-					}
-				};
-
-				// start result calculation progress thread
-				resultThread.start();
-			} catch (Exception e) {
-				LogService.getRoot().log(Level.WARNING,
-						I18N.getMessage(LogService.getRoot().getResourceBundle(),
-								"com.rapidminer.gui.processeditor.results.ResultDisplayTools.error_creating_renderer", e),
-						e);
-				String errorMsg = I18N.getMessage(I18N.getErrorBundle(), "result_display.error_creating_renderer",
-						renderer.getName());
-				visualisationComponent.addCard(card, new JLabel(errorMsg));
+		// binary entry file objects can have a custom renderer associated with them, show that one first
+		if (resultObject instanceof BinaryEntryFileObject) {
+			BinaryEntryFileObject binaryEntryFileObject = (BinaryEntryFileObject) resultObject;
+			List<RendererProvider> rendererProviders = BinaryEntryResultRendererRegistry.getInstance().getCallback(
+					RepositoryTools.getSuffixFromFilename(binaryEntryFileObject.getFilename()));
+			if (rendererProviders != null) {
+				for (RendererProvider rendererProvider : rendererProviders) {
+					addRenderer(resultContainer, cardPanel, violationList, resultObject,
+							rendererProvider.getRenderer(binaryEntryFileObject), rendererProvider.getIconName(binaryEntryFileObject));
+				}
+			} else {
+				addRenderer(resultContainer, cardPanel, violationList, resultObject, new DefaultTextRenderer(), null);
 			}
 		}
-		if (resultObject.getUserData(IOOBJECT_USER_DATA_KEY_RENDERER) != null) { // check for user
-			// specified
-			// settings
-			visualisationComponent
-					.selectCard(toCardName((String) resultObject.getUserData(IOOBJECT_USER_DATA_KEY_RENDERER)));
+		// now the regular renderers (coming from the respective ioobjects.xml file)
+		for (final Renderer renderer : renderers) {
+			addRenderer(resultContainer, cardPanel, violationList, resultObject, renderer, null);
+		}
+		if (resultObject.getUserData(IOOBJECT_USER_DATA_KEY_RENDERER) != null) {
+			// check for user specified settings
+			visualisationComponent.selectCard(toCardName((String) resultObject.getUserData(IOOBJECT_USER_DATA_KEY_RENDERER)));
 		}
 		// report statistics
 		visualisationComponent.addCardSelectionListener(new CardSelectionListener() {
@@ -257,12 +208,104 @@ public class ResultDisplayTools {
 		return resultPanel;
 	}
 
-	private static String toCardName(String name) {
-		return name.toLowerCase().replace(' ', '_');
-	}
-
 	public static ResultDisplay makeResultDisplay() {
 		return new DockableResultDisplay();
+	}
+
+	/**
+	 * @since 9.7
+	 */
+	private static void addRenderer(IOContainer resultContainer, ButtonBarCardPanel cardPanel,
+									List<LicenseConstraintViolation<Integer, Integer>> violationList,
+									IOObject resultObject, Renderer renderer, String customCardIcon) {
+		if (renderer == null) {
+			LogService.getRoot().log(Level.WARNING, () -> String.format("Renderer for %s was null!", resultObject.toString()));
+			return;
+		}
+		String cardKey = toCardName(renderer.getName());
+		final ResourceCard card = new ResourceCard(cardKey, "result_view." + cardKey);
+
+		// custom renderers (e.g. for binary entries) can define their own icon
+		if (customCardIcon != null) {
+			card.setIcon(SwingTools.createIcon("32/" + customCardIcon));
+		}
+
+		// create a placeholder panel which shows "under construction" so the results can be
+		// displayed immediately
+		final JPanel inConstructionPanel = new JPanel(new BorderLayout());
+		String humanName = I18N.getGUIMessageOrNull("gui.cards.result_view." + cardKey + ".title");
+		if (humanName == null) {
+			humanName = cardKey;
+		}
+		JLabel waitLabel = new JLabel(I18N.getGUILabel("result_construction", humanName));
+		waitLabel.setIcon(WAIT_ICON);
+		waitLabel.setHorizontalTextPosition(SwingConstants.TRAILING);
+		waitLabel.setHorizontalAlignment(SwingConstants.CENTER);
+		inConstructionPanel.add(waitLabel, BorderLayout.CENTER);
+		cardPanel.addCard(card, inConstructionPanel);
+		try {
+			ProgressThread resultThread = new ProgressThread("creating_result_tab", false, humanName) {
+
+				@Override
+				public void run() {
+					getProgressListener().setTotal(100);
+					getProgressListener().setCompleted(1);
+
+					final Component rendererComponent = renderer.getVisualizationComponent(resultObject,
+							resultContainer);
+					getProgressListener().setCompleted(60);
+
+					if (rendererComponent != null) {
+
+						if (rendererComponent instanceof JComponent) {
+							((JComponent) rendererComponent).setBorder(null);
+						}
+						getProgressListener().setCompleted(80);
+
+						SwingUtilities.invokeLater(() -> {
+							// update container
+							// renderer is finished, remove placeholder
+							inConstructionPanel.removeAll();
+
+							// add license information if necessary
+							if (!violationList.isEmpty()) {
+								JPanel warnPanel = new ResultLimitPanel(rendererComponent.getBackground(),
+										violationList.get(0));
+								inConstructionPanel.add(warnPanel, BorderLayout.NORTH);
+							}
+
+							// add real renderer
+							inConstructionPanel.add(rendererComponent, BorderLayout.CENTER);
+
+							inConstructionPanel.revalidate();
+							inConstructionPanel.repaint();
+						});
+						getProgressListener().complete();
+					}
+				}
+			};
+
+			// start result calculation progress thread
+			resultThread.start();
+		} catch (Exception e) {
+			LogService.getRoot().log(Level.WARNING,
+					I18N.getMessage(LogService.getRoot().getResourceBundle(),
+							"com.rapidminer.gui.processeditor.results.ResultDisplayTools.error_creating_renderer", e),
+					e);
+			SwingUtilities.invokeLater(() -> {
+				inConstructionPanel.removeAll();
+				// add error msg label
+				inConstructionPanel.add(new JLabel(I18N.getMessage(I18N.getErrorBundle(), "result_display.error_creating_renderer",
+						renderer.getName())), BorderLayout.CENTER);
+				// make sure it's shown
+				inConstructionPanel.revalidate();
+				inConstructionPanel.repaint();
+			});
+		}
+	}
+
+	private static String toCardName(String name) {
+		return name.toLowerCase().replace(' ', '_');
 	}
 
 	/**
@@ -275,6 +318,37 @@ public class ResultDisplayTools {
 			mapping[i] = i;
 		}
 		return new MappedExampleSet(exampleSet, mapping);
+	}
+
+	/**
+	 * Creates a new table consisting only of the first {@code #newSize} rows of the given table.
+	 */
+	private static IOTable downsample(IOTable ioTable, int newSize) {
+		Table table = ioTable.getTable();
+		Table downsampled = table.rows(0, newSize, new DisplayContext());
+		IOTable newIOTable = new IOTable(downsampled);
+		newIOTable.getAnnotations().putAll(ioTable.getAnnotations());
+		newIOTable.setSource(ioTable.getSource());
+		return newIOTable;
+	}
+
+	/**
+	 * Checks if a data set/table of the given size violates the data row constraint.
+	 */
+	private static LicenseConstraintViolation<Integer, Integer> checkRowLimitViolation(int size) {
+		return LicenseManagerRegistry.INSTANCE.get()
+				.checkConstraintViolation(ProductConstraintManager.INSTANCE.getProduct(),
+						LicenseConstants.DATA_ROW_CONSTRAINT, size, false);
+	}
+
+	/**
+	 * Adds the violation to the list and logs it.
+	 */
+	private static void addViolation(LicenseConstraintViolation<Integer, Integer> violation,
+									 List<LicenseConstraintViolation<Integer, Integer>> violationList) {
+		violationList.add(violation);
+		ActionStatisticsCollector.INSTANCE.log(ActionStatisticsCollector.TYPE_ROW_LIMIT,
+				ActionStatisticsCollector.VALUE_ROW_LIMIT_DIALOG, "results_banner");
 	}
 
 }

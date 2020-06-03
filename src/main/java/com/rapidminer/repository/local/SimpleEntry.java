@@ -34,7 +34,6 @@ import com.rapidminer.repository.ConnectionEntry;
 import com.rapidminer.repository.DataEntry;
 import com.rapidminer.repository.Entry;
 import com.rapidminer.repository.Folder;
-import com.rapidminer.repository.MalformedRepositoryLocationException;
 import com.rapidminer.repository.Repository;
 import com.rapidminer.repository.RepositoryConnectionsFolderDuplicateException;
 import com.rapidminer.repository.RepositoryException;
@@ -120,20 +119,7 @@ public abstract class SimpleEntry implements Entry {
 
 	@Override
 	public String getOwner() {
-		return getProperty("owner");
-	}
-
-	@Override
-	public RepositoryLocation getLocation() {
-		try {
-			if (getContainingFolder() != null) {
-				return new RepositoryLocation(getContainingFolder().getLocation(), getName());
-			} else {
-				return new RepositoryLocation(getRepository().getName(), new String[] { getName() });
-			}
-		} catch (MalformedRepositoryLocationException e) {
-			throw new RuntimeException(e);
-		}
+		return null;
 	}
 
 	/**

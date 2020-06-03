@@ -45,7 +45,6 @@ import com.rapidminer.repository.ConnectionEntry;
 import com.rapidminer.repository.ConnectionListener;
 import com.rapidminer.repository.ConnectionRepository;
 import com.rapidminer.repository.DataEntry;
-import com.rapidminer.repository.DateEntry;
 import com.rapidminer.repository.Entry;
 import com.rapidminer.repository.Folder;
 import com.rapidminer.repository.IOObjectEntry;
@@ -61,6 +60,7 @@ import com.rapidminer.repository.internal.remote.RemoteRepository;
 import com.rapidminer.repository.internal.remote.ResponseContainer;
 import com.rapidminer.repository.internal.remote.exception.NotYetSupportedServiceException;
 import com.rapidminer.repository.resource.ResourceRepository;
+import com.rapidminer.repository.versioned.BasicEntry;
 import com.rapidminer.search.AbstractGlobalSearchManager;
 import com.rapidminer.search.GlobalSearchDefaultField;
 import com.rapidminer.search.GlobalSearchRegistry;
@@ -91,6 +91,7 @@ class RepositoryGlobalSearchManager extends AbstractGlobalSearchManager implemen
 	private static final String FIELD_TYPE = "type";
 	private static final String FIELD_PARENT = "parent";
 	private static final String FIELD_LOCATION = "location";
+	private static final String FIELD_PARENT_LOCATION = "parent_location";
 	private static final String FIELD_MODIFIED = "modified";
 	private static final String FIELD_USER = "user";
 	private static final String FIELD_ATTRIBUTE = "attribute";
@@ -132,29 +133,35 @@ class RepositoryGlobalSearchManager extends AbstractGlobalSearchManager implemen
 
 	@Override
 	public void entryAdded(Entry newEntry, Folder parent) {
-		if (newEntry instanceof Folder) {
-			// can be ignored because all entries under the folder will also show up as entryAdded events
-			return;
+		if (newEntry instanceof DataEntry) {
+			DataEntry dataEntry = (DataEntry) newEntry;
+			// all non-folders are DataEntries, so this should be triggered always
+			boolean fullIndexing = isFullIndexing();
+			if (dataEntry instanceof BasicEntry && ((BasicEntry<?>) dataEntry).getSize() == 0) {
+				// ignore metadata when adding newly created entries in new repository
+				fullIndexing = false;
+			}
+			addDocumentToIndex(createDocument(createItem(dataEntry, fullIndexing)));
 		}
-		addDocumentToIndex(createDocument(createItem(newEntry, true)));
+		// others can be ignored, at the moment everything else is a Folder anyway
 	}
 
 	@Override
 	public void entryChanged(Entry entry) {
-		if (entry instanceof Folder) {
-			// can be ignored. Renaming events are entryMoved events.
-			return;
+		if (entry instanceof DataEntry) {
+			addDocumentToIndex(createDocument(createItem((DataEntry) entry, isFullIndexing())));
 		}
-		addDocumentToIndex(createDocument(createItem(entry, true)));
+		// others can be ignored, at the moment everything else is a Folder anyway
 	}
 
 	@Override
 	public void entryRemoved(Entry removedEntry, Folder parent, int oldIndex) {
 		if (removedEntry instanceof Folder) {
 			deleteEntriesUnderLocationFromIndex(removedEntry.getLocation().getAbsoluteLocation());
-		} else {
-			removeDocumentFromIndex(createDocument(createItem(removedEntry, false)));
+		} else if (removedEntry instanceof DataEntry) {
+			removeDocumentFromIndex(createDocument(createItem((DataEntry) removedEntry, false)));
 		}
+		// others can be ignored, they were not added anyway and do not even exist at the moment
 	}
 
 	@Override
@@ -173,12 +180,13 @@ class RepositoryGlobalSearchManager extends AbstractGlobalSearchManager implemen
 
 			// add all entries under the new folder to the index again
 			addEntriesUnderFolderToIndex((Folder) newEntry);
-		} else {
+		} else if (newEntry instanceof DataEntry) {
+			DataEntry movedEntry = (DataEntry) newEntry;
 			// delete old entry
-			removeDocumentFromIndex(createDocumentForDeletion(formerParent.getLocation().getAbsoluteLocation() + RepositoryLocation.SEPARATOR + formerName, formerName));
+			removeDocumentFromIndex(createDocumentForDeletion(formerParent.getLocation().getAbsoluteLocation() + RepositoryLocation.SEPARATOR + formerName, formerName, newEntry.getType()));
 
 			// add new entry
-			addDocumentToIndex(createDocument(createItem(newEntry, true)));
+			addDocumentToIndex(createDocument(createItem(movedEntry, isFullIndexing())));
 		}
 	}
 
@@ -190,6 +198,10 @@ class RepositoryGlobalSearchManager extends AbstractGlobalSearchManager implemen
 		}
 		if (repository instanceof ResourceRepository && !RepositoryManager.SAMPLE_REPOSITORY_NAME.equals(repository.getName())) {
 			// skip resource repositories from tutorials/templates/etc - except for the Samples repository, that one can be indexed
+			return;
+		}
+		if (repository.isTransient()) {
+			// skip transient repositories, they are used for ephemeral tasks and should not appear anywhere
 			return;
 		}
 
@@ -241,7 +253,7 @@ class RepositoryGlobalSearchManager extends AbstractGlobalSearchManager implemen
 
 	@Override
 	public void connectionEstablished(ConnectionRepository repository) {
-		// if connection to a connection repository (e.g. RM Server or Cloud) is established, try to query information for all available entries
+		// if connection to a connection repository (e.g. RapidMiner AI Hub or Cloud) is established, try to query information for all available entries
 		addEntriesUnderFolderToIndex(repository);
 	}
 
@@ -259,7 +271,7 @@ class RepositoryGlobalSearchManager extends AbstractGlobalSearchManager implemen
 		// if enabled, add full metadata to index afterwards, so user can search advanced things
 		// don't do it for RestRepositories, the full index is too expensive here
 		boolean isRestRepository = folder instanceof RESTRepository;
-		if (Boolean.parseBoolean(ParameterService.getParameterValue(RepositoryGlobalSearch.PROPERTY_FULL_REPOSITORY_INDEXING)) && !isRestRepository) {
+		if (isFullIndexing() && !isRestRepository) {
 			ProgressThread pgFull = createIndexingThread(folder, true);
 			pgFull.addDependency(pgFast.getID());
 			pgFull.start();
@@ -342,7 +354,7 @@ class RepositoryGlobalSearchManager extends AbstractGlobalSearchManager implemen
 	 * @param folder
 	 * 		the subfolder which should be queried
 	 * @param fullIndex
-	 * 		if {@code true}, RM Server will be asked to create a full index result including metadata (slow); otherwise metadata is omitted
+	 * 		if {@code true}, RapidMiner AI Hub will be asked to create a full index result including metadata (slow); otherwise metadata is omitted
 	 */
 	private void indexRemoteFolder(final List<Document> list, final Folder folder, final RemoteRepository repository, final boolean fullIndex) {
 		// relative path
@@ -366,7 +378,7 @@ class RepositoryGlobalSearchManager extends AbstractGlobalSearchManager implemen
 				RepositoryGlobalSearchItem[] repositorySearchItems = WebServiceTools.parseJsonString(json, RepositoryGlobalSearchItem[].class, false);
 				for (RepositoryGlobalSearchItem item : repositorySearchItems) {
 					// If an item has no parent, it's in the root folder.
-					// Because the alias is locally defined, it is not known on RM Server. Set it here.
+					// Because the alias is locally defined, it is not known on RapidMiner AI Hub. Set it here.
 					if (item.getParent().isEmpty()) {
 						item.setParent(repository.getAlias());
 					}
@@ -379,7 +391,7 @@ class RepositoryGlobalSearchManager extends AbstractGlobalSearchManager implemen
 			}
 		} catch (NotYetSupportedServiceException e) {
 			LogService.getRoot().log(Level.WARNING, "com.rapidminer.repository.global_search.RepositorySearchManager.error.initial_index_error_remote_folder_old_server", new Object[]{repository.getName() + path});
-		}catch (IOException | RepositoryException e) {
+		} catch (IOException | RepositoryException e) {
 			LogService.getRoot().log(Level.WARNING, "com.rapidminer.repository.global_search.RepositorySearchManager.error.initial_index_error_remote_folder", new Object[]{repository.getName() + path, e.getMessage()});
 		}
 	}
@@ -396,7 +408,7 @@ class RepositoryGlobalSearchManager extends AbstractGlobalSearchManager implemen
 	 * @param repository
 	 * 		the repository to read all contents from
 	 * @param fullIndex
-	 * 		if {@code true}, RM Server will be asked to create a full index result including metadata (slow); otherwise metadata is omitted
+	 * 		if {@code true}, RapidMiner AI Hub will be asked to create a full index result including metadata (slow); otherwise metadata is omitted
 	 * @param pg
 	 * 		the progress thread this is called from; needed if fall back to normal indexing
 	 */
@@ -427,7 +439,7 @@ class RepositoryGlobalSearchManager extends AbstractGlobalSearchManager implemen
 			RepositoryGlobalSearchItem[] repositorySearchItems = WebServiceTools.parseJsonString(json, RepositoryGlobalSearchItem[].class, false);
 			for (RepositoryGlobalSearchItem item : repositorySearchItems) {
 				// If an item has no parent, it's in the root folder.
-				// Because the name is locally defined, it is not known on RM Server. Set it here.
+				// Because the name is locally defined, it is not known on RapidMiner AI Hub. Set it here.
 				if (item.getParent().isEmpty()) {
 					item.setParent(repository.getName());
 				}
@@ -463,7 +475,7 @@ class RepositoryGlobalSearchManager extends AbstractGlobalSearchManager implemen
 		String entriesUnderFormerPath = escapedParentLocation + GlobalSearchUtilities.QUERY_WILDCARD;
 
 		// now actually search for all elements that start with the prepared path
-		GlobalSearchResultBuilder builder = new GlobalSearchResultBuilder(FIELD_LOCATION + GlobalSearchUtilities.QUERY_FIELD_SPECIFIER + entriesUnderFormerPath);
+		GlobalSearchResultBuilder builder = new GlobalSearchResultBuilder(FIELD_PARENT_LOCATION + GlobalSearchUtilities.QUERY_FIELD_SPECIFIER + entriesUnderFormerPath);
 		builder.setMaxNumberOfResults(Integer.MAX_VALUE).setSearchCategories(GlobalSearchRegistry.INSTANCE.getSearchCategoryById(getSearchCategoryId()));
 		try {
 			GlobalSearchResult result = builder.runSearch();
@@ -474,19 +486,17 @@ class RepositoryGlobalSearchManager extends AbstractGlobalSearchManager implemen
 	}
 
 	/**
-	 * Creates a repository search item for the given entry.
+	 * Creates a repository search item for the given data entry.
 	 *
 	 * @param entry
-	 * 		the repository entry for which to create the search item
+	 * 		the repository data entry for which to create the search item
 	 * @return the item, never {@code null}
 	 */
-	private RepositoryGlobalSearchItem createItem(final Entry entry, final boolean indexMetaData) {
+	private RepositoryGlobalSearchItem createItem(final DataEntry entry, final boolean indexMetaData) {
 		RepositoryGlobalSearchItem item = new RepositoryGlobalSearchItem();
-		if (entry instanceof DateEntry) {
-			long ms = ((DateEntry) entry).getDate();
-			if (ms > 0) {
-				item.setModified(String.valueOf(ms));
-			}
+		long ms = entry.getDate();
+		if (ms > 0) {
+			item.setModified(String.valueOf(ms));
 		}
 
 		// See if it's an ExampleSet/Model, then try to get its attributes
@@ -496,8 +506,9 @@ class RepositoryGlobalSearchManager extends AbstractGlobalSearchManager implemen
 				item.setConnectionName(entry.getName());
 				ConnectionEntry conEntry = (ConnectionEntry) entry;
 				item.setConnectionType(conEntry.getConnectionType());
-				ConnectionConfiguration conf = ((ConnectionInformationMetaData) conEntry.retrieveMetaData()).getConfiguration();
-				List<String> tags = conf.getTags();
+				ConnectionInformationMetaData metaData = (ConnectionInformationMetaData) conEntry.retrieveMetaData();
+				ConnectionConfiguration conf = metaData != null ? metaData.getConfiguration() : null;
+				List<String> tags = conf != null ? conf.getTags() : null;
 				item.setConnectionTags(tags != null ? tags.toArray(new String[0]) : null);
 			} catch (RepositoryException e) {
 				// no metadata available, ignore
@@ -541,16 +552,16 @@ class RepositoryGlobalSearchManager extends AbstractGlobalSearchManager implemen
 
 
 	/**
-	 * Creates a repository search document only for deletion. Does not need to know as many things as documents for searching.
+	 * Creates a repository search document only for deletion. Does not need to know as many things as documents for
+	 * searching.
 	 *
-	 * @param location
-	 * 		the absolute repository location of the item to delete
-	 * @param name
-	 * 		the name of the item to delete
+	 * @param location the absolute repository location of the item to delete
+	 * @param name     the name of the item to delete
+	 * @param type     the type of the item to delete, see {@link Entry#getType()}
 	 * @return the document, never {@code null}
 	 */
-	private Document createDocumentForDeletion(final String location, final String name) {
-		return GlobalSearchUtilities.INSTANCE.createDocument(location, name);
+	private Document createDocumentForDeletion(final String location, final String name, final String type) {
+		return GlobalSearchUtilities.INSTANCE.createDocument(RepositoryGlobalSearch.createUniqueIdForRepoItem(location, type), name);
 	}
 
 	/**
@@ -595,12 +606,26 @@ class RepositoryGlobalSearchManager extends AbstractGlobalSearchManager implemen
 		// generic fields
 		fields.add(GlobalSearchUtilities.INSTANCE.createFieldForIdentifiers(FIELD_TYPE, item.getType()));
 		fields.add(GlobalSearchUtilities.INSTANCE.createFieldForTexts(FIELD_PARENT, item.getParent()));
+		String parentFolderLocation = item.getLocation();
+		int lastSeparator = parentFolderLocation.lastIndexOf(RepositoryLocation.SEPARATOR);
+		if (lastSeparator > -1) {
+			parentFolderLocation = parentFolderLocation.substring(0, lastSeparator);
+		}
+		fields.add(GlobalSearchUtilities.INSTANCE.createFieldForTexts(FIELD_PARENT_LOCATION, GlobalSearchUtilities.INSTANCE.encodeRepositoryPath(parentFolderLocation)));
 		fields.add(GlobalSearchUtilities.INSTANCE.createFieldForTexts(FIELD_LOCATION, GlobalSearchUtilities.INSTANCE.encodeRepositoryPath(item.getLocation())));
 		if (item.getOwner() != null) {
 			fields.add(GlobalSearchUtilities.INSTANCE.createFieldForIdentifiers(FIELD_USER, item.getOwner()));
 		}
-		// absolute repository location is the unique ID for the repository category
-		return GlobalSearchUtilities.INSTANCE.createDocument(item.getLocation(), item.getName(), fields.toArray(new Field[0]));
+		// absolute repository location + ID_SEPARATOR + entry type is the unique ID for the repository category
+		return GlobalSearchUtilities.INSTANCE.createDocument(RepositoryGlobalSearch.createUniqueIdForRepoItem(item.getLocation(), item.getType()), item.getName(), fields.toArray(new Field[0]));
+	}
+
+	/**
+	 * Checks the {@link RepositoryGlobalSearch#PROPERTY_FULL_REPOSITORY_INDEXING} property.
+	 * @since 9.7
+	 */
+	private boolean isFullIndexing() {
+		return Boolean.parseBoolean(ParameterService.getParameterValue(RepositoryGlobalSearch.PROPERTY_FULL_REPOSITORY_INDEXING));
 	}
 
 }

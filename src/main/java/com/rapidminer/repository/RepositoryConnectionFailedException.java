@@ -29,4 +29,18 @@ public class RepositoryConnectionFailedException extends RepositoryException {
 	public RepositoryConnectionFailedException(String errorMessage) {
 		super(errorMessage);
 	}
+
+	/**
+	 * @since 9.7
+	 */
+	public RepositoryConnectionFailedException(Throwable cause) {
+		super(cause);
+	}
+
+	/**
+	 * @since 9.7
+	 */
+	public RepositoryConnectionFailedException(String message, Throwable cause) {
+		super(message, cause);
+	}
 }

@@ -627,7 +627,7 @@ public class SwingTools {
 							scaledIconName.append(imageName.substring(indexOfLastSlash, imageName.length()));
 							URL scaledIconUrl = Tools.getResource(scaledIconName.toString());
 							if (scaledIconUrl != null) {
-								ImageIcon icon = new ScaledImageIcon(scaledIconUrl, iconSize, iconSize);
+								ImageIcon icon = new ScaledImageIcon(scaledIconUrl, iconSize);
 								ICON_CACHE.put(imageName, icon);
 								return icon;
 							}
@@ -1815,7 +1815,7 @@ public class SwingTools {
 		return styles;
 	}
 
-	public static String toHTMLString(final Ports<? extends Port> ports) {
+	public static String toHTMLString(final Ports<?> ports) {
 		StringBuilder b = new StringBuilder();
 		boolean first = true;
 		for (Port port : ports.getAllPorts()) {

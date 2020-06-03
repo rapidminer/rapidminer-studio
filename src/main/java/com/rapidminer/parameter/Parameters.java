@@ -36,7 +36,7 @@ import com.rapidminer.operator.Operator;
 import com.rapidminer.tools.AbstractObservable;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.Observer;
-import com.rapidminer.tools.Tools;
+import com.rapidminer.tools.encryption.EncryptionProvider;
 
 
 /**
@@ -118,22 +118,12 @@ public class Parameters extends AbstractObservable<String> implements Cloneable,
 			keyToValueMap.remove(key);
 		} else {
 			if (parameterType != null) {
-				value = parameterType.transformNewValue(value);
+				value = parameterType.transformNewValue(value, null);
 			}
 			keyToValueMap.put(key, value);
 		}
 		fireUpdate(key);
 		return parameterType != null;
-	}
-
-	/**
-	 * Sets the parameter without performing a range and type check.
-	 * 
-	 * @deprecated Please use the method {@link #setParameter(String, String)} instead
-	 */
-	@Deprecated
-	public void setParameterWithoutCheck(String key, String value) {
-		setParameter(key, value);
 	}
 
 	/**
@@ -153,15 +143,10 @@ public class Parameters extends AbstractObservable<String> implements Cloneable,
 			}
 			Object defaultValue = type.getDefaultValue();
 			if ((defaultValue == null) && !type.isOptional()) {
-				// LogService.getRoot().fine("Parameter '" + key +
-				// "' is not set and has no default value.");//
-				// +Arrays.toString(Thread.currentThread().getStackTrace()));
 				LogService.getRoot().log(Level.FINE,
 						"com.rapidminer.parameter.Parameters.parameter_not_set_no_default_value", key);
 				throw new UndefinedParameterError(key);
 			} else {
-				// LogService.getRoot().finer("Parameter '" + key + "' is not set. Using default ('"
-				// + type.toString(defaultValue) + "').");
 				LogService.getRoot().log(Level.FINER, "com.rapidminer.parameter.Parameters.parameter_not_set_using_default",
 						new Object[] { key, type.toString(defaultValue) });
 
@@ -193,13 +178,10 @@ public class Parameters extends AbstractObservable<String> implements Cloneable,
 			}
 			Object value = type.getDefaultValue();
 			if ((value == null) && !type.isOptional()) {
-				// LogService.getRoot().finer("Parameter '" + key + "' is not set. Using null.");
 				LogService.getRoot().log(Level.FINER, "com.rapidminer.parameter.Parameters.parameter_not_set_using_null",
 						key);
 				return null;
 			} else {
-				// LogService.getRoot().finer("Parameter '" + key + "' is not set. Using default ('"
-				// + type.toString(value) + "').");
 				LogService.getRoot().log(Level.FINER, "com.rapidminer.parameter.Parameters.parameter_not_set_using_default",
 						new Object[] { key, type.toString(value) });
 			}
@@ -246,14 +228,34 @@ public class Parameters extends AbstractObservable<String> implements Cloneable,
 		return keyToValueMap.hashCode();
 	}
 
-	/** Appends the elements describing these Parameters to the given element. */
+	/**
+	 * Appends the elements describing these Parameters to the given element.
+	 *
+	 * @deprecated since 9.7, use {@link #appendXML(Element, boolean, String, Document)} instead
+	 */
+	@Deprecated
 	public void appendXML(Element toElement, boolean hideDefault, Document doc) {
+		appendXML(toElement, hideDefault, EncryptionProvider.DEFAULT_CONTEXT, doc);
+	}
+
+	/**
+	 * Appends the elements describing these Parameters to the given element. If encryption is necessary, uses the
+	 * provided encryption provider context (see {@link EncryptionProvider}).
+	 *
+	 * @param toElement         all elements are added to this element
+	 * @param hideDefault       if {@code true}, default values are omitted
+	 * @param encryptionContext the encryption context that will be used to potentially encrypt values (see {@link
+	 *                          com.rapidminer.tools.encryption.EncryptionProvider})
+	 * @param doc               the document for which the elements are created
+	 * @since 9.7
+	 */
+	public void appendXML(Element toElement, boolean hideDefault, String encryptionContext, Document doc) {
 		for (String key : keyToTypeMap.keySet()) {
 			String value = keyToValueMap.get(key);
 			ParameterType type = keyToTypeMap.get(key);
 			Element paramElement;
 			if (type != null) {
-				paramElement = type.getXML(key, value, hideDefault, doc);
+				paramElement = type.getXML(key, value, hideDefault, encryptionContext, doc);
 			} else {
 				paramElement = doc.createElement("parameter");
 				paramElement.setAttribute("key", key);
@@ -265,50 +267,9 @@ public class Parameters extends AbstractObservable<String> implements Cloneable,
 		}
 	}
 
-	/**
-	 * Writes a portion of the xml configuration file specifying the parameters that differ from
-	 * their default value.
-	 * 
-	 * @deprecated Use the DOM version of this method (
-	 *             {@link #appendXML(Element, boolean, Document)}).
-	 */
-	@Deprecated
-	public String getXML(String indent, boolean hideDefault) {
-		StringBuffer result = new StringBuffer();
-		Iterator<String> i = keyToTypeMap.keySet().iterator();
-		while (i.hasNext()) {
-			String key = i.next();
-			String value = keyToValueMap.get(key);
-			ParameterType type = keyToTypeMap.get(key);
-			if (type != null) {
-				result.append(type.getXML(indent, key, value, hideDefault));
-			} else {
-				result.append(indent + "<parameter key=\"" + key + "\"\tvalue=\"" + value.toString() + "\"/>"
-						+ Tools.getLineSeparator());
-			}
-		}
-		return result.toString();
-	}
-
 	@Override
 	public String toString() {
 		return this.keyToValueMap.toString();
-	}
-
-	@Deprecated
-	/**
-	 * This method has been moved to ParameterTypeList
-	 */
-	public static String transformList2String(List<String[]> parameterList) {
-		return ParameterTypeList.transformList2String(parameterList);
-	}
-
-	@Deprecated
-	/**
-	 * This method has been moved to ParameterTypeList
-	 */
-	public static List<String[]> transformString2List(String listString) {
-		return ParameterTypeList.transformString2List(listString);
 	}
 
 	/** Notify all set parameters of the operator renaming */

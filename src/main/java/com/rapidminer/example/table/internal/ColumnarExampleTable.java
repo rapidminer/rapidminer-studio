@@ -44,7 +44,7 @@ import com.rapidminer.tools.Ontology;
  * @see Column
  * @since 7.3
  */
-public class ColumnarExampleTable extends AbstractExampleTable implements GrowingExampleTable {
+public class ColumnarExampleTable extends AbstractExampleTable implements GrowingExampleTable, CleanableExampleTable {
 
 	private static final long serialVersionUID = 1L;
 
@@ -336,14 +336,7 @@ public class ColumnarExampleTable extends AbstractExampleTable implements Growin
 		}
 	}
 
-	/**
-	 * Creates a shallow clone of the table and removes all columns not contained in attributes.
-	 *
-	 * @param attributes
-	 *            the attributes to determine which columns to keep
-	 * @return a new table with only column data when the column is associated to an attribute from
-	 *         attributes
-	 */
+	@Override
 	public ColumnarExampleTable columnCleanupClone(Attributes attributes) {
 		ColumnarExampleTable newTable = createClone();
 		// check which table indices are still in use

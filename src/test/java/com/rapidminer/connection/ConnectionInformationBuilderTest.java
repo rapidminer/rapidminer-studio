@@ -18,15 +18,16 @@
  */
 package com.rapidminer.connection;
 
-import static org.junit.Assert.*;
-import static com.rapidminer.connection.configuration.ConnectionConfigurationBuilderTest.*;
+import static com.rapidminer.connection.configuration.ConnectionConfigurationBuilderTest.getDefaultConfiguration;
+import static com.rapidminer.connection.configuration.ConnectionConfigurationBuilderTest.getLargeConfiguration;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertNull;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.Reader;
 import java.lang.reflect.Field;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
@@ -40,6 +41,7 @@ import com.rapidminer.connection.configuration.ConnectionConfigurationBuilder;
 import com.rapidminer.connection.configuration.ConnectionResources;
 import com.rapidminer.operator.Annotations;
 import com.rapidminer.operator.ports.metadata.ConnectionInformationMetaData;
+import com.rapidminer.tools.encryption.EncryptionProvider;
 
 
 /**
@@ -57,8 +59,8 @@ public class ConnectionInformationBuilderTest {
 		ConnectionInformation ci = getConnectionInformation("configuration test");
 
 		ConnectionInformation clone = new ConnectionInformationBuilder(ci).build();
-		assertTrue("The clone is not equal to the original connection", ci.equals(clone));
-		assertFalse("The clone should be a new object!", ci == clone);
+		assertEquals("The clone is not equal to the original connection", ci, clone);
+		assertNotSame("The clone should be a new object!", ci, clone);
 	}
 
 	@Test
@@ -76,8 +78,8 @@ public class ConnectionInformationBuilderTest {
 		ConnectionInformationBuilder cibCanNotUpdate = new ConnectionInformationBuilder(getDefaultConfiguration());
 		final ConnectionConfiguration updateConfig = new ConnectionConfigurationBuilder("update it", CONFIGURATION_TYPE_TEST).build();
 		cibCanUpdate.updateConnectionConfiguration(updateConfig);
-		final ConnectionInformation canbuild = cibCanUpdate.build();
-		assertEquals("Expecting the updated configuration to be used", updateConfig, canbuild.getConfiguration());
+		final ConnectionInformation canBuild = cibCanUpdate.build();
+		assertEquals("Expecting the updated configuration to be used", updateConfig, canBuild.getConfiguration());
 
 		try {
 			cibCanNotUpdate.updateConnectionConfiguration(updateConfig);
@@ -88,17 +90,16 @@ public class ConnectionInformationBuilderTest {
 
 	@Test
 	public void checkMetadata() {
-		assertNull(ConnectionInformationSerializer.LOCAL.getMetaData(null));
+		assertNull(ConnectionInformationSerializer.INSTANCE.getMetaData(null));
 		ConnectionInformation ci = getConnectionInformation("checkMetadata");
-		final ConnectionInformationMetaData metaData = ConnectionInformationSerializer.LOCAL.getMetaData(ci);
+		final ConnectionInformationMetaData metaData = ConnectionInformationSerializer.INSTANCE.getMetaData(ci);
 		final Object o = read(metaData, "configuration");
-		assertTrue(ci.getConfiguration().equals(o));
+		assertEquals(ci.getConfiguration(), o);
 	}
 
 	@Test
 	public void loadConfig() throws IOException {
-		assertNull(ConnectionInformationSerializer.LOCAL.loadConfiguration((Reader) null));
-		assertNull(ConnectionInformationSerializer.LOCAL.loadConfiguration((InputStream) null));
+		assertNull(ConnectionInformationSerializer.INSTANCE.loadConfiguration(null, null));
 	}
 
 	@Test
@@ -118,10 +119,10 @@ public class ConnectionInformationBuilderTest {
 
 		// we need to store the original CI to get matching paths for the contained files
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		ConnectionInformationSerializer.LOCAL.serialize(ci, baos);
-		final ConnectionInformation ciReloaded = ConnectionInformationSerializer.LOCAL.loadConnection(new ByteArrayInputStream(baos.toByteArray()));
+		ConnectionInformationSerializer.INSTANCE.serialize(ci, baos, EncryptionProvider.DEFAULT_CONTEXT);
+		final ConnectionInformation ciReloaded = ConnectionInformationSerializer.INSTANCE.loadConnection(new ByteArrayInputStream(baos.toByteArray()), null, EncryptionProvider.DEFAULT_CONTEXT);
 
-		assertTrue("The serialized and afterwards deserialized ConnectionInformation should be equal to the original object, but it is not", ci.equals(ciReloaded));
+		assertEquals("The serialized and afterwards deserialized ConnectionInformation should be equal to the original object, but it is not", ci, ciReloaded);
 	}
 
 	static Object read(Object object, String field) {
@@ -140,7 +141,6 @@ public class ConnectionInformationBuilderTest {
 		List<Path> libfiles = null;
 		List<Path> otherfiles = null;
 		Annotations annotations = null;
-		ConnectionStatistics statistics = null;
 		return new ConnectionInformationBuilder(configBuilder.build()).withLibraryFiles(libfiles).withOtherFiles(otherfiles).withAnnotations(annotations).build();
 	}
 }

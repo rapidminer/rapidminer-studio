@@ -31,11 +31,13 @@ import java.util.Collections;
 import java.util.Random;
 
 import org.apache.commons.lang.RandomStringUtils;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.rapidminer.connection.configuration.ConfigurationParameter;
 import com.rapidminer.connection.configuration.ConfigurationParameterImpl;
 import com.rapidminer.connection.configuration.ConnectionConfigurationBuilder;
+import com.rapidminer.tools.encryption.EncryptionProvider;
 
 
 /**
@@ -56,6 +58,12 @@ public class ConnectionInformationMetaDataTest {
 	private static final String TAG = RandomStringUtils.randomAlphabetic(3 + RANDOM.nextInt(5));
 	private static final String ANNOTATION_KEY = RandomStringUtils.randomAlphabetic(3 + RANDOM.nextInt(5));
 	private static final String ANNOTATION_VALUE = RandomStringUtils.randomAlphabetic(3 + RANDOM.nextInt(5));
+
+
+	@BeforeClass
+	public static void init() {
+		EncryptionProvider.initialize();
+	}
 
 	@Test
 	public void testSerializedObjectDoesNotContainEncryptedParameter() throws IOException {

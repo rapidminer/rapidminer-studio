@@ -18,6 +18,8 @@
 */
 package com.rapidminer.operator.performance;
 
+import com.rapidminer.operator.IOObject;
+import com.rapidminer.tools.FunctionWithThrowable;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.math.Averagable;
@@ -147,15 +149,15 @@ public class PerformanceVector extends AverageVector {
 		}
 	}
 
+	/** @since 9.7 */
+	@Override
+	public IOObject copy() {
+		return copyOrClone(Averagable::copy);
+	}
+
 	@Override
 	public Object clone() throws CloneNotSupportedException {
-		PerformanceVector av = new PerformanceVector();
-		for (int i = 0; i < size(); i++) {
-			Averagable avg = getAveragable(i);
-			av.addAveragable((Averagable) (avg).clone());
-		}
-		av.cloneAnnotationsFrom(this);
-		return av;
+		return copyOrClone(Averagable::clone);
 	}
 
 	@Override
@@ -190,5 +192,21 @@ public class PerformanceVector extends AverageVector {
 			Averagable averagable = getAveragable(i);
 			this.currentValues.put(averagable.getName(), averagable.getAverage());
 		}
+	}
+
+	/**
+	 * Combined method for {@link #copy()} and {@link #clone()} to reduce duplicate code
+	 *
+	 * @since 9.7
+	 */
+	private <E extends Exception> PerformanceVector copyOrClone(FunctionWithThrowable<Averagable, ?, E> copyFunction) throws E {
+		PerformanceVector av = new PerformanceVector();
+		av.mainCriterion = mainCriterion;
+		for (int i = 0; i < size(); i++) {
+			Averagable avg = getAveragable(i);
+			av.addAveragable((Averagable) copyFunction.applyWithException(avg));
+		}
+		av.cloneAnnotationsFrom(this);
+		return av;
 	}
 }

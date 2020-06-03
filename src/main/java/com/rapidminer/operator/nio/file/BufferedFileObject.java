@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.nio.Buffer;
 
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.tools.TempFileTools;
 
 
 /**
@@ -56,11 +57,10 @@ public class BufferedFileObject extends FileObject {
 	public File getFile() throws OperatorException {
 		if (file == null) {
 			try {
-				file = File.createTempFile("rm_file_", ".dump");
+				file = TempFileTools.createTempFile("rm_file_", ".dump").toFile();
 				try (FileOutputStream fos = new FileOutputStream(file)) {
 					fos.write(this.buffer);
 				}
-				file.deleteOnExit();
 			} catch (IOException e) {
 				throw new OperatorException("303", e, file, e.getMessage());
 			}

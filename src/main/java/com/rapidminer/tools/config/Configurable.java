@@ -86,11 +86,11 @@ public interface Configurable {
 	Map<String, String> getParameters();
 
 	/**
-	 * Returns the ID of this configurable in case it was retrieved from RapidMiner Server. This ID
+	 * Returns the ID of this configurable in case it was retrieved from RapidMiner AI Hub. This ID
 	 * must be used when editing and saving a configurable.
 	 *
 	 * @see #getSource()
-	 * @return -1 if this configurable was not loaded from RapidMiner Server
+	 * @return -1 if this configurable was not loaded from RapidMiner AI Hub
 	 */
 	int getId();
 
@@ -102,14 +102,14 @@ public interface Configurable {
 	void setId(int id);
 
 	/**
-	 * If this configurable was loaded from a RapidMiner Server instance, this is the connection it
+	 * If this configurable was loaded from a RapidMiner AI Hub instance, this is the connection it
 	 * was loaded from. May be null for local entries.
 	 *
 	 * @see #getId()
 	 */
 	RemoteRepository getSource();
 
-	/** Set when this configurable was loaded from a RapidMiner Server instance. */
+	/** Set when this configurable was loaded from a RapidMiner AI Hub instance. */
 	void setSource(RemoteRepository source);
 
 	/**

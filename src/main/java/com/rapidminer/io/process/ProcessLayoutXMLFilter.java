@@ -252,7 +252,7 @@ public class ProcessLayoutXMLFilter implements ProcessXMLFilter {
 	 * 		the list of children to check
 	 * @since 8.2
 	 */
-	private void setPortSpacings(Ports<? extends Port> ports, NodeList children, String portPrefix) {
+	private void setPortSpacings(Ports<? > ports, NodeList children, String portPrefix) {
 		for (Port port : ports.getAllPorts()) {
 			for (int i = 0; i < children.getLength(); i++) {
 				Node item = children.item(i);

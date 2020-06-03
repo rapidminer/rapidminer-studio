@@ -26,11 +26,11 @@ import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.gui.tools.dialogs.ConfirmDialog;
-import com.rapidminer.repository.Entry;
 import com.rapidminer.repository.MalformedRepositoryLocationException;
 import com.rapidminer.repository.ProcessEntry;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryLocation;
+import com.rapidminer.repository.RepositoryLocationBuilder;
 import com.rapidminer.repository.gui.RepositoryLocationChooser;
 
 
@@ -85,10 +85,10 @@ public class SaveAsAction extends ResourceAction {
 				false, true, true);
 		if (loc != null) {
 			try {
-				RepositoryLocation location = new RepositoryLocation(loc);
+				RepositoryLocation location = new RepositoryLocationBuilder().withExpectedDataEntryType(ProcessEntry.class).buildFromAbsoluteLocation(loc);
 
-				Entry entry = location.locateEntry();
-				if (entry instanceof ProcessEntry) {
+				ProcessEntry entry = location.locateData();
+				if (entry != null) {
 					if (SwingTools.showConfirmDialog("overwrite", ConfirmDialog.YES_NO_OPTION, entry.getLocation()) == ConfirmDialog.NO_OPTION) {
 						return false;
 					}

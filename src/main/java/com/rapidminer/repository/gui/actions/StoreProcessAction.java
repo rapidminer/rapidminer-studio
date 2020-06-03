@@ -30,6 +30,7 @@ import com.rapidminer.repository.MalformedRepositoryLocationException;
 import com.rapidminer.repository.ProcessEntry;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryLocation;
+import com.rapidminer.repository.RepositoryLocationBuilder;
 import com.rapidminer.repository.gui.RepositoryTree;
 
 
@@ -49,10 +50,10 @@ public class StoreProcessAction extends AbstractRepositoryAction<Entry> {
 	@Override
 	public void actionPerformed(Entry entry) {
 		if (entry instanceof Folder) {
-			storeInFolder(Folder.class.cast(entry));
+			storeInFolder((Folder) entry);
 		}
 		if (entry instanceof ProcessEntry) {
-			overwriteProcess(ProcessEntry.class.cast(entry));
+			overwriteProcess((ProcessEntry) entry);
 		}
 	}
 
@@ -71,19 +72,13 @@ public class StoreProcessAction extends AbstractRepositoryAction<Entry> {
 			}
 			try {
 				// check if folder already contains entry with said name
-				RepositoryLocation entryLocation = new RepositoryLocation(folder.getLocation(), name);
-				if (folder.containsEntry(name)) {
-					Entry existingEntry = entryLocation.locateEntry();
-					if (!(existingEntry instanceof ProcessEntry)) {
-						// existing entry is not a ProcessEntry, cannot overwrite
-						SwingTools.showVerySimpleErrorMessage("repository_entry_already_exists", name);
-						return;
-					} else {
-						// existing entry is ProcessEntry,let #overwriteProcess() handle it
-						overwriteProcess((ProcessEntry) existingEntry);
+				RepositoryLocation entryLocation = new RepositoryLocationBuilder().withExpectedDataEntryType(ProcessEntry.class).buildFromParentLocation(folder.getLocation(), name);
+					ProcessEntry existingEntry = entryLocation.locateData();
+					if (existingEntry != null) {
+						// let #overwriteProcess() handle it
+						overwriteProcess(existingEntry);
 						return;
 					}
-				}
 			} catch (RepositoryException | MalformedRepositoryLocationException e1) {
 				SwingTools.showSimpleErrorMessage("cannot_store_process_in_repository", e1, name);
 				return;
@@ -97,10 +92,10 @@ public class StoreProcessAction extends AbstractRepositoryAction<Entry> {
 					Process process = RapidMinerGUI.getMainFrame().getProcess();
 					RepositoryProcessLocation processLocation = null;
 					try {
-						processLocation = new RepositoryProcessLocation(new RepositoryLocation(folder.getLocation(), name));
+						processLocation = new RepositoryProcessLocation(new RepositoryLocationBuilder().withExpectedDataEntryType(ProcessEntry.class).buildFromParentLocation(folder.getLocation(), name));
 						getProgressListener().setCompleted(10);
 						Process.checkIfSavable(process);
-						folder.createProcessEntry(name, process.getRootOperator().getXML(false));
+						folder.createProcessEntry(name, process.getRootOperator().getXML(false, processLocation.getRepositoryLocation().getRepository().getEncryptionContext()));
 						process.setProcessLocation(processLocation);
 						tree.expandPath(tree.getSelectionPath());
 						RapidMinerGUI.addToRecentFiles(process.getProcessLocation());
@@ -129,7 +124,7 @@ public class StoreProcessAction extends AbstractRepositoryAction<Entry> {
 					try {
 						Process process = RapidMinerGUI.getMainFrame().getProcess();
 						process.setProcessLocation(new RepositoryProcessLocation(processEntry.getLocation()));
-						processEntry.storeXML(process.getRootOperator().getXML(false));
+						processEntry.storeXML(process.getRootOperator().getXML(false, processEntry.getLocation().getRepository().getEncryptionContext()));
 						RapidMinerGUI.addToRecentFiles(process.getProcessLocation());
 						RapidMinerGUI.getMainFrame().processHasBeenSaved();
 					} catch (Exception e) {
@@ -147,10 +142,10 @@ public class StoreProcessAction extends AbstractRepositoryAction<Entry> {
 	@Override
 	public void enable() {
 		Entry entry = tree.getSelectedEntry();
-		if (entry.isReadOnly()) {
+		if (entry == null || entry.isReadOnly()) {
 			setEnabled(false);
 		} else {
-			setEnabled((Folder.class.isInstance(entry) || ProcessEntry.class.isInstance(entry)));
+			setEnabled((entry instanceof Folder || entry instanceof ProcessEntry));
 		}
 
 	}

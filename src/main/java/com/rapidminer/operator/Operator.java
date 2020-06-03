@@ -20,7 +20,6 @@ package com.rapidminer.operator;
 
 import static com.rapidminer.repository.RepositoryLocation.REPOSITORY_PREFIX;
 import static com.rapidminer.repository.RepositoryLocation.SEPARATOR;
-import static com.rapidminer.repository.RepositoryLocation.getRepositoryLocation;
 import static com.rapidminer.repository.RepositoryLocation.isConnectionPath;
 
 import java.io.File;
@@ -45,6 +44,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Stream;
 import javax.xml.transform.stream.StreamResult;
 
 import org.w3c.dom.Document;
@@ -98,7 +98,9 @@ import com.rapidminer.parameter.ParameterTypeTupel;
 import com.rapidminer.parameter.Parameters;
 import com.rapidminer.parameter.UndefinedMacroError;
 import com.rapidminer.parameter.UndefinedParameterError;
+import com.rapidminer.repository.DataEntry;
 import com.rapidminer.repository.RepositoryLocation;
+import com.rapidminer.repository.RepositoryLocationType;
 import com.rapidminer.repository.RepositoryManager;
 import com.rapidminer.studio.internal.ProcessStoppedRuntimeException;
 import com.rapidminer.tools.AbstractObservable;
@@ -114,6 +116,7 @@ import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.WebServiceTools;
 import com.rapidminer.tools.WrapperLoggingHandler;
 import com.rapidminer.tools.XMLException;
+import com.rapidminer.tools.encryption.EncryptionProvider;
 import com.rapidminer.tools.io.Encoding;
 import com.rapidminer.tools.math.StringToMatrixConverter;
 import com.rapidminer.tools.patterns.Visitor;
@@ -403,19 +406,6 @@ public abstract class Operator extends AbstractObservable<Operator>
 	 */
 	public final String getOperatorClassName() {
 		return operatorDescription.getName();
-	}
-
-	/**
-	 * Returns the experiment (process) of this operator by asking the parent operator. If the
-	 * operator itself and all of its parents are not part of an process, this method will return
-	 * null. Please note that some operators (e.g. ProcessLog) must be part of an process in order
-	 * to work properly.
-	 *
-	 * @deprecated Please use {@link #getProcess()} instead
-	 */
-	@Deprecated
-	public Process getExperiment() {
-		return getProcess();
 	}
 
 	/**
@@ -1100,7 +1090,7 @@ public abstract class Operator extends AbstractObservable<Operator>
 		}
 	}
 
-	private void formatIO(Ports<? extends Port> ports, StringBuilder builder) {
+	private void formatIO(Ports<?> ports, StringBuilder builder) {
 		for (Port port : ports.getAllPorts()) {
 			builder.append("\n  ");
 			builder.append(port.getName());
@@ -1612,12 +1602,46 @@ public abstract class Operator extends AbstractObservable<Operator>
 	}
 
 	/**
-	 * This method returns the parameter identified by key as a RepositoryLocation. For this the
-	 * string is resolved against this operators process location in the Repository.
+	 * This method returns the parameter identified by key as a RepositoryLocation for a folder. For this the string is
+	 * resolved against this operators process location in the Repository.
+	 *
+	 * @param key the parameter key
+	 * @since 9.7
 	 */
-	public RepositoryLocation getParameterAsRepositoryLocation(String key) throws UserError {
+	public RepositoryLocation getParameterAsRepositoryLocationFolder(String key) throws UserError {
 		String loc = getParameter(key);
-		return getRepositoryLocation(loc, this);
+		return RepositoryLocation.getRepositoryLocationFolder(loc, this);
+	}
+
+	/**
+	 * This method returns the parameter identified by key as a RepositoryLocation. For this the string is resolved
+	 * against this operators process location in the Repository.
+	 *
+	 * @param key              the parameter key
+	 * @param expectedDataType the expected specific {@link DataEntry} (sub-)type. At the same repository location, for
+	 *                         example a "test.rmhdf5table" (example set) and "test.rmp" (process) might live, and if
+	 *                         the expected data entry subtype is not specified, this method will return the first one
+	 *                         it finds. If {@code null}, will use {@link DataEntry}. Also see {@link
+	 *                         RepositoryLocation#locateData()}.
+	 * @since 9.7
+	 */
+	public RepositoryLocation getParameterAsRepositoryLocationData(String key, Class<? extends DataEntry> expectedDataType) throws UserError {
+		String loc = getParameter(key);
+		return RepositoryLocation.getRepositoryLocationData(loc, this, expectedDataType);
+	}
+
+	/**
+	 * This method returns the parameter identified by key as a RepositoryLocation. For this the string is resolved
+	 * against this operators process location in the Repository.
+	 *
+	 * @deprecated since 9.7, use {@link #getParameterAsRepositoryLocationFolder(String)} or {@link
+	 * #getParameterAsRepositoryLocationData(String, Class)} instead
+	 */
+	@Deprecated
+	public RepositoryLocation getParameterAsRepositoryLocation(String key) throws UserError {
+		RepositoryLocation location = getParameterAsRepositoryLocationData(key, DataEntry.class);
+		location.setLocationType(RepositoryLocationType.UNKNOWN);
+		return location;
 	}
 
 	/** Returns a single named parameter and casts it to a double matrix. */
@@ -1714,21 +1738,21 @@ public abstract class Operator extends AbstractObservable<Operator>
 	}
 
 	/**
-	 * Writes the XML representation of this operator.
+	 * This will report this operator with all its parameter settings to the given writer as XML.
 	 *
-	 * @deprecated indent is not considered any more. Use {@link #writeXML(Writer, boolean)}
+	 * @deprecated since 9.7, use {@link #writeXML(Writer, boolean, String)} instead
 	 */
 	@Deprecated
-	public void writeXML(Writer out, String indent, boolean hideDefault) throws IOException {
-		writeXML(out, hideDefault);
+	public void writeXML(Writer out, boolean hideDefault) throws IOException {
+		writeXML(out, hideDefault, EncryptionProvider.DEFAULT_CONTEXT);
 	}
 
 	/**
 	 * This will report this operator with all its parameter settings to the given writer as XML.
 	 */
-	public void writeXML(Writer out, boolean hideDefault) throws IOException {
+	public void writeXML(Writer out, boolean hideDefault, String encryptionContext) throws IOException {
 		try {
-			XMLTools.stream(new XMLExporter().exportProcess(this, hideDefault), new StreamResult(out),
+			XMLTools.stream(new XMLExporter(false, encryptionContext).exportProcess(this, hideDefault), new StreamResult(out),
 					XMLImporter.PROCESS_FILE_CHARSET);
 		} catch (XMLException e) {
 			throw new IOException("Cannot create process XML: " + e, e);
@@ -1737,35 +1761,65 @@ public abstract class Operator extends AbstractObservable<Operator>
 
 	/**
 	 * This returns this operator with all its parameter settings as a {@link Document}
+	 *
+	 * @deprecated since 9.7, use {@link #getXML(boolean, boolean, String)} instead
 	 */
+	@Deprecated
 	public Document getDOMRepresentation() throws IOException {
-		return new XMLExporter().exportProcess(this, false);
+		return new XMLExporter(false, EncryptionProvider.DEFAULT_CONTEXT).exportProcess(this, false);
 	}
 
 	/**
-	 * @deprecated indent is not used any more. Use {@link #getXML(boolean)}.
+	 * Same as getXML(hideDefault, false).
+	 *
+	 * @deprecated since 9.7, use {@link #getXML(boolean, String)} instead
 	 */
 	@Deprecated
-	public String getXML(String indent, boolean hideDefault) {
-		return getXML(hideDefault);
-	}
-
-	/** Same as getXML(hideDefault, false). */
 	public String getXML(boolean hideDefault) {
 		return getXML(hideDefault, false);
 	}
 
 	/**
+	 * Same as getXML(hideDefault, false, encryptionContext).
+	 *
+	 * @param hideDefault       if {@code true}, default parameters will be ignored when creating the xml
+	 *                          representation
+	 * @param encryptionContext the encryption context that will be used to potentially encrypt values (see {@link
+	 *                          com.rapidminer.tools.encryption.EncryptionProvider#DEFAULT_CONTEXT}). If {@code null}, no
+	 *                          encryption will be used!
+	 * @return the XML, where ParameterTypes that require encryption (e.g. ParameterTypePassword) are encrypted with the
+	 * given encryption context, never {@code null}
+	 * @since 9.7
+	 */
+	public String getXML(boolean hideDefault, String encryptionContext) {
+		return getXML(hideDefault, false, encryptionContext);
+	}
+
+	/**
 	 * Returns the XML representation of this operator.
 	 *
-	 * @param hideDefault
-	 *            if true, default parameters will be ignored when creating the xml representation
-	 * @param onlyCoreElements
-	 *            if true, GUI and other additional information will be ignored.
+	 * @param hideDefault      if true, default parameters will be ignored when creating the xml representation
+	 * @param onlyCoreElements if true, GUI and other additional information will be ignored.
+	 * @deprecated since 9.7, use {@link #getXML(boolean, boolean, String)} instead
 	 */
+	@Deprecated
 	public String getXML(boolean hideDefault, boolean onlyCoreElements) {
+		return getXML(hideDefault, onlyCoreElements, EncryptionProvider.DEFAULT_CONTEXT);
+	}
+
+	/**
+	 * @param hideDefault       if {@code true}, default parameters will be ignored when creating the xml
+	 *                          representation
+	 * @param onlyCoreElements  if {@code true}, GUI and other additional information will be ignored
+	 * @param encryptionContext the encryption context that will be used to potentially encrypt values (see {@link
+	 *                          com.rapidminer.tools.encryption.EncryptionProvider})
+	 * @return the XML, where ParameterTypes that require encryption (e.g. ParameterTypePassword) are encrypted with the
+	 * given encryption context, never {@code null}
+	 * @since 9.7
+	 */
+	public String getXML(boolean hideDefault, boolean onlyCoreElements, String encryptionContext) {
 		try {
-			return XMLTools.toString(new XMLExporter(onlyCoreElements).exportProcess(this, hideDefault));
+			return XMLTools.toString(new XMLExporter(onlyCoreElements, encryptionContext).exportProcess(this, hideDefault));
 		} catch (Exception e) {
 			LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
 					"com.rapidminer.operator.Operator.generating_xml_process_error", e), e);
@@ -1773,31 +1827,48 @@ public abstract class Operator extends AbstractObservable<Operator>
 		}
 	}
 
+	/**
+	 * @deprecated since 9.7, use {@link #createFromXML(Element, Process, List, ProgressListener, VersionNumber, String)} instead
+	 */
+	@Deprecated
 	public static Operator createFromXML(Element element, Process targetProcess,
 										 List<UnknownParameterInformation> unknownParameterInformation) throws XMLException {
-		return createFromXML(element, targetProcess, unknownParameterInformation, null);
+		return createFromXML(element, targetProcess, unknownParameterInformation, null, XMLImporter.CURRENT_VERSION, EncryptionProvider.DEFAULT_CONTEXT);
 	}
 
 	/**
-	 * This will create an operator by interpreting the given XML element as being generated from
-	 * the current RapidMiner version. No Import Rules will be applied to adapt it to version
-	 * changes.
+	 * @deprecated since 9.7, use {@link #createFromXML(Element, Process, List, ProgressListener, VersionNumber, String)} instead
 	 */
+	@Deprecated
 	public static Operator createFromXML(Element element, Process process,
 										 List<UnknownParameterInformation> unknownParameterInformation, ProgressListener l) throws XMLException {
-		XMLImporter importer = new XMLImporter(l);
-		return importer.parseOperator(element, XMLImporter.CURRENT_VERSION, process, unknownParameterInformation);
+		return createFromXML(element, process, unknownParameterInformation, l, XMLImporter.CURRENT_VERSION, EncryptionProvider.DEFAULT_CONTEXT);
 	}
 
 	/**
-	 * This will create an operator from a XML element describing this operator. The given version
-	 * will be passed to the XMLImporter to enable the handling of this element as if it would have
-	 * been created from this version. See {@link XMLImporter#VERSION_RM_5} for details.
+	 * @deprecated since 9.7, use {@link #createFromXML(Element, Process, List, ProgressListener, VersionNumber, String)} instead
 	 */
+	@Deprecated
 	public static Operator createFromXML(Element element, Process process,
 										 List<UnknownParameterInformation> unknownParameterInformation, ProgressListener progressListener,
 										 VersionNumber originatingVersion) throws XMLException {
-		XMLImporter importer = new XMLImporter(progressListener);
+		return createFromXML(element, process, unknownParameterInformation, progressListener, originatingVersion, EncryptionProvider.DEFAULT_CONTEXT);
+	}
+
+	/**
+	 * This will create an operator from a XML element describing this operator. The given version will be passed to the
+	 * XMLImporter to enable the handling of this element as if it would have been created from this version. See {@link
+	 * XMLImporter#VERSION_RM_5} for details.
+	 *
+	 * @param encryptionContext the encryption context that will be used to potentially decrypt values (see {@link
+	 *                          com.rapidminer.tools.encryption.EncryptionProvider}). If {@code null}, no decryption
+	 *                          will take place
+	 * @since 9.7
+	 */
+	public static Operator createFromXML(Element element, Process process,
+										 List<UnknownParameterInformation> unknownParameterInformation, ProgressListener progressListener,
+										 VersionNumber originatingVersion, String encryptionContext) throws XMLException {
+		XMLImporter importer = new XMLImporter(progressListener, encryptionContext);
 		return importer.parseOperator(element, originatingVersion, process, unknownParameterInformation);
 	}
 
@@ -1925,7 +1996,7 @@ public abstract class Operator extends AbstractObservable<Operator>
 
 	protected void collectErrors(List<ProcessSetupError> errors) {
 		errors.addAll(errorList);
-		for (Port port : getInputPorts().getAllPorts()) {
+		for (InputPort port : getInputPorts().getAllPorts()) {
 			Collection<MetaDataError> portErrors = port.getErrors();
 			if (portErrors != null) {
 				try {
@@ -1937,10 +2008,10 @@ public abstract class Operator extends AbstractObservable<Operator>
 				}
 			}
 		}
-		for (Port port : getOutputPorts().getAllPorts()) {
+		for (OutputPort port : getOutputPorts().getAllPorts()) {
 			Collection<MetaDataError> portErrors = port.getErrors();
 			if (portErrors != null) {
-				errors.addAll(port.getErrors());
+				errors.addAll(portErrors);
 			}
 		}
 	}
@@ -1962,45 +2033,14 @@ public abstract class Operator extends AbstractObservable<Operator>
 		return (breakPoint[0] || breakPoint[1] ? "* " : "") + name + " (" + type + ")";
 	}
 
-	/**
-	 * Returns this operator's name and class.
-	 *
-	 * @deprecated Use {@link #createProcessTree(int)} instead
-	 */
-	@Deprecated
-	public String createExperimentTree(int indent) {
-		return createProcessTree(indent);
-	}
-
 	/** Returns this operator's name and class. */
 	public String createProcessTree(int indent) {
 		return createProcessTree(indent, "", "", null, null);
 	}
 
-	/**
-	 * Returns this operator's name and class.
-	 *
-	 * @deprecated Use {@link #createMarkedProcessTree(int, String, Operator)} instead
-	 */
-	@Deprecated
-	public String createMarkedExperimentTree(int indent, String mark, Operator markOperator) {
-		return createMarkedProcessTree(indent, mark, markOperator);
-	}
-
 	/** Returns this operator's name and class. */
 	public String createMarkedProcessTree(int indent, String mark, Operator markOperator) {
 		return createProcessTree(indent, "", "", markOperator, mark);
-	}
-
-	/**
-	 * Returns this operator's name and class.
-	 *
-	 * @deprecated Use {@link #createProcessTree(int, String, String, Operator, String)} instead
-	 */
-	@Deprecated
-	protected String createExperimentTree(int indent, String selfPrefix, String childPrefix, Operator markOperator,
-										  String mark) {
-		return createProcessTree(indent, selfPrefix, childPrefix, markOperator, mark);
 	}
 
 	/** Returns this operator's name and class. */
@@ -2201,20 +2241,11 @@ public abstract class Operator extends AbstractObservable<Operator>
 	}
 
 	/**
-	 * This method will disconnect all ports from as well the input ports as well as the
-	 * outputports.
+	 * This method will disconnect all ports from the input ports as well as the output ports.
 	 */
 	public void disconnectPorts() {
-		for (OutputPort port : getOutputPorts().getAllPorts()) {
-			if (port.isConnected()) {
-				port.disconnect();
-			}
-		}
-		for (InputPort port : getInputPorts().getAllPorts()) {
-			if (port.isConnected()) {
-				port.getSource().disconnect();
-			}
-		}
+		Stream.concat(getOutputPorts().getAllPorts().stream(), getInputPorts().getAllPorts().stream())
+				.filter(Port::isConnected).forEach(Port::disconnect);
 	}
 
 	/**
@@ -2413,7 +2444,7 @@ public abstract class Operator extends AbstractObservable<Operator>
 	 * Looks up an operator with the given name in the containing process.
 	 *
 	 * TODO: This method is slow since it scans operators several times. Simply looking at the
-	 * {@link Process#operatorNameMap} does not work for parallel execution, however.
+	 * Process#operatorNameMap does not work for parallel execution, however.
 	 */
 	protected Operator lookupOperator(String operatorName) {
 		if (getName().equals(operatorName)) {

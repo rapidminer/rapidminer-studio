@@ -18,9 +18,26 @@
 */
 package com.rapidminer.tools;
 
+import java.awt.Desktop;
+import java.awt.event.ActionEvent;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.Action;
+import javax.swing.SwingUtilities;
+import javax.swing.event.HyperlinkListener;
+
 import com.rapidminer.Process;
 import com.rapidminer.RapidMiner;
-import com.rapidminer.RepositoryProcessLocation;
 import com.rapidminer.gui.MainFrame;
 import com.rapidminer.gui.OperatorDocumentationBrowser;
 import com.rapidminer.gui.Perspective;
@@ -32,31 +49,14 @@ import com.rapidminer.gui.tools.DockingTools;
 import com.rapidminer.gui.tools.dialogs.ButtonDialog;
 import com.rapidminer.io.process.ProcessOriginProcessXMLFilter;
 import com.rapidminer.operator.OperatorCreationException;
-import com.rapidminer.repository.ConnectionEntry;
-import com.rapidminer.repository.Entry;
-import com.rapidminer.repository.IOObjectEntry;
+import com.rapidminer.repository.BinaryEntry;
+import com.rapidminer.repository.DataEntry;
 import com.rapidminer.repository.MalformedRepositoryLocationException;
-import com.rapidminer.repository.ProcessEntry;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryLocation;
+import com.rapidminer.repository.RepositoryLocationBuilder;
 import com.rapidminer.repository.gui.RepositoryBrowser;
 import com.rapidminer.tools.update.internal.UpdateManagerRegistry;
-
-import javax.swing.Action;
-import javax.swing.SwingUtilities;
-import javax.swing.event.HyperlinkListener;
-import java.awt.Desktop;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 
 /**
@@ -84,6 +84,7 @@ public class RMUrlHandler {
 	public static final String ACTION_RUN_PROCESS_BACKGROUND = "run_process_background";
 	public static final String ACTION_RUN_PROCESS_RMSERVER_NOW = "run_process_rmserver_now";
 	public static final String ACTION_RUN_PROCESS_RMSERVER_SCHEDULE = "run_process_rmserver_schedule";
+	public static final String ACTION_CONNECT_TO_PROJECT = "connect_to_project";
 	public static final String ACTION_MARKETPLACE = "marketplace";
 	/** @since 9.5.0 */
 	public static final String ACTION_MARKETPLACE_UPDATES = "marketplace-updates";
@@ -122,6 +123,7 @@ public class RMUrlHandler {
 	private static final String RAPIDMINER_SCHEMA_REPOSITORY = "repository";
 	private static final String RAPIDMINER_SCHEMA_OPERATOR_TUTORIAL_PROCESS = "operator_tutorial_process";
 	private static final String RAPIDMINER_SCHEMA_PROCESS_URL = "process_url";
+	private static final String RAPIDMINER_SCHEMA_CONNECT_TO_PROJECT = "project_url";
 	private static final String INTERNAL_SCHEMA_OPDOC = "opdoc/";
 	private static final String INTERNAL_SCHEMA_OPERATOR = "operator/";
 	private static final String SCHEMA_HTTP = "http://";
@@ -211,8 +213,8 @@ public class RMUrlHandler {
 			try {
 				Desktop.getDesktop().browse(uri);
 			} catch (IOException e) {
-				File tempFile = File.createTempFile("rmredirect", ".html");
-				tempFile.deleteOnExit();
+				File tempFile = TempFileTools.createTempFile("rmredirect", ".html").toFile();
+
 				try (FileWriter out = new FileWriter(tempFile)) {
 					out.write(String.format(
 							"<!DOCTYPE html>\n"
@@ -272,6 +274,9 @@ public class RMUrlHandler {
 	 * </p>
 	 */
 	public static void openInBrowser(URI uri) {
+		if (uri == null) {
+			return;
+		}
 		if (Desktop.isDesktopSupported()) {
 			try {
 				Desktop.getDesktop().browse(uri);
@@ -297,8 +302,7 @@ public class RMUrlHandler {
 	 */
 	private static void openInBrowserWithTempFile(URI uri) {
 		try {
-			File tempFile = File.createTempFile("rmredirect", ".html");
-			tempFile.deleteOnExit();
+			File tempFile = TempFileTools.createTempFile("rmredirect", ".html").toFile();
 			try (FileWriter out = new FileWriter(tempFile)) {
 				out.write(String.format(
 						"<!DOCTYPE html>\n"
@@ -321,7 +325,6 @@ public class RMUrlHandler {
 		ButtonDialog dialog = BrowserUnavailableDialogFactory.createNewDialog(uri);
 		dialog.setVisible(true);
 		LOGGER.log(Level.SEVERE, "Failed to open web page in browser, browsing is not supported on this platform.");
-
 	}
 
 	/**
@@ -352,12 +355,25 @@ public class RMUrlHandler {
 			MainFrame mainFrame = RapidMinerGUI.getMainFrame();
 			mainFrame.selectAndShowOperator(mainFrame.getProcess().getOperator(opName), true);
 		} else {
-			// try if an action is registered under than name and trigger it
-			Action action = ACTION_MAP.get(suffix);
-			if (action != null) {
-				action.actionPerformed(null);
+			// special case for connect to project
+			// example: rm://connect_to_project/http:||192.168.1.242:8080|executions|git|studio-test.git
+			if (suffix.startsWith(ACTION_CONNECT_TO_PROJECT)) {
+				int furtherSlashIndex = suffix.indexOf('/');
+				String escapedProjectUrl = null;
+				if (furtherSlashIndex > 0 && suffix.length() > furtherSlashIndex) {
+					escapedProjectUrl = suffix.substring(furtherSlashIndex + 1);
+				}
+				executeConnectToProjectAction(escapedProjectUrl);
 			} else {
-				LogService.getRoot().log(Level.WARNING, "com.rapidminer.tools.RMUrlHandler.no_action_associated_with_url", url);
+				// try if an action is registered under than name and trigger it
+				Action action = ACTION_MAP.get(suffix);
+				if (action != null) {
+
+					action.actionPerformed(null);
+				} else {
+					LogService.getRoot().log(Level.WARNING, "com.rapidminer.tools.RMUrlHandler.no_action_associated_with_url", url);
+				}
+
 			}
 		}
 	}
@@ -416,25 +432,15 @@ public class RMUrlHandler {
 			case RAPIDMINER_SCHEMA_REPOSITORY:
 				String locString = components[1].replaceAll(":", "/");
 				try {
-					final RepositoryLocation location = new RepositoryLocation(locString);
-					Entry entry = location.locateEntry();
-					if (entry == null) {
-						LogService.getRoot().log(Level.WARNING, "com.rapidminer.gui.RapidMinerGUI.rapidminer_url_repo_not_found",
-								new Object[] { locString });
+					// in case of duplicates (should not happen), open first
+					final RepositoryLocation location = new RepositoryLocationBuilder().withExpectedDataEntryType(DataEntry.class).buildFromAbsoluteLocation(locString);
+					DataEntry entry = location.locateData();
+					// don't open binary entries this way, security risk (quickly execute a .cmd or .py script or similar
+					if (entry instanceof BinaryEntry) {
+						LogService.getRoot().log(Level.INFO, "Not opening binary entry via rapidminer:// url: " + locString);
 						return;
 					}
-					if (entry instanceof ProcessEntry) {
-						if (RapidMinerGUI.getMainFrame().close()) {
-							OpenAction.open(new RepositoryProcessLocation(location), true);
-						}
-					} else if (entry instanceof ConnectionEntry) {
-						OpenAction.showConnectionInformationDialog((ConnectionEntry) entry);
-					} else if (entry instanceof IOObjectEntry) {
-						OpenAction.showAsResult((IOObjectEntry) entry);
-					} else {
-						LogService.getRoot().log(Level.WARNING, "com.rapidminer.gui.RapidMinerGUI.rapidminer_url_repo_unknown_type",
-								new Object[] { entry.getClass().getName(), locString });
-					}
+					OpenAction.open(entry, true);
 				} catch (RepositoryException | MalformedRepositoryLocationException e) {
 					LogService.getRoot().log(Level.WARNING, "com.rapidminer.gui.RapidMinerGUI.rapidminer_url_repo_broken_location",
 							new Object[] { locString });
@@ -452,20 +458,30 @@ public class RMUrlHandler {
 				}
 				break;
 			case RAPIDMINER_SCHEMA_PROCESS_URL:
-				// example: rapidminer://process_url/s3.amazonaws.com:rapidminer.community:XML:61083.xml
-				// urls must use colon instead of slashes since we split along the slashes above, for that reason we
-				// also cannot accept a url with the schema but https:// will be added in front automatically
-				locString = components[1].replaceAll(":", "/");
+				String webUrlString = components[1];
+				if (webUrlString.contains("|")) {
+					// VERSION 9.7+:
+					// example: rapidminer://process_url/https:||s3.amazonaws.com|rapidminer.community|XML|61083.xml
+					// example: rapidminer://process_url/https:||myServer.com:8080|path|file.xml
+					// urls must use pipe instead of slashes since we split along the slashes above
+					locString = webUrlString.toLowerCase(Locale.ENGLISH).replaceAll("\\|", "/");
+				} else {
+					// PRE-VERSION 9.7:
+					// example: rapidminer://process_url/s3.amazonaws.com:rapidminer.community:XML:61083.xml
+					// urls must use colon instead of slashes since we split along the slashes above, for that reason we
+					// also cannot accept a url with the schema but https:// will be added in front automatically
+					locString = SCHEMA_HTTPS + webUrlString.replaceAll(":", "/");
+				}
 				URL processURL = null;
 				try {
-					processURL = new URL(SCHEMA_HTTPS + locString);
+					processURL = new URL(locString);
 				} catch (MalformedURLException e) {
 					LogService.getRoot().log(Level.WARNING, "com.rapidminer.gui.RapidMinerGUI.malformed_rapidminer_url",
 							new Object[] { urlStr, e.getMessage() });
 				}
 				if (processURL != null) {
 					try {
-						Process p = new Process(processURL);
+						Process p = new Process(processURL, null);
 						// ensure this is tracked in UsageStats by setting the process origin
 						ProcessOriginProcessXMLFilter.setProcessOriginState(p, ProcessOriginProcessXMLFilter.ProcessOriginState.WEB_URL);
 						if (RapidMinerGUI.getMainFrame().close()) {
@@ -476,9 +492,36 @@ public class RMUrlHandler {
 					}
 				}
 				break;
+				case RAPIDMINER_SCHEMA_CONNECT_TO_PROJECT:
+					// example: rapidminer://project_url/http:||www.myserver.com:8080|executions|git|my-git-repo.git
+					// example: rapidminer://project_url/https:||www.myserver.com:8080|executions|git|my-git-repo.git
+					// if the url does not start with http or https, it is discarded in the action later
+					// action is registered in PluginInitRemoteRepository of the Remote Repository Extension
+					executeConnectToProjectAction(components[1]);
+					break;
 			default:
 				LogService.getRoot().log(Level.WARNING, "com.rapidminer.gui.RapidMinerGUI.unknown_rapidminer_url",
 						new Object[] { urlStr });
+		}
+	}
+
+	/**
+	 * Execute the action to connect to a project.
+	 *
+	 * @param escapedProjectUrl the project url, or {@code null} if nothing should be pre-filled
+	 */
+	private static void executeConnectToProjectAction(String escapedProjectUrl) {
+		if (escapedProjectUrl != null) {
+			escapedProjectUrl = escapedProjectUrl.toLowerCase(Locale.ENGLISH).replaceAll("\\|", "/");
+		} else {
+			// (Swing returns the swing component getText() content if passing null as action command, so make it an empty string...)
+			escapedProjectUrl = "";
+		}
+		Action connectToProjectAction = ACTION_MAP.get(ACTION_CONNECT_TO_PROJECT);
+		if (connectToProjectAction != null) {
+			connectToProjectAction.actionPerformed(new ActionEvent(new Object(), -1, escapedProjectUrl));
+		} else {
+			LogService.getRoot().log(Level.WARNING, "com.rapidminer.tools.RMUrlHandler.connect_to_project_not_supported");
 		}
 	}
 }

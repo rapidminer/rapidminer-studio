@@ -31,7 +31,7 @@ import com.rapidminer.tools.usagestats.ActionStatisticsCollector;
 
 
 /**
- * Interface for a RapidMiner server backed repository. It allows to manipulate the repository content via the
+ * Interface for a RapidMiner AI Hub backed repository. It allows to manipulate the repository content via the
  * {@link RemoteContentManager}, to schedule remote processes via the {@link RemoteScheduler} and to retrieve further
  * server information via the {@link RemoteInfoService}.
  *
@@ -51,17 +51,23 @@ public interface RemoteRepository extends RemoteFolder, ConnectionRepository {
 	/** Authentication types */
 	enum AuthenticationType {
 
-		BASIC(ActionStatisticsCollector.TYPE_REMOTE_REPOSITORY), // user+password
-		SAML(ActionStatisticsCollector.TYPE_REMOTE_REPOSITORY_SAML); // enterprise SSO
+		BASIC(ActionStatisticsCollector.TYPE_REMOTE_REPOSITORY, ActionStatisticsCollector.TYPE_PROJECT), // user+password
+		SAML(ActionStatisticsCollector.TYPE_REMOTE_REPOSITORY_SAML, ActionStatisticsCollector.TYPE_PROJECT_SAML); // enterprise SSO
 
 		private final String actionStatisticsType; // for usage stat collection
+		private final String actionStatisticsGitType; // for usage stat collection
 
-		private AuthenticationType(String actionStatisticsType) {
+		private AuthenticationType(String actionStatisticsType, String actionStatisticsGitType) {
 			this.actionStatisticsType = actionStatisticsType;
+			this.actionStatisticsGitType = actionStatisticsGitType;
 		}
 
 		public String getActionStatisticsType() {
-			return actionStatisticsType;
+			return getActionStatisticsType(false);
+		}
+
+		public String getActionStatisticsType(boolean useGitVariant) {
+			return useGitVariant ? actionStatisticsGitType : actionStatisticsType;
 		}
 	}
 
@@ -122,7 +128,7 @@ public interface RemoteRepository extends RemoteFolder, ConnectionRepository {
 	 * Returns the cached {@link RemoteInfoService} if present, otherwise fetches it from the RM
 	 * server. If fetching from the server fails, checks the password and tries again.
 	 *
-	 * @return the {@link RemoteInfoService} if it can be accessed. If the queried Server cannot be
+	 * @return the {@link RemoteInfoService} if it can be accessed. If the queried AI Hub cannot be
 	 *         reached or has no {@link RemoteInfoService} or the login dialog was canceled
 	 *         <code>null</code> is returned.
 	 */
@@ -170,7 +176,7 @@ public interface RemoteRepository extends RemoteFolder, ConnectionRepository {
 	 *            should NOT be encoded. This will be done by this function.
 	 * @param preAuthHeader
 	 *            if {@code true} the username and password is added to the connection if present,
-	 *            if {@code false} it is checked if the RM server is reachable
+	 *            if {@code false} it is checked if the RapidMiner AI Hub is reachable
 	 * @return the connection
 	 * @throws IOException
 	 * @throws RepositoryException
@@ -180,7 +186,7 @@ public interface RemoteRepository extends RemoteFolder, ConnectionRepository {
 	HttpURLConnection getHTTPConnection(String pathInfo, boolean preAuthHeader) throws IOException, RepositoryException;
 
 	/**
-	 * Creates a connection to the Server using the arguments.
+	 * Creates a connection to the AI Hub using the arguments.
 	 *
 	 * @param pathInfo
 	 *            should look like 'RAWS/...' without a '/' in front. Furthermore the pathInfo
@@ -191,7 +197,7 @@ public interface RemoteRepository extends RemoteFolder, ConnectionRepository {
 	 *            (e.g. String query = "?format="+URLEncoder.encode("binmeta", "UTF-8");).
 	 * @param preAuthHeader
 	 *            if {@code true} the username and password is added to the connection if present,
-	 *            if {@code false} it is checked if the RM server is reachable
+	 *            if {@code false} it is checked if the RapidMiner AI Hub is reachable
 	 *
 	 * @return the connection
 	 * @throws IOException
@@ -289,7 +295,7 @@ public interface RemoteRepository extends RemoteFolder, ConnectionRepository {
 	default void cleanup(){}
 
 	/*
-	 * Get a client that is compatible with the Server
+	 * Get a client that is compatible with the AI Hub
 	 *
 	 * @return an implementation based on {@link BaseServerClient}, methods may return
 	 * {@link com.rapidminer.repository.internal.remote.exception.NotYetSupportedServiceException}
@@ -299,14 +305,14 @@ public interface RemoteRepository extends RemoteFolder, ConnectionRepository {
 	BaseServerClient getClient();
 
 	/**
-	 * Get the version from Server.
+	 * Get the version from AI Hub.
 	 *
-	 * @return the servers {@link VersionNumber} or null
+	 * @return the AI Hub {@link VersionNumber} or null
 	 */
 	VersionNumber getServerVersion();
 
 	/**
-	 * Get the version from Server if it is already known, should not connect to get the version number.
+	 * Get the version from AI Hub if it is already known, should not connect to get the version number.
 	 *
 	 * @return the servers {@link VersionNumber} or null
 	 */

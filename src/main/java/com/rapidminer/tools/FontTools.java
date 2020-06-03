@@ -22,6 +22,7 @@ import java.awt.Font;
 import java.awt.GraphicsEnvironment;
 import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.logging.Level;
 import javax.swing.UIManager;
@@ -97,7 +98,7 @@ public class FontTools {
 	 * @return A {@link Font} with respect to {@link RapidMinerGUI#PROPERTY_FONT_CONFIG}.
 	 */
 	public static Font getFont(String family, int style, int size) {
-		String fontConfig = getFontConfig();
+		String fontConfig = Objects.toString(getFontConfig(), OPTION_SYSTEM_FONTS);
 		Font font;
 		switch (fontConfig) {
 			case OPTION_STANDARD_FONTS:

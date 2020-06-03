@@ -167,9 +167,7 @@ public class RepositoryTreeModel implements TreeModel {
 			sortedRepositoryEntriesHashMap.remove(parent.getLocation());
 
 			// Save path of parent
-			final RepositoryTreeUtil treeUtil = new RepositoryTreeUtil();
 			TreePath parentPath = getPathTo(parent);
-			treeUtil.saveSelectionPath(parentPath);
 
 			// Fire event
 			final TreeModelEvent p = makeChangeEvent(removedEntry);
@@ -180,10 +178,6 @@ public class RepositoryTreeModel implements TreeModel {
 				for (TreeModelListener l : listeners.getListeners(TreeModelListener.class)) {
 					l.treeNodesRemoved(e);
 					l.treeStructureChanged(p);
-				}
-				// Restore selected path / expansion state of parent
-				if (parentTree != null) {
-					treeUtil.restoreSelectionPaths(parentTree);
 				}
 			});
 		}

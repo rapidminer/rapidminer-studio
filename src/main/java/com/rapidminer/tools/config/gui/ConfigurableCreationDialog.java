@@ -777,7 +777,7 @@ public class ConfigurableCreationDialog extends JDialog {
 				// should not happen as we're connected anyway
 				configurators.add(c);
 			} else if (source.getKnownServerVersion().isAtLeast(new VersionNumber(9, 6, 0, "SNAPSHOT"))) {
-				// Server at least on 9.6, we can prevent creation of legacy connections
+				// AI Hub at least on 9.6, we can prevent creation of legacy connections
 				if (ConnectionAdapterHandler.class.isAssignableFrom(c.getClass())) {
 					// show label that informs that something was filtered due to new connection management
 					deprecatedHidden = true;
@@ -786,7 +786,7 @@ public class ConfigurableCreationDialog extends JDialog {
 					configurators.add(c);
 				}
 			} else if (source.getTypeIds().contains(typeId)) {
-				// Server below 9.6, add if the type id is available on Server
+				// AI Hub below 9.6, add if the type id is available on AI Hub
 				configurators.add(c);
 			}
 

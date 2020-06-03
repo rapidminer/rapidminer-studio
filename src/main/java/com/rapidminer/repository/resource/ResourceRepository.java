@@ -19,20 +19,19 @@
 package com.rapidminer.repository.resource;
 
 import java.util.logging.Level;
-
 import javax.swing.event.EventListenerList;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-import com.rapidminer.repository.Entry;
 import com.rapidminer.repository.Folder;
 import com.rapidminer.repository.MalformedRepositoryLocationException;
 import com.rapidminer.repository.Repository;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryListener;
 import com.rapidminer.repository.RepositoryLocation;
-import com.rapidminer.repository.RepositoryManager;
+import com.rapidminer.repository.RepositoryLocationBuilder;
+import com.rapidminer.repository.RepositoryLocationType;
 import com.rapidminer.repository.gui.RepositoryConfigurationPanel;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
@@ -132,15 +131,10 @@ public class ResourceRepository extends ResourceFolder implements Repository {
 	@Override
 	public RepositoryLocation getLocation() {
 		try {
-			return new RepositoryLocation(getName(), new String[0]);
+			return new RepositoryLocationBuilder().withLocationType(RepositoryLocationType.FOLDER).buildFromPathComponents(getName(), new String[0]);
 		} catch (MalformedRepositoryLocationException e) {
 			throw new RuntimeException(e);
 		}
-	}
-
-	@Override
-	public Entry locate(String entry) throws RepositoryException {
-		return RepositoryManager.getInstance(null).locate(this, entry, false);
 	}
 
 	@Override
@@ -162,5 +156,11 @@ public class ResourceRepository extends ResourceFolder implements Repository {
 	@Override
 	public RepositoryConfigurationPanel makeConfigurationPanel() {
 		throw new UnsupportedOperationException("Resource repository cannot be configured.");
+	}
+
+	@Override
+	public String getEncryptionContext() {
+		// no encryption when reading from Resources repo, otherwise nobody can read it
+		return null;
 	}
 }

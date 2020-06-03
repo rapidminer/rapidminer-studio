@@ -929,7 +929,7 @@ public final class ProcessDrawer {
 	 * @param g
 	 * @param enabled
 	 */
-	private void renderPorts(final Ports<? extends Port> ports, final Graphics2D g, final boolean enabled) {
+	private void renderPorts(final Ports<?> ports, final Graphics2D g, final boolean enabled) {
 		boolean input = ports instanceof InputPorts;
 		g.setStroke(LINE_STROKE);
 
@@ -941,12 +941,7 @@ public final class ProcessDrawer {
 		InputPort selectedConnectionTarget = selectedConnectionSource != null ? selectedConnectionSource.getDestination()
 				: null;
 		Port hoveredPort = model.getHoveringPort();
-		Port hoveredPortConnectedTo = null;
-		if (hoveredPort instanceof OutputPort) {
-			hoveredPortConnectedTo = ((OutputPort) hoveredPort).getDestination();
-		} else if (hoveredPort instanceof InputPort) {
-			hoveredPortConnectedTo = ((InputPort) hoveredPort).getSource();
-		}
+		Port hoveredPortConnectedTo = hoveredPort != null ? hoveredPort.getOpposite() : null;
 
 		for (Port port : ports.getAllPorts()) {
 			boolean hasError = !port.getErrors().isEmpty();
@@ -1257,7 +1252,7 @@ public final class ProcessDrawer {
 	 * @param ports
 	 * @param g2
 	 */
-	private void renderPortsBackground(final Ports<? extends Port> ports, final Graphics2D g2) {
+	private void renderPortsBackground(final Ports<?> ports, final Graphics2D g2) {
 		boolean input = ports instanceof InputPorts;
 		g2.setStroke(LINE_STROKE);
 

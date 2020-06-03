@@ -18,6 +18,8 @@
 */
 package com.rapidminer.repository;
 
+
+
 /**
  * Anything that is not a folder.
  *
@@ -25,8 +27,16 @@ package com.rapidminer.repository;
  */
 public interface DataEntry extends DateEntry {
 
-	/** Returns the revision number of this entry. */
-	int getRevision();
+	/**
+	 * Returns the revision number of this entry.
+	 *
+	 * @deprecated since 9.7. See {@link com.rapidminer.repository.versioned.NewVersionedRepository} for the new
+	 * versioned repository
+	 */
+	@Deprecated
+	default int getRevision() {
+		return 1;
+	}
 
 	/** Returns the size of this entry in bytes. */
 	long getSize();

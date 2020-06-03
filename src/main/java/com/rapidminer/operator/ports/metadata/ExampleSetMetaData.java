@@ -24,11 +24,11 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.rapidminer.RapidMiner;
 import com.rapidminer.adaption.belt.IOTable;
 import com.rapidminer.adaption.belt.TableViewingTools;
-import com.rapidminer.belt.column.Column;
 import com.rapidminer.belt.table.BeltConverter;
 import com.rapidminer.belt.table.Table;
 import com.rapidminer.example.AttributeRole;
@@ -37,6 +37,7 @@ import com.rapidminer.example.ExampleSet;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.ParameterService;
 import com.rapidminer.tools.Tools;
+import com.rapidminer.tools.belt.BeltTools;
 
 
 /**
@@ -63,12 +64,25 @@ public class ExampleSetMetaData extends MetaData {
 		super(ExampleSet.class);
 	}
 
+	/**
+	 * @param keyValueMap ignored
+	 * @deprecated since 9.7, never used, confusing and unnecessary, will be removed in the near future. Use {@link
+	 * #ExampleSetMetaData()} instead and call {@link MetaData#addAdditionalData(String, Object)} if needed.
+	 */
+	@Deprecated
 	public ExampleSetMetaData(Map<String, Object> keyValueMap) {
-		super(ExampleSet.class, keyValueMap);
+		super(ExampleSet.class);
 	}
 
+	/**
+	 * @param key   ignored
+	 * @param value ignored
+	 * @deprecated since 9.7, never used, confusing and unnecessary, will be removed in the near future. Use {@link
+	 * #ExampleSetMetaData()} instead and call {@link MetaData#addAdditionalData(String, Object)} if needed.
+	 */
+	@Deprecated
 	public ExampleSetMetaData(String key, Object value) {
-		super(ExampleSet.class, key, value);
+		super(ExampleSet.class);
 	}
 
 	public ExampleSetMetaData(List<AttributeMetaData> attributeMetaData) {
@@ -158,6 +172,10 @@ public class ExampleSetMetaData extends MetaData {
 				break;
 			}
 		}
+		if (getAllAttributes().size() < exampleSet.getAttributes().allSize()) {
+			mergeSetRelation(SetRelation.SUPERSET);
+		}
+
 		numberOfExamples = new MDInteger(exampleSet.size());
 	}
 
@@ -168,13 +186,13 @@ public class ExampleSetMetaData extends MetaData {
 		} catch (BeltConverter.ConversionException e) {
 			//clear meta data in case some were added before the exception
 			attributeMetaData.clear();
-			handleWithCustom(tableObject, shortened);
+			handleWithAdvanced(tableObject, shortened);
 		}
 	}
 
 	/**
-	 * In case the tableObject contains custom columns, creates meta data for the table without custom columns and then
-	 * adds the custom columns with {@link Ontology#ATTRIBUTE_VALUE}.
+	 * In case the tableObject contains advanced columns, creates meta data for the table without advanced columns and
+	 * then adds the advanced columns with {@link Ontology#ATTRIBUTE_VALUE}.
 	 *
 	 * @param tableObject
 	 * 		the table object for which to create meta data
@@ -182,10 +200,11 @@ public class ExampleSetMetaData extends MetaData {
 	 * 		whether the meta data should be shortened. In case it should be shortened the meta-data will contain at
 	 * 		most {@link #getMaximumNumberOfAttributes()} attributes
 	 */
-	private void handleWithCustom(IOTable tableObject, boolean shortened) {
+	private void handleWithAdvanced(IOTable tableObject, boolean shortened) {
 		Table table = tableObject.getTable();
-		Table tableWithoutCustoms = table.columns(table.select().notOfTypeId(Column.TypeId.CUSTOM).labels());
-		ExampleSet view = TableViewingTools.getView(new IOTable(tableWithoutCustoms));
+		Table tableWithoutAdvanced = table.columns(table.labels().stream()
+				.filter(l -> !BeltTools.isAdvanced(table.column(l).type())).collect(Collectors.toList()));
+		ExampleSet view = TableViewingTools.getView(new IOTable(tableWithoutAdvanced));
 		create(view, shortened, !shortened);
 		int maxNumber = Integer.MAX_VALUE;
 		if (shortened) {
@@ -193,12 +212,15 @@ public class ExampleSetMetaData extends MetaData {
 		}
 		maxNumber -= attributeMetaData.size();
 		if (maxNumber > 0) {
-			for (String custom : table.select().ofTypeId(Column.TypeId.CUSTOM).labels()) {
-				String role = BeltConverter.convertRole(table, custom);
-				addAttribute(new AttributeMetaData(custom, Ontology.ATTRIBUTE_VALUE, role));
-				maxNumber--;
-				if (maxNumber == 0) {
-					break;
+			for (int i = 0; i < table.width(); i++) {
+				if (BeltTools.isAdvanced(table.column(i).type())) {
+					String advanced = table.label(i);
+					String role = BeltConverter.convertRole(table, advanced);
+					addAttribute(new AttributeMetaData(advanced, Ontology.ATTRIBUTE_VALUE, role));
+					maxNumber--;
+					if (maxNumber == 0) {
+						break;
+					}
 				}
 			}
 		}

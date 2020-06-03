@@ -43,7 +43,7 @@ import com.rapidminer.operator.ports.metadata.SimpleMetaDataError;
  * @author Nils Woehler
  *
  */
-public abstract class AbstractInputPort extends AbstractPort implements InputPort {
+public abstract class AbstractInputPort extends AbstractPort<InputPort, OutputPort> implements InputPort {
 
 	private final Collection<MetaDataChangeListener> metaDataChangeListeners = new LinkedList<>();
 
@@ -56,8 +56,13 @@ public abstract class AbstractInputPort extends AbstractPort implements InputPor
 	/** The port to which this port is connected. */
 	private OutputPort sourceOutputPort;
 
-	protected AbstractInputPort(Ports<? extends Port> owner, String name, boolean simulatesStack) {
+	protected AbstractInputPort(Ports<InputPort> owner, String name, boolean simulatesStack) {
 		super(owner, name, simulatesStack);
+	}
+
+	@Override
+	public final boolean canConnectTo(Port other) {
+		return InputPort.super.canConnectTo(other);
 	}
 
 	@Override
@@ -107,6 +112,9 @@ public abstract class AbstractInputPort extends AbstractPort implements InputPor
 		fireUpdate(this);
 	}
 
+	/**
+	 * @return the connected output port or {@code null}
+	 */
 	@Override
 	public OutputPort getSource() {
 		return sourceOutputPort;

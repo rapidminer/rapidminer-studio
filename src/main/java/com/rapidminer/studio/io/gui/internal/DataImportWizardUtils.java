@@ -27,7 +27,7 @@ import com.rapidminer.core.io.data.source.DataSourceFactory;
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.actions.OpenAction;
 import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.repository.Entry;
+import com.rapidminer.repository.DataEntry;
 import com.rapidminer.repository.IOObjectEntry;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.tools.I18N;
@@ -155,7 +155,7 @@ public final class DataImportWizardUtils {
 						.expandToRepositoryLocation(entryLocation);
 				// Switch to result
 				try {
-					Entry entry = entryLocation.locateEntry();
+					DataEntry entry = entryLocation.locateData();
 					if (entry instanceof IOObjectEntry) {
 						OpenAction.showAsResult((IOObjectEntry) entry);
 					}

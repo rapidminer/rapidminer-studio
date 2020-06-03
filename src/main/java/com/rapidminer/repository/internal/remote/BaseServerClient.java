@@ -23,11 +23,13 @@ import java.net.URI;
 import java.net.URL;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
 import com.rapidminer.gui.tools.VersionNumber;
+import com.rapidminer.repository.RepositoryConnectionCancelledException;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.internal.remote.model.InstanceData;
 import com.rapidminer.tools.XMLException;
@@ -37,10 +39,10 @@ import com.rapidminer.tools.config.jwt.JwtClaim;
 
 
 /**
- * Base implementation containing methods for all services exposed by Server.
+ * Base implementation containing methods for all services exposed by AI Hub.
  * May throw {@link com.rapidminer.repository.internal.remote.exception.NotYetSupportedServiceException NotYetSupportedServiceException}
  * or {@link com.rapidminer.repository.internal.remote.exception.DeprecatedServiceException DeprecatedServiceException}
- * which clarify if a service was not supported in the Server version or was deprecated and cannot be used any longer.
+ * which clarify if a service was not supported in the AI Hub version or was deprecated and cannot be used any longer.
  *
  * @author Andreas Timm
  * @since 9.5.0
@@ -48,7 +50,7 @@ import com.rapidminer.tools.config.jwt.JwtClaim;
 public interface BaseServerClient {
 
     /**
-     * Check if the given filename was blacklisted on the Server
+     * Check if the given filename was blacklisted on the AI Hub
      *
      * @param originalFilename to be checked
      * @return {@code true} if the server would not accept uploading this file
@@ -87,9 +89,80 @@ public interface BaseServerClient {
     List<String> checkProcessCompatibility(String location) throws IOException, RepositoryException;
 
     /**
+     * Gets the available queues for the current user.
+     *
+     * @return the available queues, can be empty but never {@code null}
+     * @throws IOException         in case accessing the server failed technically
+     * @throws RepositoryException in case something else fails
+     * @since 9.7
+     */
+    List<ServerQueueInformation> getAvailableQueues() throws IOException, RepositoryException;
+
+    /**
+     * Schedules a job executing the process specified in the given queue (with optional cron expression and max
+     * time-to-live).
+     *
+     * @param repositoryLocation the repository location. The format depends on which repository the process lives in:
+     *                           <ul>
+     *                               <li>Legacy repository: path relative to the root. Example: '/home/user/myProcess'</li>
+     *                               <li>Versioned repository: prefixed by {@code git://}, followed by the repository name ending in {@code .git},
+     *                               followed by path relative to the root. Example 'git://my-repository.git/processes/myProcess'</li>
+     *                           </ul>
+     * @param queueName          the name of the queue to submit the job in. If {@code null}, the {@code DEFAULT} queue
+     *                           will be used
+     * @param cronExpression     the cron expression when the job should run. If {@code null}, the job will run
+     *                           immediately and only once
+     * @param contextMacros      the macros. If {@code null}, no macros will be used
+     * @param inputLocations     the input repository locations. If {@code null}, none will be used
+     * @param outputLocations    the output repository locations. If {@code null}, none will be used
+     * @param startAt            Set the timestamp (ms since epoch) when the job should start for the first time. Use in
+     *                           combination with a cron expression. If no cron expression is defined, this becomes the
+     *                           timestamp when the job will run once. If {@code null}, no start time restrictions will
+     *                           be in place @param endAt            Set the timestamp (ms since epoch) after which the
+     *                           job should not be scheduled anymore. Use in combination with a cron expression. If no
+     *                           cron expression is defined, this has no effect. If {@code null}, no end time
+     *                           restrictions will be in place
+     * @param maxTTL             the maximum time-to-live in ms before the job gets killed if not yet finished. If
+     *                           {@code null}, no limit will be imposed
+     * @return a {@link JobScheduleInformation} which contains the information sent to the service, as well as the ID of
+     * the job and its next fire time, never {@code null}
+     * @throws IOException         in case accessing the server failed technically
+     * @throws RepositoryException in case something else fails
+     * @since 9.7
+     */
+    JobScheduleInformation scheduleJob(String repositoryLocation, String queueName, String cronExpression, Map<String, String> contextMacros,
+                     List<String> inputLocations, List<String> outputLocations, Long startAt, Long endAt, Long maxTTL) throws IOException, RepositoryException;
+
+    /**
+     * Creates a new versioned repository on RapidMiner AI Hub.
+     *
+     * @param name            the name, must be in the correct format, see {@link VersionedRepositoryRequest#setName(String)}
+     * @param displayName     the display name, must not be {@code null} or empty
+     * @param description     the optional description, can be {@code null}
+     * @param secret        the encryption secret for the repository, can be {@code null} if no secret exists yet and AI Hub should create a new one
+     * @param permissions     the permissions for the repository, can be {@code null} or empty
+     * @return the details of the created repository, never {@code null}
+     * @throws IOException         in case accessing the server failed technically
+     * @throws RepositoryException in case something else fails
+     * @since 9.7
+     */
+    VersionedRepositoryInformation createVersionedRepository(String name, String displayName, String description, VersionedRepositoryRequest.RepositorySecret secret, List<VersionedRepositoryRequest.RepositoryPermission> permissions) throws IOException, RepositoryException;
+
+    /**
+     * Gets the specified versioned repository of RapidMiner AI Hub.
+     *
+     * @param name the name, must be in the correct format, see {@link VersionedRepositoryRequest#setName(String)}
+     * @return the details of the created repository, or {@code null} if it does not exist
+     * @throws IOException         in case accessing the server failed technically
+     * @throws RepositoryException in case something else fails
+     * @since 9.7
+     */
+    VersionedRepositoryInformation getVersionedRepository(String name) throws IOException, RepositoryException;
+
+    /**
      * Returns the URI to which a browser can be pointed to access the RA web interface.
      *
-     * @return {@link URI} to the servers webinterface
+     * @return {@link URI} to the servers web interface
      */
     URI getWebInterfaceURI();
 
@@ -104,12 +177,12 @@ public interface BaseServerClient {
      * Get the {@link URI} to access a log for a process
      *
      * @param id of the process
-     * @return Server {@link URI} of the process log
+     * @return AI Hub {@link URI} of the process log
      */
     URI getProcessLogURI(int id);
 
     /**
-     * Load JDBC connections from Server
+     * Load JDBC connections from AI Hub
      *
      * @return a Collection of Objects which are FieldConnectionEntry
      * @throws XMLException    if the returned XML structure is incorrect
@@ -146,17 +219,31 @@ public interface BaseServerClient {
      * Warning: Don't use the result of this method to give access to sensitive information!
      * </p>
      *
-     * @return JwtClaim or null
+     * @return JwtClaim, never {@code null}
      * @throws IOException         in case accessing the server failed technically
      * @throws RepositoryException in case the repository could not fulfill the request
      */
     JwtClaim getJwtClaim() throws RepositoryException, IOException;
 
     /**
+     * Get the JWT Token from the remote token service or from the system properties. Will use configured
+     * authentication.
+     * <p>
+     * This method is NOT public API and requires {@link com.rapidminer.security.PluginSandboxPolicy#RAPIDMINER_INTERNAL_PERMISSION}!
+     *
+     * @return the token, {@code null}
+     * @throws IOException         in case accessing the server failed technically
+     * @throws RepositoryException if the JWT token could not be queried
+     * @since 9.7
+     */
+    String getJwtToken() throws RepositoryException, IOException;
+
+    /**
      * Tries to connect to the server which will test the current username and password.
      * <p>
      * The {@link com.rapidminer.tools.WebServiceTools#WEB_SERVICE_TIMEOUT} settings value will be used as the timeout value.
      *
+     * @throws RepositoryConnectionCancelledException if the user cancelled the token retrieval
      * @throws IOException         in case accessing the server failed technically
      * @throws RepositoryException in case the repository could not fulfill the request
      */
@@ -165,21 +252,26 @@ public interface BaseServerClient {
     /**
      * Retrieve the {@link URL} to access the {@link RemoteInfoService}
      *
-     * @return the {@link URL} to connect to the Server's Info Service
+     * @return the {@link URL} to connect to the AI Hub's Info Service
      */
     URL getRAInfoServiceWSDLUrl();
 
     /**
      * Retrieve the {@link URL} to access the {@link RemoteContentManager}
      *
-     * @return the {@link URL} to connect to the Server's Repository Service
+     * @return the {@link URL} to connect to the AI Hub's Repository Service
      */
     URL getRepositoryServiceWSDLUrl();
 
     /**
      * Load all server vault entries for a repository location
      *
-     * @param repoLocation the location to read the vault information for
+     * @param repoLocation the location to read the vault information for. Note that there is a different syntax
+     *                     depending on the target repository type:
+     *                     <ul>
+     *                     <li>Versioned repository: {@code git://reponame.git/Connections/My Connection.conninfo}</li>
+     *                     <li>AI Hub repository: {@code /Connections/My Connection}</li>
+     *                     </ul>
      * @return the entries for that repository location
      */
     RemoteVaultEntry[] loadVaultInfo(String repoLocation) throws RepositoryException;
@@ -245,7 +337,7 @@ public interface BaseServerClient {
 
     /**
      * Check if a connection exists remote for the given path. Can be used to check the successful consumption of an
-     * uploaded connection information by Server.
+     * uploaded connection information by AI Hub.
      *
      * @param path The path of the connection that was stored.
      * @throws IOException         in case accessing the server failed technically
@@ -254,7 +346,7 @@ public interface BaseServerClient {
     void checkConnectionAvailable(String path) throws IOException, RepositoryException;
 
     /**
-     * Load all the available configuration type IDs from Server.
+     * Load all the available configuration type IDs from AI Hub.
      *
      * @return a list of configuration type IDs
      * @throws IOException            in case accessing the server failed technically
@@ -275,7 +367,7 @@ public interface BaseServerClient {
     ResponseContainer loadConfigurationType(String typeId) throws IOException, RepositoryException;
 
     /**
-     * Store a configuration on Server
+     * Store a configuration on AI Hub
      *
      * @param typeId of the configuration to be stored
      * @param xml    to be written
@@ -309,9 +401,9 @@ public interface BaseServerClient {
     ResponseContainer loadIOObject(String path, RemoteRepository.EntryStreamType entryStreamType) throws IOException, RepositoryException;
 
     /**
-     * Check if the Server supports connections.
+     * Check if the AI Hub supports connections.
      *
-     * @return true iff storing connections is possible on Server
+     * @return true iff storing connections is possible on AI Hub
      */
     boolean supportsConnections();
 }

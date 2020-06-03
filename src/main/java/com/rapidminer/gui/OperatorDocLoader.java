@@ -241,7 +241,7 @@ public class OperatorDocLoader {
 		return "<br/><a href=\"show_example_" + exampleIndex + "\">Show example process</a>.";
 	}
 
-	private static void appendPortsToDocumentation(Ports<? extends Port> ports, String title, StringBuilder buf) {
+	private static void appendPortsToDocumentation(Ports<?> ports, String title, StringBuilder buf) {
 		if (ports.getNumberOfPorts() > 0) {
 			buf.append("<h4>" + title + "</h4><table border=\"0\" cellspacing=\"0\"><tr><td>");
 			for (Port port : ports.getAllPorts()) {
@@ -251,7 +251,7 @@ public class OperatorDocLoader {
 				if (port instanceof InputPort) {
 					// Input Port
 					InputPort inputPort = (InputPort) port;
-					List<Precondition> preconditions = new LinkedList<Precondition>(inputPort.getAllPreconditions());
+					List<Precondition> preconditions = new LinkedList<>(inputPort.getAllPreconditions());
 					if (preconditions.size() > 0) {
 						MetaData metaData = preconditions.get(0).getExpectedMetaData();
 						if (metaData != null) {

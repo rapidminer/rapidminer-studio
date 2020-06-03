@@ -21,6 +21,7 @@ package com.rapidminer.tools.math;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
+import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.ResultObjectAdapter;
 import com.rapidminer.report.Readable;
 import com.rapidminer.tools.Tools;
@@ -239,10 +240,19 @@ public abstract class Averagable extends ResultObjectAdapter implements Cloneabl
 		try {
 			Class<? extends Averagable> clazz = this.getClass();
 			Constructor<? extends Averagable> cloneConstructor = clazz.getConstructor(clazz);
-			Averagable result = cloneConstructor.newInstance(this);
-			return result;
+			return cloneConstructor.newInstance(this);
 		} catch (IllegalAccessException | InstantiationException | InvocationTargetException | NoSuchMethodException e) {
 			throw new CloneNotSupportedException("Cannot clone averagable: " + e.getMessage());
+		}
+	}
+
+	/** @since 9.7 */
+	@Override
+	public IOObject copy() {
+		try {
+			return (IOObject) clone();
+		} catch (CloneNotSupportedException e) {
+			return this;
 		}
 	}
 

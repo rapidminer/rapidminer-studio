@@ -76,7 +76,8 @@ public class TransferableOperator extends DefaultUsageLoggable implements Transf
 		if (flavor.equals(DataFlavor.stringFlavor)) {
 			StringBuilder b = new StringBuilder();
 			for (Operator op : clonedOperators) {
-				b.append(op.getXML(false));
+				// we cannot encrypt anything when copying to clipboard (otherwise nobody we share the process with could decrypt it)
+				b.append(op.getXML(false, null));
 			}
 			return b.toString();
 		}

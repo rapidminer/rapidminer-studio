@@ -40,7 +40,7 @@ public class ConnectToQuickFix extends AbstractQuickFix {
 	@Override
 	public void apply() {
 		if (inputPort.isConnected()) {
-			inputPort.getSource().disconnect();
+			inputPort.disconnect();
 		}
 		outputPort.connectTo(inputPort);
 	}

@@ -74,7 +74,7 @@ public abstract class AbstractReader<T extends IOObject> extends Operator {
 
 	protected static final String TRANSFORMER_THREAD_KEY = "AbstractReader.transform_metadata";
 
-	private final OutputPort outputPort = getOutputPorts().createPort("output");
+	protected final OutputPort outputPort = getOutputPorts().createPort("output");
 	private final Class<? extends IOObject> generatedClass;
 
 	private boolean cacheDirty = true;

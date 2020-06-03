@@ -161,7 +161,7 @@ public abstract class ConfigurationManager implements Observable<Pair<EventType,
 	};
 
 	/**
-	 * URL from which configurations are loaded from RapidMiner Server via the ConfigurationServlet
+	 * URL from which configurations are loaded from RapidMiner AI Hub via the ConfigurationServlet
 	 * (includes trailing slash).
 	 */
 	public static final String RM_SERVER_CONFIGURATION_URL_PREFIX = "/api/rest/configuration/";
@@ -430,9 +430,9 @@ public abstract class ConfigurationManager implements Observable<Pair<EventType,
 
 	/**
 	 * Looks up a {@link Configurable} of the given name and type. If there are two configurables
-	 * with the same name and typeId, i.e. one located locally and one located on a RM Server, the
+	 * with the same name and typeId, i.e. one located locally and one located on a RapidMiner AI Hub, the
 	 * local one would be returned. The configurable is first searched in the local connections and
-	 * if there was no such configurable, it is searched in each existing RM Server.
+	 * if there was no such configurable, it is searched in each existing RapidMiner AI Hub.
 	 *
 	 * @param typeId
 	 *            must be one of {@link #getAllTypeIds()}
@@ -554,7 +554,7 @@ public abstract class ConfigurationManager implements Observable<Pair<EventType,
 				ResponseContainer response = ra.getClient().loadConfigurationType(typeId);
 
 				if (response.getResponseCode() == 404) {
-					LogService.getRoot().log(Level.INFO,
+					LogService.getRoot().log(Level.FINE,
 							"com.rapidminer.tools.config.ConfigurationManager.loading_configuration.unknown",
 							new Object[]{typeId, ra.getName()});
 					continue;
@@ -566,17 +566,17 @@ public abstract class ConfigurationManager implements Observable<Pair<EventType,
 						configurator);
 
 				createAndRegisterConfigurables(configurator, configurationParameters, configurationPermittedGroups, ra);
-				LogService.getRoot().log(Level.INFO, "com.rapidminer.tools.config.ClientConfigurationManager.loaded_from_ra",
+				LogService.getRoot().log(Level.FINE, "com.rapidminer.tools.config.ClientConfigurationManager.loaded_from_ra",
 						new Object[]{ra.getName(), configurator.getName(), counter});
 
 			} catch (FileNotFoundException fnfe) {
-				LogService.getRoot().log(Level.INFO,
+				LogService.getRoot().log(Level.FINE,
 						"com.rapidminer.tools.config.ConfigurationManager.loading_configuration.unknown",
 						new Object[]{typeId, ra.getName()});
-			} catch (Exception e) {
-				LogService.log(LogService.getRoot(), Level.WARNING, e,
+			} catch (Throwable t) {
+				LogService.log(LogService.getRoot(), Level.WARNING, t,
 						"com.rapidminer.tools.config.ClientConfigurationManager.error_loading_from_ra", ra.getName(),
-						configurator.getName(), e.toString());
+						configurator.getName(), t.toString());
 			}
 		}
 
@@ -657,7 +657,7 @@ public abstract class ConfigurationManager implements Observable<Pair<EventType,
 	public void loadConfiguration() {
 		for (AbstractConfigurator<? extends Configurable> configurator : configurators.values()) {
 			try {
-				LogService.getRoot().log(Level.INFO, "com.rapidminer.tools.config.ConfigurationManager.loading_configuration",
+				LogService.getRoot().log(Level.FINE, "com.rapidminer.tools.config.ConfigurationManager.loading_configuration",
 						configurator.getName());
 				Map<Pair<Integer, String>, Map<String, String>> parameters;
 				try {
@@ -671,7 +671,7 @@ public abstract class ConfigurationManager implements Observable<Pair<EventType,
 					continue;
 				}
 				createAndRegisterConfigurables(configurator, parameters, null, null);
-				LogService.getRoot().log(Level.INFO, "com.rapidminer.tools.config.ConfigurationManager.loaded_configurations",
+				LogService.getRoot().log(Level.FINE, "com.rapidminer.tools.config.ConfigurationManager.loaded_configurations",
 						new Object[]{configurables.get(configurator.getTypeId()).size(), configurator.getName()});
 			} catch (Throwable t) {
 				LogService.getRoot().log(Level.SEVERE, "Failed to load configurable " + configurator.getTypeId(), t);

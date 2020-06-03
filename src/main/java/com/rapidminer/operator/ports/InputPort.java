@@ -32,51 +32,85 @@ import java.util.Collection;
  * 
  * @author Simon Fischer
  */
-public interface InputPort extends Port {
+public interface InputPort extends Port<InputPort, OutputPort> {
+
+	@Override
+	default void connectTo(OutputPort opposite) throws PortException {
+		opposite.connectTo(this);
+	}
+
+	@Override
+	default boolean canConnectTo(Port other) {
+		return other instanceof OutputPort;
+	}
 
 	/**
 	 * Receives data from the output port. Throws an {@link PortException} if data has already been
-	 * set. (Called by {@link OuptutPort#deliver(Object)} . *
+	 * set. (Called by {@link OutputPort#deliver(IOObject)} . *
 	 */
-	public void receive(IOObject object);
+	void receive(IOObject object);
 
-	/** Does the same as {@link #receive(Object)} but only with meta data. */
-	public void receiveMD(MetaData metaData);
+	/** Does the same as {@link #receive(IOObject)} but only with meta data. */
+	void receiveMD(MetaData metaData);
 
 	/** Returns the meta data received by {@link #receiveMD(MetaData)}. */
 	@Override
-	public MetaData getMetaData();
+	MetaData getMetaData();
 
-	// /** Called by the OutputPort when it connects to this InputPort. */
-	// public void connect(OutputPort outputPort);
+	/**
+	 * @return the same as {@link #getSource()}
+	 */
+	@Override
+	default OutputPort getOpposite() {
+		return getSource();
+	}
 
-	/** Returns the output port to which this input port is connected. */
-	public OutputPort getSource();
+	/**
+	 * @return this port
+	 */
+	@Override
+	default InputPort getDestination() {
+		return this;
+	}
 
 	/** Adds a precondition to this input port. */
-	public void addPrecondition(Precondition precondition);
+	void addPrecondition(Precondition precondition);
 
 	/** Returns a collection (view) of all preconditions assigned to this InputPort. */
-	public Collection<Precondition> getAllPreconditions();
+	Collection<Precondition> getAllPreconditions();
 
 	/** Checks all registered preconditions. */
-	public void checkPreconditions();
+	void checkPreconditions();
 
 	/** Returns true if the given input is compatible with the preconditions. */
-	public boolean isInputCompatible(MetaData input, CompatibilityLevel level);
+	boolean isInputCompatible(MetaData input, CompatibilityLevel level);
 
 	/** Returns a human readable representation of the preconditions. */
-	public String getPreconditionDescription();
+	String getPreconditionDescription();
 
 	/**
 	 * This will add the given listener to this port. It is informed whenever the method
 	 * {@link #receiveMD(MetaData)} is called.
 	 */
-	public void registerMetaDataChangeListener(MetaDataChangeListener listener);
+	void registerMetaDataChangeListener(MetaDataChangeListener listener);
 
 	/**
 	 * Removes the given listener again.
 	 */
-	public void removeMetaDataChangeListener(MetaDataChangeListener listener);
+	void removeMetaDataChangeListener(MetaDataChangeListener listener);
 
+	/**
+	 * Delegates to {@link #getSource() getSource().disconnect()} if connected.
+	 *
+	 * @throws PortException if this port is not connected
+	 * @since 9.7
+	 */
+	@Override
+	default void disconnect() throws PortException {
+		OutputPort outputPort = getSource();
+		if (outputPort == null) {
+			throw new PortException(this, "Not connected.");
+		}
+		outputPort.disconnect();
+	}
 }

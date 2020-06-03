@@ -27,7 +27,6 @@ import javax.swing.JTree;
 import javax.swing.tree.TreePath;
 
 import com.rapidminer.repository.Entry;
-import com.rapidminer.repository.MalformedRepositoryLocationException;
 import com.rapidminer.repository.Repository;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryLocation;
@@ -46,10 +45,10 @@ public class RepositoryTreeUtil {
 	private TreePath[] selectedPaths;
 
 	/** Saved expanded nodes */
-	private HashSet<String> expandedNodes;
+	private HashSet<RepositoryLocation> expandedNodes;
 
 	/** Saved selected nodes */
-	private HashSet<String> selectedNodes;
+	private HashSet<RepositoryLocation> selectedNodes;
 
 	/** Saves single path */
 	public void saveSelectionPath(TreePath treePath) {
@@ -96,7 +95,7 @@ public class RepositoryTreeUtil {
 			Object entryObject = path.getLastPathComponent();
 			if ((isExpanded || isSelected) && entryObject instanceof Entry) {
 				Entry entry = (Entry) entryObject;
-				String absoluteLocation = entry.getLocation().getAbsoluteLocation();
+				RepositoryLocation absoluteLocation = entry.getLocation();
 				if (isExpanded) {
 					expandedNodes.add(absoluteLocation);
 				}
@@ -124,7 +123,7 @@ public class RepositoryTreeUtil {
 				Object entryObject = path.getLastPathComponent();
 				if (entryObject instanceof Entry) {
 					Entry entry = (Entry) entryObject;
-					String absoluteLocation = entry.getLocation().getAbsoluteLocation();
+					RepositoryLocation absoluteLocation = entry.getLocation();
 					if (expandedNodes.contains(absoluteLocation)) {
 						tree.expandPath(path);
 					}
@@ -141,15 +140,26 @@ public class RepositoryTreeUtil {
 
 	/**
 	 * Calls {@link RepositoryLocation###locateEntry()} on every node which was saved with ##
-	 * {@link #saveExpansionState(JTree)}. This calls {@link com.rapidminer.repository.RepositoryManager#locate(Repository,
-	 * String, boolean)} which refreshes parent folders of missed entries.
+	 * {@link #saveExpansionState(JTree)}. This calls {@link com.rapidminer.repository.RepositoryManager#locateData(Repository,
+	 * String, Class, boolean)} which refreshes parent folders of missed entries.
 	 */
 	public void locateExpandedEntries() {
-		for (String absoluteLocation : expandedNodes) {
+		for (RepositoryLocation absoluteLocation : expandedNodes) {
 			try {
-				RepositoryLocation repositoryLocation = new RepositoryLocation(absoluteLocation);
-				repositoryLocation.locateEntry();
-			} catch (MalformedRepositoryLocationException | RepositoryException e) {
+				switch (absoluteLocation.getLocationType()) {
+					case DATA_ENTRY:
+						absoluteLocation.locateData();
+						break;
+					case FOLDER:
+						absoluteLocation.locateFolder();
+						break;
+					case UNKNOWN:
+					default:
+						absoluteLocation.locateData();
+						absoluteLocation.locateFolder();
+						break;
+				}
+			} catch (RepositoryException e) {
 				LogService.getRoot().warning(
 						"com.rapidminer.repository.RepositoryTreeUtil.error_expansion" + absoluteLocation);
 			}

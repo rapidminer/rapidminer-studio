@@ -24,17 +24,13 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
-import java.security.Key;
 
 import org.apache.commons.lang.RandomStringUtils;
-import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
-import com.rapidminer.tools.cipher.KeyGenerationException;
-import com.rapidminer.tools.cipher.KeyGeneratorTool;
+import com.rapidminer.connection.ConnectionInformationSerializer;
+import com.rapidminer.tools.encryption.EncryptionProvider;
 
 
 /**
@@ -49,23 +45,10 @@ public class ValueProviderParameterImplTest {
 	private static String name;
 	private static String value;
 	private static ValueProviderParameter[] parameters;
-	private static ObjectMapper mapper;
-	private static ObjectWriter writer;
 
-	private static final Key USER_KEY;
-
-	static {
-		Key userKey = null;
-		try {
-			userKey = KeyGeneratorTool.getUserKey();
-		} catch (IOException e) {
-			// ignore
-		}
-		USER_KEY = userKey;
-	}
 
 	@BeforeClass
-	public static void setup() throws KeyGenerationException {
+	public static void setup() {
 		name = RandomStringUtils.randomAlphabetic(5);
 		value = RandomStringUtils.randomAlphanumeric(10);
 		parameters = new ValueProviderParameter[8];
@@ -73,34 +56,31 @@ public class ValueProviderParameterImplTest {
 			parameters[i] = new ValueProviderParameterImpl(name, i % 2 == (i < 4 ? 0 : 1) ? value : null, i % 4 > 1,
 					(i % 4) % 3 != 0);
 		}
-		mapper = new ObjectMapper();
-		writer = mapper.writerWithDefaultPrettyPrinter();
-		KeyGeneratorTool.setUserKey(KeyGeneratorTool.createSecretKey());
-	}
-
-	@AfterClass
-	public static void restoreValues() {
-		KeyGeneratorTool.setUserKey(USER_KEY);
+		EncryptionProvider.initialize();
 	}
 
 	@Test
 	public void testSerialisation() throws IOException {
 		for (ValueProviderParameter parameter : parameters) {
-			String serialized = writer.writeValueAsString(parameter);
-			ValueProviderParameter deserialized = mapper.readValue(serialized, ValueProviderParameter.class);
+			String serialized = ConnectionInformationSerializer.INSTANCE.createJsonFromObject(parameter, EncryptionProvider.DEFAULT_CONTEXT);
+			ValueProviderParameter deserialized = ConnectionInformationSerializer.INSTANCE.createObjectFromJson(serialized, ValueProviderParameter.class, null, EncryptionProvider.DEFAULT_CONTEXT);
 			assertEquals("encryption state not equal after serialization", parameter.isEncrypted(), deserialized.isEncrypted());
 			assertEquals("enabled state not equal after serialization", parameter.isEnabled(), deserialized.isEnabled());
 			assertEquals("names not equal after serialization", parameter.getName(), deserialized.getName());
 			assertEquals("values not equal after serialization", parameter.getValue(), deserialized.getValue());
-			String doubleSerialized = writer.writeValueAsString(deserialized);
-			assertEquals("double serialization breaks json", serialized, doubleSerialized);
+
+			// can only check for equality if the parameter is not encrypted, as encrypting the same input multiple times yields different outputs each time for increased security
+			if (!parameter.isEncrypted()) {
+				String doubleSerialized = ConnectionInformationSerializer.INSTANCE.createJsonFromObject(deserialized, EncryptionProvider.DEFAULT_CONTEXT);
+				assertEquals("double serialization breaks json", serialized, doubleSerialized);
+			}
 		}
 	}
 
 	@Test
 	public void testEncryption() throws IOException {
 		for (ValueProviderParameter parameter : parameters) {
-			String serialized = writer.writeValueAsString(parameter);
+			String serialized = ConnectionInformationSerializer.INSTANCE.createJsonFromObject(parameter, EncryptionProvider.DEFAULT_CONTEXT);
 			boolean isPlainText = serialized.contains(String.valueOf(parameter.getValue()));
 			boolean isNull = parameter.getValue() == null;
 			boolean isEncrypted = parameter.isEncrypted();
@@ -111,21 +91,21 @@ public class ValueProviderParameterImplTest {
 	@Test
 	public void testUnsetEncryptionInSerialization() throws IOException {
 		ValueProviderParameter parameter = new ValueProviderParameterImpl(name, value, true);
-		String serialized = writer.writeValueAsString(parameter);
+		String serialized = ConnectionInformationSerializer.INSTANCE.createJsonFromObject(parameter, EncryptionProvider.DEFAULT_CONTEXT);
 		serialized = serialized.replace("true", "false");
-		ValueProviderParameter deserialized = mapper.readValue(serialized, ValueProviderParameter.class);
+		ValueProviderParameter deserialized = ConnectionInformationSerializer.INSTANCE.createObjectFromJson(serialized, ValueProviderParameter.class, null, EncryptionProvider.DEFAULT_CONTEXT);
 		assertNotEquals("Values equal after disabling encryption", parameter.getValue(), deserialized.getValue());
 	}
 
 	@Test
 	public void testSetEncryptionInSerialization() throws IOException {
 		String otherValue = RandomStringUtils.randomAlphanumeric(8);
-		ValueProviderParameter parameters[] = {new ValueProviderParameterImpl(name, value, false),
+		ValueProviderParameter[] parameters = {new ValueProviderParameterImpl(name, value, false),
 				new ValueProviderParameterImpl(name, otherValue, false)};
 		for (ValueProviderParameter parameter : parameters) {
-			String serialized = writer.writeValueAsString(parameter);
+			String serialized = ConnectionInformationSerializer.INSTANCE.createJsonFromObject(parameter, EncryptionProvider.DEFAULT_CONTEXT);
 			serialized = serialized.replace("false", "true");
-			ValueProviderParameter deserialized = mapper.readValue(serialized, ValueProviderParameter.class);
+			ValueProviderParameter deserialized = ConnectionInformationSerializer.INSTANCE.createObjectFromJson(serialized, ValueProviderParameter.class, null, EncryptionProvider.DEFAULT_CONTEXT);
 			assertNotEquals("Values equal after enabling encryption", parameter.getValue(), deserialized.getValue());
 			assertNull("Value not null after decryption error", deserialized.getValue());
 		}
@@ -134,16 +114,9 @@ public class ValueProviderParameterImplTest {
 	@Test
 	public void testMissingEnabledInSerialization() throws IOException {
 		ValueProviderParameter parameter = new ValueProviderParameterImpl(name, value, false, false);
-		String serialized = writer.writeValueAsString(parameter);
+		String serialized = ConnectionInformationSerializer.INSTANCE.createJsonFromObject(parameter, EncryptionProvider.DEFAULT_CONTEXT);
 		serialized = serialized.replace("  \"enabled\" : false," + System.lineSeparator(), "");
-		ValueProviderParameter deserialized = mapper.readValue(serialized, ValueProviderParameter.class);
+		ValueProviderParameter deserialized = ConnectionInformationSerializer.INSTANCE.createObjectFromJson(serialized, ValueProviderParameter.class, null, EncryptionProvider.DEFAULT_CONTEXT);
 		assertTrue("Missing enabled is not desirialized to true", deserialized.isEnabled());
-	}
-
-	@AfterClass
-	public static void tearDown() {
-		writer = null;
-		mapper = null;
-		parameters = null;
 	}
 }

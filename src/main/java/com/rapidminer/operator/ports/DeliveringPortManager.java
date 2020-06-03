@@ -54,10 +54,8 @@ public final class DeliveringPortManager {
 	 * @see #resolve(Process, DeliveringPortIdentifier)
 	 */
 	public static void setLastDeliveringPort(IOObject ioObject, Port port) {
-		if (port instanceof InputPort) {
-			// always store an output port
-			port = ((InputPort) port).getSource();
-		}
+		// always store an output port
+		port = port.getSource();
 		PortOwner owner = port.getPorts().getOwner();
 		OperatorChain portHandler = owner.getPortHandler();
 		Operator operator = owner.getOperator();

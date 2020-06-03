@@ -43,6 +43,7 @@ import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.OutputPort;
 import com.rapidminer.operator.ports.OutputPorts;
 import com.rapidminer.tools.container.Pair;
+import com.rapidminer.tools.encryption.EncryptionProvider;
 
 
 /**
@@ -52,19 +53,41 @@ import com.rapidminer.tools.container.Pair;
 public class XMLExporter {
 
 	public static final String ELEMENT_PROCESS = "process";
-	private boolean onlyCoreElements = false;
+	private final boolean onlyCoreElements;
+	private final String encryptionContext;
 
+
+	/**
+	 * Creates an XMLExporter which exports all elements and uses the {@link EncryptionProvider#DEFAULT_CONTEXT} for
+	 * encryption.
+	 */
 	public XMLExporter() {
 		this(false);
 	}
 
 	/**
+	 * Creates an XMLExporter which exports GUI and other additional information as specified and uses the {@link
+	 * EncryptionProvider#DEFAULT_CONTEXT} for encryption.
 	 *
-	 * @param onlyCoreElements
-	 *            If true, GUI and other additional information will be ignored.
+	 * @param onlyCoreElements If true, GUI and other additional information will be ignored.
 	 */
 	public XMLExporter(boolean onlyCoreElements) {
+		this(onlyCoreElements, EncryptionProvider.DEFAULT_CONTEXT);
+	}
+
+	/**
+	 * Creates an XMLExporter which exports GUI and other additional information as specified and uses the specified
+	 * encryption context (see {@link com.rapidminer.tools.encryption.EncryptionProvider}.
+	 *
+	 * @param onlyCoreElements  If {@code true}, GUI and other additional information will be ignored.
+	 * @param encryptionContext the encryption context that will be used to potentially encrypt values (see {@link
+	 *                          com.rapidminer.tools.encryption.EncryptionProvider}). If {@code null}, no encryption
+	 *                          will take place.
+	 * @since 9.7
+	 */
+	public XMLExporter(boolean onlyCoreElements, String encryptionContext) {
 		this.onlyCoreElements = onlyCoreElements;
+		this.encryptionContext = encryptionContext;
 	}
 
 	/**
@@ -150,7 +173,7 @@ public class XMLExporter {
 		opElement.setAttribute("expanded", operator.isExpanded() ? "true" : "false");
 		opElement.setAttribute("activated", operator.isEnabled() ? "true" : "false");
 
-		operator.getParameters().appendXML(opElement, hideDefault, doc);
+		operator.getParameters().appendXML(opElement, hideDefault, encryptionContext, doc);
 		if (operator instanceof OperatorChain) {
 			OperatorChain nop = (OperatorChain) operator;
 			for (ExecutionUnit executionUnit : nop.getSubprocesses()) {

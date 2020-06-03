@@ -37,12 +37,15 @@ import com.rapidminer.tools.LogService;
 
 
 /**
- * The default {@link CipherKeyProvider} for RapidMiner Studio. It reads the Cipher key from a file
- * called "cipher.key" which is stored within the RapidMiner user folder.
+ * The default {@link CipherKeyProvider} for RapidMiner Studio. It reads the Cipher key from a file called "cipher.key"
+ * which is stored within the RapidMiner user folder.
  *
  * @author Nils Woehler
  * @since 6.2.0
+ * @deprecated since 9.7, use {@link com.rapidminer.tools.encryption.EncryptionProvider} instead for new features
+ * needing encryption!
  */
+@Deprecated
 public class FileCipherKeyProvider implements CipherKeyProvider {
 
 	/** Default file name used to store the cipher. */
@@ -62,8 +65,8 @@ public class FileCipherKeyProvider implements CipherKeyProvider {
 			return KeyGeneratorTool.makeKey(rawKey);
 		} catch (IOException e) {
 			// catch to log the problem, then throw again to indicate error
-			Level logLevel = RapidMiner.getExecutionMode().canAccessFilesystem() ? Level.WARNING : Level.CONFIG;
-			LogService.getRoot().log(logLevel, "com.rapidminer.tools.cipher.KeyGeneratorTool.read_key_error",
+			// no longer the main way,
+			LogService.getRoot().log(Level.CONFIG, "com.rapidminer.tools.cipher.KeyGeneratorTool.read_key_error",
 					e.getMessage());
 			throw new KeyLoadingException("Cannot retrieve key: " + e.getMessage());
 		}

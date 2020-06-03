@@ -26,10 +26,10 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import javax.swing.event.EventListenerList;
 import javax.xml.ws.WebServiceException;
 
@@ -37,6 +37,7 @@ import com.rapidminer.gui.security.UserCredential;
 import com.rapidminer.gui.security.Wallet;
 import com.rapidminer.gui.tools.VersionNumber;
 import com.rapidminer.repository.RepositoryException;
+import com.rapidminer.repository.internal.remote.BaseServerClient;
 import com.rapidminer.repository.internal.remote.RemoteInfoService;
 import com.rapidminer.repository.internal.remote.RemoteRepository;
 import com.rapidminer.tools.Observable;
@@ -50,7 +51,6 @@ import com.rapidminer.tools.config.gui.event.ConfigurableEvent;
 import com.rapidminer.tools.config.gui.event.ConfigurableEvent.EventType;
 import com.rapidminer.tools.config.gui.event.ConfigurableModelEventListener;
 import com.rapidminer.tools.config.jwt.JwtClaim;
-import com.rapidminer.tools.config.jwt.JwtReader;
 import com.rapidminer.tools.container.Pair;
 
 
@@ -648,7 +648,11 @@ public class ConfigurableModel implements Observer<Pair<EventType, Configurable>
 	 */
 	private boolean hasAdminRightsOnServer() {
 		try {
-			JwtClaim userInfo = new JwtReader().readClaim(getSource());
+			Optional<BaseServerClient> serverClient = Optional.ofNullable(getSource()).map(RemoteRepository::getClient);
+			if (!serverClient.isPresent()) {
+				return false;
+			}
+			JwtClaim userInfo = serverClient.get().getJwtClaim();
 			if (userInfo != null) {
 				return userInfo.isAdmin();
 			}

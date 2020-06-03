@@ -19,6 +19,7 @@
 package com.rapidminer.example.set;
 
 import java.util.Iterator;
+import java.util.Map;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
@@ -115,6 +116,26 @@ public class AttributeSelectionExampleSet extends AbstractExampleSet {
 			return false;
 		}
 		return this.parent.equals(o);
+	}
+
+	@Override
+	public Object getUserData(String key) {
+		return parent.getUserData(key);
+	}
+
+	@Override
+	public Object setUserData(String key, Object value) {
+		return parent.setUserData(key, value);
+	}
+
+	@Override
+	public Map<String, Object> getAllUserData() {
+		return parent.getAllUserData();
+	}
+
+	@Override
+	public void setAllUserData(Map<String, Object> userDataMap) {
+		parent.setAllUserData(userDataMap);
 	}
 
 	@Override

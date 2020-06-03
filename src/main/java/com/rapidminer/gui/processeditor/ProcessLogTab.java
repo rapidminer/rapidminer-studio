@@ -20,18 +20,23 @@ package com.rapidminer.gui.processeditor;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
-
 import javax.swing.Icon;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.SwingConstants;
 
 import com.rapidminer.datatable.DataTable;
 import com.rapidminer.gui.MainFrame;
+import com.rapidminer.gui.RapidMinerGUI;
+import com.rapidminer.gui.actions.CloseAllResultsAction;
+import com.rapidminer.gui.actions.CloseAllResultsExceptCurrentResultAction;
 import com.rapidminer.gui.tools.ResourceLabel;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.gui.viewer.DataTableViewer;
 import com.vlsolutions.swing.docking.DockKey;
 import com.vlsolutions.swing.docking.Dockable;
+import com.vlsolutions.swing.docking.DockableActionCustomizer;
 
 
 /**
@@ -52,7 +57,19 @@ public class ProcessLogTab extends JPanel implements Dockable {
 		setLayout(new BorderLayout());
 		this.dockKey = new DockKey(key);
 		dockKey.setIcon(DATA_TABLE_ICON);
+		dockKey.setFloatEnabled(true);
 		dockKey.setDockGroup(MainFrame.DOCK_GROUP_RESULTS);
+		dockKey.putProperty(DockKey.PROPERTY_SHORTCUT_CLOSING_ENABLED, Boolean.TRUE);
+		DockableActionCustomizer customizer = new DockableActionCustomizer() {
+
+			@Override
+			public void visitTabSelectorPopUp(JPopupMenu popUpMenu, Dockable dockable) {
+				popUpMenu.add(new JMenuItem(new CloseAllResultsExceptCurrentResultAction(RapidMinerGUI.getMainFrame(), dockKey.getKey())));
+				popUpMenu.add(new JMenuItem(new CloseAllResultsAction(RapidMinerGUI.getMainFrame())));
+			}
+		};
+		customizer.setTabSelectorPopUpCustomizer(true); // enable tabbed dock custom popup menu entries
+		this.dockKey.setActionCustomizer(customizer);
 	}
 
 	public void setDataTableViewer(DataTableViewer viewer) {

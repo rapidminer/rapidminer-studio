@@ -22,8 +22,6 @@ import java.awt.geom.Rectangle2D;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.rapidminer.Process;
@@ -36,15 +34,12 @@ import com.rapidminer.operator.ExecutionUnit;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorChain;
 import com.rapidminer.operator.OperatorDescription;
-import com.rapidminer.operator.ports.InputPort;
-import com.rapidminer.operator.ports.OutputPort;
 import com.rapidminer.operator.ports.Port;
 import com.rapidminer.operator.ports.Ports;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.Parameters;
 import com.rapidminer.tools.OperatorService;
 import com.rapidminer.tools.ProcessTools;
-import com.rapidminer.tools.container.Pair;
 
 
 /**
@@ -87,8 +82,8 @@ public class ReplaceOperatorMenu extends OperatorMenu {
 		}
 
 		// remember source and sink connections so we can reconnect them later.
-		Map<String, Port> inputPortMap = getConnectedPorts(selectedOperator.getOutputPorts(), OutputPort::getDestination);
-		Map<String, Port> outputPortMap = getConnectedPorts(selectedOperator.getInputPorts(), InputPort::getSource);
+		Map<String, Port> inputPortMap = getConnectedPorts(selectedOperator.getOutputPorts());
+		Map<String, Port> outputPortMap = getConnectedPorts(selectedOperator.getInputPorts());
 
 		// copy parameters if possible
 		Parameters oldParameters = selectedOperator.getParameters();
@@ -96,7 +91,8 @@ public class ReplaceOperatorMenu extends OperatorMenu {
 		for (String key : oldParameters.getDefinedKeys()) {
 			ParameterType newType = newParameters.getParameterType(key);
 			// copy if parameter types match
-			if (newType != null && oldParameters.getParameterType(key) != null && oldParameters.getParameterType(key).getClass() == newType.getClass()) {
+			if (newType != null && oldParameters.getParameterType(key) != null
+					&& oldParameters.getParameterType(key).getClass() == newType.getClass()) {
 				newParameters.setParameter(key, oldParameters.getParameterOrNull(key));
 			}
 		}
@@ -149,27 +145,9 @@ public class ReplaceOperatorMenu extends OperatorMenu {
 	 *
 	 * @since 9.3
 	 */
-	private <P extends Port> LinkedHashMap<String, Port> getConnectedPorts(Ports<P> ports, Function<P, Port> opposite) {
-		return ports.getAllPorts().stream().filter(Port::isConnected).map(p -> getDisconnectedLockedPair(p, opposite.apply(p)))
-				.collect(Collectors.toMap(Pair::getFirst, Pair::getSecond, (a, b) -> b, LinkedHashMap::new));
-	}
-
-	/**
-	 * Gets a pair of connected {@link Port Ports}. Locks both ports, disconnects them and returns the a {@link Pair}
-	 * with the first port's name and the second port.
-	 *
-	 * @see Port#lock()
-	 * @since 9.3
-	 */
-	private Pair<String, Port> getDisconnectedLockedPair(Port port, Port other) {
-		port.lock();
-		other.lock();
-		if (port instanceof OutputPort) {
-			((OutputPort) port).disconnect();
-		} else if (other instanceof OutputPort) {
-			((OutputPort) other).disconnect();
-		}
-		return new Pair<>(port.getName(), other);
+	private LinkedHashMap<String, Port> getConnectedPorts(Ports<?> ports) {
+		return ports.getAllPorts().stream().filter(Port::isConnected)
+				.collect(Collectors.toMap(Port::getName, Port::lockDisconnectAndGet, (a, b) -> b, LinkedHashMap::new));
 	}
 
 	/**
@@ -179,23 +157,25 @@ public class ReplaceOperatorMenu extends OperatorMenu {
 	 * @see Ports#getPortByName(String)
 	 * @since 9.3
 	 */
-	private int rewirePorts(Map<String, ? extends Port> connectedPorts, Ports<?> ports) {
-		int sum = 0;
-		for (Entry<String, ? extends Port> e : connectedPorts.entrySet()) {
-			Port p = ports.getPortByName(e.getKey());
-			if (p == null) {
-				sum++;
-				continue;
-			}
-			Port q = e.getValue();
-			if (p instanceof OutputPort) {
-				((OutputPort) p).connectTo((InputPort) q);
-			} else {
-				((OutputPort) q).connectTo((InputPort) p);
-			}
-			p.unlock();
-			q.unlock();
+	private long rewirePorts(Map<String, Port> connectedPorts, Ports<?> portFinder) {
+		return connectedPorts.entrySet().stream().filter(e -> !connectAndUnlock(portFinder.getPortByName(e.getKey()), e.getValue())).count();
+	}
+
+	/**
+	 * Connects two locked ports and unlocks them afterwards. Returns {@code false} if the first port is {@code null},
+	 * representing the case that the port could not be found at the operator searched for i {@link #rewirePorts(Map, Ports)}.
+	 *
+	 * @see Port#connectTo(Port)
+	 * @see Port#unlock()
+	 * @since 9.7
+	 */
+	private boolean connectAndUnlock(Port p, Port q) {
+		if (p == null) {
+			return false;
 		}
-		return sum;
+		p.connectTo(q);
+		p.unlock();
+		q.unlock();
+		return true;
 	}
 }

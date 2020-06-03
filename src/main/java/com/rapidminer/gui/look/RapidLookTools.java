@@ -114,6 +114,13 @@ public final class RapidLookTools {
 	public static final String PROPERTY_BUTTON_CIRCLE = "button_circular";
 
 	/**
+	 * If buttons should be painted as a toolbar button. Set to {@code true} or {@code false}. Default is {@code false}.
+	 *
+	 * @since 9.7
+	 */
+	public static final String PROPERTY_BUTTON_PAINT_AS_TOOLBAR_BUTTON = "button_paint_as_toolbar_button";
+
+	/**
 	 * If input fields should have a darker border. Set to {@code true} or {@code false}. Default is {@code false}.
 	 *
 	 * @since 8.1
@@ -177,7 +184,8 @@ public final class RapidLookTools {
 	}
 
 	public static boolean isToolbarButton(JComponent b) {
-		return b.getParent() instanceof JToolBar || vlDockingAvailable && isVLToolbarButton(b);
+		boolean paintAsToolbarButton = Boolean.parseBoolean(String.valueOf(b.getClientProperty(RapidLookTools.PROPERTY_BUTTON_PAINT_AS_TOOLBAR_BUTTON)));
+		return b.getParent() instanceof JToolBar || vlDockingAvailable && isVLToolbarButton(b) || paintAsToolbarButton;
 	}
 
 	public static boolean isVLToolbarButton(JComponent b) {

@@ -54,6 +54,7 @@ import javax.swing.event.DocumentListener;
 /**
  * @author Simon Fischer
  */
+@Deprecated
 public class LocalRepositoryPanel extends JPanel implements RepositoryConfigurationPanel {
 
 	private static final long serialVersionUID = 1L;

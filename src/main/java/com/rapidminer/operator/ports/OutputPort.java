@@ -29,44 +29,47 @@ import com.rapidminer.operator.ports.metadata.MetaData;
  * 
  * @author Simon Fischer
  */
-public interface OutputPort extends Port {
-
-	/**
-	 * Connects to an input port.
-	 * 
-	 * @throws PortException
-	 *             if already connected.
-	 */
-	public void connectTo(InputPort inputPort) throws PortException;
-
-	/**
-	 * Disconnects the OutputPort from its InputPort. Note: As a side effect, disconnecting ports
-	 * may trigger PortExtenders removing these ports. In order to avoid this behaviour,
-	 * {@link #lock()} port first.
-	 * 
-	 * @throws PortException
-	 *             if not connected.
-	 */
-	public void disconnect() throws PortException;
+public interface OutputPort extends Port<OutputPort, InputPort> {
 
 	/**
 	 * Delivers an object to the connected {@link InputPort} or ignores it if the output port is not
 	 * connected.
 	 */
-	public void deliver(IOObject object);
-
-	/** Returns the destination input port. */
-	public InputPort getDestination();
+	void deliver(IOObject object);
 
 	/**
-	 * Does the same as {@link #deliver(Object)} except that only meta data is delivered. This
+	 * @return the same as {@link #getDestination()}
+	 */
+	@Override
+	default InputPort getOpposite() {
+		return getDestination();
+	}
+
+	/**
+	 * @return this port
+	 */
+	@Override
+	default OutputPort getSource() {
+		return this;
+	}
+
+	@Override
+	void connectTo(InputPort opposite) throws PortException;
+
+	@Override
+	default boolean canConnectTo(Port other) {
+		return other instanceof InputPort;
+	}
+
+	/**
+	 * Does the same as {@link #deliver(IOObject)} except that only meta data is delivered. This
 	 * method is called by the Operator's {@link MDTransformer}.
 	 */
-	public void deliverMD(MetaData md);
+	void deliverMD(MetaData md);
 
 	/**
 	 * Asks the owning operator
 	 * {@link com.rapidminer.operator.Operator#shouldAutoConnect(OutputPort)}.
 	 */
-	public boolean shouldAutoConnect();
+	boolean shouldAutoConnect();
 }

@@ -37,7 +37,6 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-
 import javax.swing.Action;
 import javax.swing.JPopupMenu;
 import javax.swing.JToggleButton;
@@ -54,7 +53,7 @@ import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.operator.ExecutionUnit;
 import com.rapidminer.operator.Operator;
-import com.rapidminer.operator.ports.InputPort;
+import com.rapidminer.operator.ports.Port;
 import com.rapidminer.tools.FontTools;
 
 
@@ -129,12 +128,10 @@ public class FlowVisualizer {
 					break;
 				case MOUSE_MOVED:
 					hoveringOperator = findOperator(e.getPoint());
-					if (startOperator != null) {
-						if (hoveringOperator != startOperator) {
-							endOperator = hoveringOperator;
-							recomputeDependentOperators();
-							view.repaint();
-						}
+					if (startOperator != null && hoveringOperator != startOperator) {
+						endOperator = hoveringOperator;
+						recomputeDependentOperators();
+						view.repaint();
 					}
 					break;
 				case MOUSE_PRESSED:
@@ -164,6 +161,7 @@ public class FlowVisualizer {
 							dependentOps = null;
 							view.repaint();
 							break;
+						default:
 					}
 					break;
 				case MOUSE_RELEASED:
@@ -186,10 +184,8 @@ public class FlowVisualizer {
 				return;
 			}
 
-			if (type == KeyEventType.KEY_PRESSED) {
-				if (KeyEvent.VK_ESCAPE == e.getKeyCode()) {
-					SHOW_ORDER_TOGGLEBUTTON.doClick();
-				}
+			if (type == KeyEventType.KEY_PRESSED && KeyEvent.VK_ESCAPE == e.getKeyCode()) {
+				SHOW_ORDER_TOGGLEBUTTON.doClick();
 			}
 
 			// no matter what, while flow visualizer is active we consume all events
@@ -204,7 +200,7 @@ public class FlowVisualizer {
 		public void draw(ExecutionUnit process, Graphics2D g2, ProcessRendererModel model) {
 			if (active) {
 				// Re-Arrange operators
-				List<Operator> operators = new LinkedList<Operator>(process.getOperators());
+				List<Operator> operators = new LinkedList<>(process.getOperators());
 				if (dependentOps != null) {
 					operators.removeAll(dependentOps);
 					int insertionIndex = operators.indexOf(startOperator) + 1;
@@ -313,7 +309,6 @@ public class FlowVisualizer {
 		if (this.active != active) {
 			this.active = active;
 			if (!active) {
-				startOperator = null;
 				startOperator = endOperator = null;
 				dependentOps = null;
 			}
@@ -346,8 +341,8 @@ public class FlowVisualizer {
 			return Collections.emptyList();
 		}
 
-		Set<Operator> foundDependingOperators = new HashSet<Operator>();
-		Set<Operator> completedOperators = new HashSet<Operator>();
+		Set<Operator> foundDependingOperators = new HashSet<>();
+		Set<Operator> completedOperators = new HashSet<>();
 
 		Operator stopWhenReaching = topologicallySortedCandidates.get(startIndex);
 
@@ -365,35 +360,21 @@ public class FlowVisualizer {
 			if (!foundDependingOperators.contains(op)) {
 				continue;
 			}
-			for (InputPort in : op.getInputPorts().getAllPorts()) {
-				if (in.isConnected()) {
-					Operator predecessor = in.getSource().getPorts().getOwner().getOperator();
-					// Skip if connected to inner sink
-					if (predecessor == enclosingOperator) {
-						continue;
-					} else {
-						// Skip if working on it already
-						if (completedOperators.contains(predecessor)) {
-							continue;
-							// Skip when reaching end of the range
-						} else if (predecessor == stopWhenReaching) { // did we reach the end?
-							continue;
-						} else {
-							// Skip when beyond bounds
-							int predecessorIndex = topologicallySortedCandidates.indexOf(predecessor);
-							if (predecessorIndex <= startIndex) {
-								continue;
-							} else {
-								// Otherwise, add to set of depending operators
-								foundDependingOperators.add(predecessor);
-							}
+			op.getInputPorts().getAllPorts().stream().filter(Port::isConnected).map(in -> in.getSource().getPorts().getOwner().getOperator())
+					// Skip if connected to inner sink, when reaching end of the range, working on it already
+					.filter(pre -> pre != enclosingOperator && pre != stopWhenReaching && !completedOperators.contains(pre))
+					.forEach(pre -> {
+						int predecessorIndex = topologicallySortedCandidates.indexOf(pre);
+						// Skip when beyond bounds
+						if (predecessorIndex <= startIndex) {
+							return;
 						}
-					}
-				}
-			}
+						// Otherwise, add to set of depending operators
+						foundDependingOperators.add(pre);
+					});
 		}
 
-		List<Operator> orderedResult = new LinkedList<Operator>();
+		List<Operator> orderedResult = new LinkedList<>();
 		for (Operator op : topologicallySortedCandidates) {
 			if (foundDependingOperators.contains(op)) {
 				orderedResult.add(op);

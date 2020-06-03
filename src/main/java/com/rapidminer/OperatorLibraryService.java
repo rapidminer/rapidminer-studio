@@ -44,7 +44,9 @@ import java.util.Map.Entry;
  * as well as to the context menu. They are only available on entries of the according class.
  * 
  * @author Sebastian Land
+ * @deprecated since 9.7, but was unused even before
  */
+@Deprecated
 public class OperatorLibraryService {
 
 	/**

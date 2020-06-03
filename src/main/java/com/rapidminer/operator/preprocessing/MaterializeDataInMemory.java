@@ -18,18 +18,29 @@
 */
 package com.rapidminer.operator.preprocessing;
 
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import com.rapidminer.RapidMiner;
+import com.rapidminer.belt.table.BeltConverter;
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.AttributeRole;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
+import com.rapidminer.example.SimpleAttributes;
+import com.rapidminer.example.set.SimpleExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
+import com.rapidminer.example.table.BinominalAttribute;
 import com.rapidminer.example.table.DataRow;
 import com.rapidminer.example.table.DataRowFactory;
+import com.rapidminer.example.table.DataRowReader;
+import com.rapidminer.example.table.DateAttribute;
+import com.rapidminer.example.table.ExampleTable;
 import com.rapidminer.example.table.NominalMapping;
+import com.rapidminer.example.table.NumericalAttribute;
+import com.rapidminer.example.table.PolynominalAttribute;
 import com.rapidminer.example.utils.ExampleSetBuilder;
 import com.rapidminer.example.utils.ExampleSetBuilder.DataManagement;
 import com.rapidminer.example.utils.ExampleSets;
@@ -54,6 +65,19 @@ import com.rapidminer.tools.parameter.internal.DataManagementParameterHelper;
  */
 public class MaterializeDataInMemory extends AbstractDataProcessing {
 
+	/**
+	 * Set of primitive attribute types that are known to be safe to read from the example table directly (in contrast
+	 * to {@link com.rapidminer.example.table.ViewAttribute}s).
+	 */
+	private static final Set<Class<? extends Attribute>> SAFE_ATTRIBUTES = new HashSet<>(5);
+
+	static {
+		SAFE_ATTRIBUTES.add(BinominalAttribute.class);
+		SAFE_ATTRIBUTES.add(PolynominalAttribute.class);
+		SAFE_ATTRIBUTES.add(DateAttribute.class);
+		SAFE_ATTRIBUTES.add(NumericalAttribute.class);
+	}
+
 	public MaterializeDataInMemory(OperatorDescription description) {
 		super(description);
 	}
@@ -68,8 +92,7 @@ public class MaterializeDataInMemory extends AbstractDataProcessing {
 			dataManagement = DataRowFactory.TYPE_COLUMN_VIEW;
 			newDataManagement = DataManagementParameterHelper.getSelectedDataManagement(this);
 		}
-		ExampleSet createdSet = materialize(exampleSet, dataManagement, newDataManagement);
-		return createdSet;
+		return materialize(exampleSet, dataManagement, newDataManagement);
 	}
 
 	@Override
@@ -169,49 +192,19 @@ public class MaterializeDataInMemory extends AbstractDataProcessing {
 		// size table by setting number of rows and add attributes
 		ExampleSetBuilder builder = ExampleSets.from(targetAttributes);
 
-		// copy columnwise if beta features are activated and dataManagment is double array or
+		// copy columnwise if not legacy features are activated and dataManagment is double array or
 		// column view
 		// if datamanagement is not one of the two then there can be value changes when copying to a
 		// "smaller" row which we need to keep
 		if (Boolean.valueOf(ParameterService.getParameterValue(RapidMiner.PROPERTY_RAPIDMINER_SYSTEM_LEGACY_DATA_MGMT))
 				|| (dataManagement != DataRowFactory.TYPE_DOUBLE_ARRAY
-						&& dataManagement != DataRowFactory.TYPE_COLUMN_VIEW)) {
-			builder.withExpectedSize(exampleSet.size());
-			DataRowFactory rowFactory = new DataRowFactory(dataManagement, '.');
-			
-			// copying data differently for sparse and non sparse for speed reasons
-			if (isSparseType(dataManagement)) {
-				for (Example example : exampleSet) {
-					DataRow targetRow = rowFactory.create(targetAttributes.length);
-					for (int i = 0; i < sourceAttributes.length; i++) {
-						double value = example.getValue(sourceAttributes[i]);
-						// we have a fresh sparse row, so everything is currently empty and we only
-						// need to set non default value attributes to avoid unnecessary binary
-						// searchs
-						if (value != 0) {
-							targetRow.set(targetAttributes[i], value);
-						}
-					}
-					builder.addDataRow(targetRow);
-				}
-			} else {
-				// dense data we copy entirely without condition
-				for (Example example : exampleSet) {
-					DataRow targetRow = rowFactory.create(targetAttributes.length);
-					for (int i = 0; i < sourceAttributes.length; i++) {
-						targetRow.set(targetAttributes[i], example.getValue(sourceAttributes[i]));
-					}
-					builder.addDataRow(targetRow);
-				}
-			}
+				&& dataManagement != DataRowFactory.TYPE_COLUMN_VIEW)) {
+			legacyCopy(builder, exampleSet, sourceAttributes, targetAttributes, dataManagement);
+
 		} else {
 			builder.withBlankSize(exampleSet.size());
 			builder.withOptimizationHint(newDataManagement);
-			for (int i = 0; i < sourceAttributes.length; i++) {
-				final int index = i;
-				builder.withColumnFiller(targetAttributes[i],
-						j -> exampleSet.getExample(j).getValue(sourceAttributes[index]));
-			}
+			addColumnFillers(exampleSet, sourceAttributes, targetAttributes, builder);
 		}
 
 		// create and return result
@@ -220,8 +213,103 @@ public class MaterializeDataInMemory extends AbstractDataProcessing {
 		}
 		ExampleSet createdSet = builder.build();
 		createdSet.getAnnotations().addAll(exampleSet.getAnnotations());
+		createdSet.setAllUserData(exampleSet.getAllUserData());
 		return createdSet;
 	}
+
+	/**
+	 * Add column fillers depending on what promises to being the fastest. For {@link SimpleExampleSet}s with normal
+	 * attributes read directly from the {@link ExampleTable}. If there is an underlying belt table, use a reader. In
+	 * case of other views on top (mostly mapped views) use {@link ExampleSet#getExample(int)} in all cases since the
+	 * readers just call this internally.
+	 */
+	private static void addColumnFillers(ExampleSet exampleSet, Attribute[] sourceAttributes,
+										 Attribute[] targetAttributes, ExampleSetBuilder builder) {
+		if (safeToReadFromTable(exampleSet)) {
+			if (BeltConverter.isTableWrapper(exampleSet)) {
+				ExampleTable exampleTable = exampleSet.getExampleTable();
+				for (int i = 0; i < sourceAttributes.length; i++) {
+					final int index = i;
+					DataRowReader dataRowReader = exampleTable.getDataRowReader();
+					builder.withColumnFiller(targetAttributes[i],
+							j -> dataRowReader.next().get(sourceAttributes[index]));
+				}
+			} else {
+				ExampleTable exampleTable = exampleSet.getExampleTable();
+				for (int i = 0; i < sourceAttributes.length; i++) {
+					final int index = i;
+					builder.withColumnFiller(targetAttributes[i],
+							j -> exampleTable.getDataRow(j).get(sourceAttributes[index]));
+				}
+			}
+		} else {
+			for (int i = 0; i < sourceAttributes.length; i++) {
+				final int index = i;
+				builder.withColumnFiller(targetAttributes[i],
+						j -> exampleSet.getExample(j).getValue(sourceAttributes[index]));
+			}
+		}
+	}
+
+
+	/**
+	 * Legacy row-wise writing when using {@link com.rapidminer.example.table.MemoryExampleTable}s.
+	 */
+	private static void legacyCopy(ExampleSetBuilder builder, ExampleSet exampleSet, Attribute[] sourceAttributes,
+								   Attribute[] targetAttributes, int dataManagement) {
+		builder.withExpectedSize(exampleSet.size());
+		DataRowFactory rowFactory = new DataRowFactory(dataManagement, '.');
+
+		// copying data differently for sparse and non sparse for speed reasons
+		if (isSparseType(dataManagement)) {
+			for (Example example : exampleSet) {
+				DataRow targetRow = rowFactory.create(targetAttributes.length);
+				for (int i = 0; i < sourceAttributes.length; i++) {
+					double value = example.getValue(sourceAttributes[i]);
+					// we have a fresh sparse row, so everything is currently empty and we only
+					// need to set non default value attributes to avoid unnecessary binary
+					// searchs
+					if (value != 0) {
+						targetRow.set(targetAttributes[i], value);
+					}
+				}
+				builder.addDataRow(targetRow);
+			}
+		} else {
+			// dense data we copy entirely without condition
+			for (Example example : exampleSet) {
+				DataRow targetRow = rowFactory.create(targetAttributes.length);
+				for (int i = 0; i < sourceAttributes.length; i++) {
+					targetRow.set(targetAttributes[i], example.getValue(sourceAttributes[i]));
+				}
+				builder.addDataRow(targetRow);
+			}
+		}
+	}
+
+	/**
+	 * Checks if reading from the {@link ExampleSet} gives the same results as reading from the underlying {@link
+	 * ExampleTable} directly which is a bit faster.
+	 */
+	private static boolean safeToReadFromTable(ExampleSet exampleSet) {
+		if (!(exampleSet instanceof SimpleExampleSet)) {
+			return false;
+		}
+
+		if (!(exampleSet.getAttributes() instanceof SimpleAttributes)) {
+			return false;
+		}
+
+		Iterator<Attribute> attributes = exampleSet.getAttributes().allAttributes();
+		while (attributes.hasNext()) {
+			Attribute attribute = attributes.next();
+			if (!SAFE_ATTRIBUTES.contains(attribute.getClass())) {
+				return false;
+			}
+		}
+		return true;
+	}
+
 
 	/**
 	 * Returns whether the given type is sparse.

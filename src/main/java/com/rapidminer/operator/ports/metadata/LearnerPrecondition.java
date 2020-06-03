@@ -24,6 +24,7 @@ import com.rapidminer.operator.OperatorCreationException;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.learner.CapabilityProvider;
 import com.rapidminer.operator.learner.PredictionModel;
+import com.rapidminer.operator.learner.meta.AbstractMetaLearner;
 import com.rapidminer.operator.learner.meta.Binary2MultiClassLearner;
 import com.rapidminer.operator.learner.meta.ClassificationByRegression;
 import com.rapidminer.operator.ports.InputPort;
@@ -120,7 +121,8 @@ public class LearnerPrecondition extends CapabilityPrecondition {
 	@Override
 	protected Collection<QuickFix> getFixesForClassificationWhenRegressionSupported() {
 		Operator learner = getInputPort().getPorts().getOwner().getOperator();
-		OperatorDescription ods[] = OperatorService.getOperatorDescriptions(ClassificationByRegression.class);
+		final Class<ClassificationByRegression> quickFixOpClass = ClassificationByRegression.class;
+		OperatorDescription ods[] = OperatorService.getOperatorDescriptions(quickFixOpClass);
 		String name = null;
 		if (ods.length > 0) {
 			name = ods[0].getName();
@@ -129,68 +131,9 @@ public class LearnerPrecondition extends CapabilityPrecondition {
 		QuickFix fix = new OperatorInsertionQuickFix("insert_classification_by_regression_learner",
 				new Object[] { name, learner.getOperatorDescription().getName() }, 3, getInputPort()) {
 
-			@SuppressWarnings("deprecation")
 			@Override
 			public void apply() {
-				List<Port> toUnlock = new LinkedList<Port>();
-				try {
-					Operator learner = getInputPort().getPorts().getOwner().getOperator();
-					ExecutionUnit learnerUnit = learner.getExecutionUnit();
-
-					// searching for model outport
-					OutputPort modelOutput = null;
-					MetaData modelMetaData = new PredictionModelMetaData(PredictionModel.class, new ExampleSetMetaData());
-					for (OutputPort port : learner.getOutputPorts().getAllPorts()) {
-						MetaData data = port.getMetaData();
-						if (modelMetaData.isCompatible(data, CompatibilityLevel.VERSION_5)) {
-							modelOutput = port;
-							toUnlock.add(modelOutput);
-							modelOutput.lock();
-							break;
-						}
-					}
-
-					ClassificationByRegression metaLearner = OperatorService
-							.createOperator(ClassificationByRegression.class);
-					learnerUnit.addOperator(metaLearner, learnerUnit.getIndexOfOperator(learner));
-
-					// connecting meta learner input port
-					OutputPort output = getInputPort().getSource();
-					toUnlock.add(output);
-					output.lock();
-					output.disconnect();
-					output.connectTo(metaLearner.getTrainingSetInputPort());
-
-					// connecting meta learner output port
-					if (modelOutput != null) {
-						InputPort inputPort = modelOutput.getDestination();
-						// connecting meta learner
-						if (inputPort != null) {
-							toUnlock.add(inputPort);
-							inputPort.lock();
-							modelOutput.disconnect();
-							metaLearner.getModelOutputPort().connectTo(inputPort);
-						}
-					}
-
-					// moving learner inside meta learner
-					learner.remove();
-					metaLearner.getSubprocess(0).addOperator(learner);
-
-					// connecting learner input port to meta learner
-					metaLearner.getSubprocess(0).getInnerSources().getPortByIndex(0).connectTo(getInputPort());
-
-					// connecting learner output port to meta learner
-					if (modelOutput != null) {
-						modelOutput.connectTo(metaLearner.getInnerModelSink());
-					}
-
-				} catch (OperatorCreationException ex) {
-				} finally {
-					for (Port port : toUnlock) {
-						port.unlock();
-					}
-				}
+				applyQuickFix(quickFixOpClass);
 			}
 
 			@Override
@@ -210,7 +153,8 @@ public class LearnerPrecondition extends CapabilityPrecondition {
 	@Override
 	protected Collection<QuickFix> getFixesForPolynomialClassificationWhenBinominalSupported() {
 		Operator learner = getInputPort().getPorts().getOwner().getOperator();
-		OperatorDescription ods[] = OperatorService.getOperatorDescriptions(Binary2MultiClassLearner.class);
+		final Class<Binary2MultiClassLearner> quickFixOpClass = Binary2MultiClassLearner.class;
+		OperatorDescription ods[] = OperatorService.getOperatorDescriptions(quickFixOpClass);
 		String name = null;
 		if (ods.length > 0) {
 			name = ods[0].getName();
@@ -218,67 +162,9 @@ public class LearnerPrecondition extends CapabilityPrecondition {
 		QuickFix fix = new OperatorInsertionQuickFix("insert_binominal_to_multiclass_learner",
 				new Object[] { name, learner.getOperatorDescription().getName() }, 8, getInputPort()) {
 
-			@SuppressWarnings("deprecation")
 			@Override
 			public void apply() {
-				List<Port> toUnlock = new LinkedList<Port>();
-				try {
-					Operator learner = getInputPort().getPorts().getOwner().getOperator();
-					ExecutionUnit learnerUnit = learner.getExecutionUnit();
-
-					// searching for model outport
-					OutputPort modelOutput = null;
-					MetaData modelMetaData = new PredictionModelMetaData(PredictionModel.class, new ExampleSetMetaData());
-					for (OutputPort port : learner.getOutputPorts().getAllPorts()) {
-						MetaData data = port.getMetaData();
-						if (modelMetaData.isCompatible(data, CompatibilityLevel.VERSION_5)) {
-							modelOutput = port;
-							toUnlock.add(modelOutput);
-							modelOutput.lock();
-							break;
-						}
-					}
-
-					Binary2MultiClassLearner metaLearner = OperatorService.createOperator(Binary2MultiClassLearner.class);
-					learnerUnit.addOperator(metaLearner, learnerUnit.getIndexOfOperator(learner));
-
-					// connecting meta learner input port
-					OutputPort output = getInputPort().getSource();
-					toUnlock.add(output);
-					output.lock();
-					output.disconnect();
-					output.connectTo(metaLearner.getTrainingSetInputPort());
-
-					// connecting meta learner output port
-					if (modelOutput != null) {
-						InputPort inputPort = modelOutput.getDestination();
-						// connecting meta learner
-						if (inputPort != null) {
-							toUnlock.add(inputPort);
-							inputPort.lock();
-							modelOutput.disconnect();
-							metaLearner.getModelOutputPort().connectTo(inputPort);
-						}
-					}
-
-					// moving learner inside meta learner
-					learner.remove();
-					metaLearner.getSubprocess(0).addOperator(learner);
-
-					// connecting learner input port to meta learner
-					metaLearner.getSubprocess(0).getInnerSources().getPortByIndex(0).connectTo(getInputPort());
-
-					// connecting learner output port to meta learner
-					if (modelOutput != null) {
-						modelOutput.connectTo(metaLearner.getInnerModelSink());
-					}
-
-				} catch (OperatorCreationException ex) {
-				} finally {
-					for (Port port : toUnlock) {
-						port.unlock();
-					}
-				}
+				applyQuickFix(quickFixOpClass);
 			}
 
 			@Override
@@ -288,6 +174,75 @@ public class LearnerPrecondition extends CapabilityPrecondition {
 			}
 		};
 		return Collections.singletonList(fix);
+	}
+
+	/**
+	 * Applies the {@link OperatorInsertionQuickFix} for the given {@link AbstractMetaLearner} class.
+	 *
+	 * @param quickFixOpClass
+	 * 		the class of the new operator to be inserted
+	 * @since 9.7
+	 */
+	@SuppressWarnings("deprecation")
+	private void applyQuickFix(Class<? extends AbstractMetaLearner> quickFixOpClass) {
+		List<Port> toUnlock = new LinkedList<>();
+		try {
+			Operator learner = getInputPort().getPorts().getOwner().getOperator();
+			ExecutionUnit learnerUnit = learner.getExecutionUnit();
+
+			// searching for model outport
+			OutputPort modelOutput = null;
+			MetaData modelMetaData = new PredictionModelMetaData(PredictionModel.class, new ExampleSetMetaData());
+			for (OutputPort port : learner.getOutputPorts().getAllPorts()) {
+				MetaData data = port.getMetaData();
+				if (modelMetaData.isCompatible(data, CompatibilityLevel.VERSION_5)) {
+					modelOutput = port;
+					toUnlock.add(modelOutput);
+					modelOutput.lock();
+					break;
+				}
+			}
+
+			AbstractMetaLearner metaLearner = OperatorService.createOperator(quickFixOpClass);
+			learnerUnit.addOperator(metaLearner, learnerUnit.getIndexOfOperator(learner));
+
+			// connecting meta learner input port
+			OutputPort output = getInputPort().getSource();
+			toUnlock.add(output);
+			output.lock();
+			output.disconnect();
+			output.connectTo(metaLearner.getTrainingSetInputPort());
+
+			// connecting meta learner output port
+			if (modelOutput != null) {
+				InputPort inputPort = modelOutput.getDestination();
+				// connecting meta learner
+				if (inputPort != null) {
+					toUnlock.add(inputPort);
+					inputPort.lock();
+					modelOutput.disconnect();
+					metaLearner.getModelOutputPort().connectTo(inputPort);
+				}
+			}
+
+			// moving learner inside meta learner
+			learner.remove();
+			metaLearner.getSubprocess(0).addOperator(learner);
+
+			// connecting learner input port to meta learner
+			metaLearner.getSubprocess(0).getInnerSources().getPortByIndex(0).connectTo(getInputPort());
+
+			// connecting learner output port to meta learner
+			if (modelOutput != null) {
+				modelOutput.connectTo(metaLearner.getInnerModelSink());
+			}
+
+		} catch (OperatorCreationException ex) {
+		} finally {
+			for (Port port : toUnlock) {
+				port.unlock();
+			}
+		}
 	}
 
 }

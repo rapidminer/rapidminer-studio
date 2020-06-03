@@ -18,6 +18,11 @@
 */
 package com.rapidminer.parameter;
 
+import java.util.function.Predicate;
+
+import com.rapidminer.repository.Entry;
+
+
 /**
  * A parameter type for specifying a repository location.
  * 
@@ -29,6 +34,9 @@ public class ParameterTypeRepositoryLocation extends ParameterTypeString {
 
 	private boolean allowFolders, allowEntries, allowAbsoluteEntries, enforceValidRepositoryEntryName,
 			onlyWriteableLocations;
+
+	private Predicate<Entry> filter;
+
 
 	/**
 	 * Creates a new parameter type for files with the given extension. If the extension is null no
@@ -118,5 +126,38 @@ public class ParameterTypeRepositoryLocation extends ParameterTypeString {
 
 	public void setEnforceValidRepositoryEntryName(boolean enforceValidRepositoryEntryName) {
 		this.enforceValidRepositoryEntryName = enforceValidRepositoryEntryName;
+	}
+
+	/**
+	 * Gets whether the UI for this parameter should show only a subset of the whole tree, providing a {@link Predicate
+	 * < Entry >} to accept them. Defaults to null, meaning everything is visible.
+	 * <p>
+	 * Note: This does NOT validate the entered repository location, it only affects user choice during UI interactions.
+	 * The repository location that is returned could still be invalid to this filter, the user of this parameter type
+	 * has to ultimately check the validity!
+	 * </p>
+	 *
+	 * @return the {@link Predicate<Entry>} that accepts {@link Entry Entries} that should be visualized in the {@link
+	 * com.rapidminer.repository.gui.RepositoryTree}
+	 * @since 9.7
+	 */
+	public Predicate<Entry> getRepositoryFilter() {
+		return filter;
+	}
+
+	/**
+	 * Sets whether the UI for this parameter should show only a subset of the whole tree. See e.g. {@link
+	 * com.rapidminer.repository.RepositoryTools#ONLY_BLOB_AND_BINARY_ENTRIES}.
+	 * <p>
+	 * Note: This does NOT validate the entered repository location, it only affects user choice during UI interactions.
+	 * The repository location that is returned could still be invalid to this filter, the user of this parameter type
+	 * has to ultimately check the validity!
+	 * </p>
+	 *
+	 * @param filter the filter, can be {@code null} to show everything (as is the default).
+	 * @since 9.7
+	 */
+	public void setRepositoryFilter(Predicate<Entry> filter) {
+		this.filter = filter;
 	}
 }

@@ -18,19 +18,19 @@
 */
 package com.rapidminer.test_utils;
 
-import com.rapidminer.Process;
-import com.rapidminer.operator.IOObject;
-import com.rapidminer.repository.DataEntry;
-import com.rapidminer.repository.Folder;
-import com.rapidminer.repository.IOObjectEntry;
-import com.rapidminer.repository.RepositoryException;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.rapidminer.Process;
+import com.rapidminer.operator.IOObject;
+import com.rapidminer.repository.DataEntry;
+import com.rapidminer.repository.Folder;
+import com.rapidminer.repository.IOObjectEntry;
+import com.rapidminer.repository.RepositoryException;
 
 
 /**
@@ -55,7 +55,7 @@ public class Util {
 
 		Map<Integer, IOObject> results = new HashMap<Integer, IOObject>();
 
-		Folder folder = (Folder) process.getRepositoryLocation().parent().locateEntry();
+		Folder folder = process.getRepositoryLocation().parent().locateFolder();
 
 		for (DataEntry entry : folder.getDataEntries()) {
 			if (entry instanceof IOObjectEntry) {
@@ -93,7 +93,7 @@ public class Util {
 	 * @throws RepositoryException
 	 */
 	public static void removeExpectedResults(Process process) throws RepositoryException {
-		Folder folder = process.getRepositoryLocation().locateEntry().getContainingFolder();
+		Folder folder = process.getRepositoryLocation().locateData().getContainingFolder();
 
 		Collection<IOObjectEntry> toDelete = new ArrayList<>();
 		for (DataEntry entry : folder.getDataEntries()) {

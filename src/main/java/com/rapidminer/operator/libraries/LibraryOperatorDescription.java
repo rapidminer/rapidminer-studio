@@ -39,7 +39,9 @@ import org.w3c.dom.Element;
  * of these operators.
  * 
  * @author Sebastian Land
+ * @deprecated since 9.7, but was unused even before
  */
+@Deprecated
 public abstract class LibraryOperatorDescription extends OperatorDescription {
 
 	private static final String ATTRIBUTE_KEY = "key";

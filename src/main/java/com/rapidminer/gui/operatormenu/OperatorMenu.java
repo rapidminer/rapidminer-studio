@@ -24,9 +24,7 @@ import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 
 import com.rapidminer.gui.tools.ResourceMenu;
-import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorChain;
-import com.rapidminer.operator.OperatorCreationException;
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.tools.GroupTree;
 import com.rapidminer.tools.OperatorService;
@@ -82,16 +80,9 @@ public abstract class OperatorMenu extends ResourceMenu implements OperatorServi
 					item = new JMenuItem(description.getName(), icon);
 				}
 
-				Operator operator = null;
-				try {
-					operator = description.createOperatorInstance();
-				} catch (OperatorCreationException e1) {
-					// do nothing
-				}
 				item.addActionListener(e -> performAction(description));
 
-				if ((description.getDeprecationInfo() != null)
-						|| ((operator != null) && (operator.getOperatorDescription().getDeprecationInfo() != null))) {
+				if (description.getDeprecationInfo() != null) {
 					item.setForeground(Color.LIGHT_GRAY);
 				}
 

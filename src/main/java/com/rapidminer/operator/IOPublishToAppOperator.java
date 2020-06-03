@@ -36,10 +36,10 @@ import com.rapidminer.parameter.ParameterTypeSuggestion;
  * IOObject will be &quot;hidden&quot; and can not be directly accessed by following operators. In
  * order to retrieve the stored object and make it again accessible, you can use the operator
  * {@link IORecallfromAppOperator}. The combination of those two operators can be used to cache
- * {@link IOObject}s during a RapidMiner Server App session and use those cached {@link IOObject}s
+ * {@link IOObject}s during a RapidMiner AI Hub App session and use those cached {@link IOObject}s
  * multiple times in the app without executing the same process several times.
  *
- * This operator is used to manipulate a RapidMiner Server App. If the operator is executed in
+ * This operator is used to manipulate a RapidMiner AI Hub App. If the operator is executed in
  * RapidMiner Studio, the {@link IOObject} is stored in the cache in
  * {@link RapidMiner#getGlobalIOObjectCache()}.
  *

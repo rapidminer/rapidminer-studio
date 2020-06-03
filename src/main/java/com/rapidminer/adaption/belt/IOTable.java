@@ -105,7 +105,7 @@ public final class IOTable extends ResultObjectAdapter {
 
 	@Override
 	public String getName() {
-		return "DataTable";
+		return "ExampleSet";
 	}
 
 	/**
@@ -115,8 +115,8 @@ public final class IOTable extends ResultObjectAdapter {
 		try {
 			return BeltConverter.convertSequentially(this);
 		} catch (BeltConverter.ConversionException e) {
-			throw new InvalidObjectException("Custom column " + e.getColumnName()
-					+ " of type " + e.getType().customTypeID() + " not serializable");
+			throw new InvalidObjectException("Advanced column " + e.getColumnName()
+					+ " of type " + e.getType() + " not serializable");
 		}
 	}
 

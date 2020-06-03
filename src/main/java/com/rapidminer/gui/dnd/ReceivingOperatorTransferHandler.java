@@ -25,6 +25,7 @@ import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -49,6 +50,7 @@ import com.rapidminer.Process;
 import com.rapidminer.RapidMiner;
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.flow.processrendering.annotations.model.WorkflowAnnotation;
+import com.rapidminer.gui.tools.ProgressThread;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.io.process.XMLImporter;
 import com.rapidminer.io.process.XMLTools;
@@ -58,11 +60,12 @@ import com.rapidminer.operator.OperatorCreationException;
 import com.rapidminer.operator.internal.ProcessEmbeddingOperator;
 import com.rapidminer.operator.io.RepositorySource;
 import com.rapidminer.operator.nio.file.LoadFileOperator;
+import com.rapidminer.repository.BinaryEntry;
 import com.rapidminer.repository.BlobEntry;
 import com.rapidminer.repository.DataEntry;
-import com.rapidminer.repository.Entry;
 import com.rapidminer.repository.ProcessEntry;
 import com.rapidminer.repository.RepositoryLocation;
+import com.rapidminer.repository.RepositoryTools;
 import com.rapidminer.studio.io.gui.internal.DataImportWizardBuilder;
 import com.rapidminer.studio.io.gui.internal.DataImportWizardUtils;
 import com.rapidminer.tools.I18N;
@@ -75,9 +78,15 @@ import com.rapidminer.tools.usagestats.UsageLoggable;
 
 /**
  * Transfer handler that supports dragging and dropping operators and workflow annotations.
+ * <p>
+ * For custom behavior when special files are dropped from disk, see {@link DropFileIntoProcessActionRegistry}.
+ * </p>
+ * <p>
+ * For custom behavior when binary entries are dropped from the repository, see {@link
+ * DropBinaryEntryIntoProcessActionRegistry}.
+ * </p>
  *
  * @author Simon Fischer, Marius Helf, Michael Knopf, Marco Boeck
- *
  */
 public abstract class ReceivingOperatorTransferHandler extends OperatorTransferHandler {
 
@@ -162,22 +171,41 @@ public abstract class ReceivingOperatorTransferHandler extends OperatorTransferH
 
 			@SuppressWarnings("unchecked")
 			final File file = ((List<File>) transferData).get(0);
-			if (file.getName().toLowerCase().endsWith("." + RapidMiner.PROCESS_FILE_EXTENSION)) {
-				// This is a process file
-				try {
-					Operator processEmbedder = OperatorService.createOperator(ProcessEmbeddingOperator.OPERATOR_KEY);
-					processEmbedder.setParameter(ProcessEmbeddingOperator.PARAMETER_PROCESS_FILE, file.getAbsolutePath());
-					newOperators = Collections.singletonList(processEmbedder);
-				} catch (Exception e) {
-					SwingTools.showSimpleErrorMessage("cannot_create_process_embedder", e);
-					dropEnds();
+			String suffix = RepositoryTools.getSuffixFromFilename(file.getName());
+			DropFileIntoProcessCallback callback = DropFileIntoProcessActionRegistry.getInstance().getCallback(suffix);
+			final Path filePath = file.toPath();
+			if (callback != null) {
+				if (callback.willReturnOperator(filePath)) {
+					// an operator is to be created
+					try {
+						newOperators = callback.createAndConfigureOperatorsForDroppedFile(filePath);
+					} catch (Exception e) {
+						SwingTools.showSimpleErrorMessage("cannot_create_operator", e);
+						LogService.getRoot().log(Level.WARNING, "com.rapidminer.gui.dnd.ReceivingOperatorTransferHandler.custom_drop_operator_failed", e);
+						dropEnds();
+						return false;
+					}
+				} else {
+					// some other action is to be triggered, has to happen async
+					new ProgressThread("file_dropped_custom_action") {
+
+						@Override
+						public void run() {
+							try {
+								callback.triggerAction(filePath);
+							} catch (Exception e) {
+								SwingTools.showSimpleErrorMessage("cannot_open_with_registry", e);
+								LogService.getRoot().log(Level.WARNING, "com.rapidminer.repository.gui.actions.OpenInOperatingSystemAction.open_binary_registry_error", e);
+							}
+						}
+					}.start();
 					return false;
 				}
 			} else {
 				SwingUtilities.invokeLater(() -> {
 					DataImportWizardBuilder importWizardBuilder = new DataImportWizardBuilder();
 					importWizardBuilder.setCallback(DataImportWizardUtils.showInResultsCallback());
-					importWizardBuilder.forFile(file.toPath()).build(RapidMinerGUI.getMainFrame()).getDialog()
+					importWizardBuilder.forFile(filePath).build(RapidMinerGUI.getMainFrame()).getDialog()
 							.setVisible(true);
 				});
 				dropEnds();
@@ -201,7 +229,7 @@ public abstract class ReceivingOperatorTransferHandler extends OperatorTransferH
 				return false;
 			}
 			try {
-				Process process = new Process(((String) transferData).trim());
+				Process process = new Process(((String) transferData).trim(), Process.NO_ENCRYPTION);
 				newOperators = process.getRootOperator().getSubprocess(0).getOperators();
 			} catch (Exception e) {
 				try {
@@ -250,17 +278,15 @@ public abstract class ReceivingOperatorTransferHandler extends OperatorTransferH
 				return false;
 			}
 			RepositoryLocation repositoryLocation = (RepositoryLocation) transferData;
-			Operator newOp = createOperator(repositoryLocation);
-			if (newOp == null) {
+			List<Operator> newOps = createOperators(repositoryLocation);
+			if (newOps == null) {
 				dropEnds();
 				return false;
 			}
-			newOperators = Collections.singletonList(newOp);
+			newOperators = newOps;
 		} else if (acceptedFlavor.equals(TransferableOperator.LOCAL_TRANSFERRED_REPOSITORY_LOCATION_LIST_FLAVOR)) {
 			Stream<RepositoryLocation> repoLocations;
-			if (transferData instanceof RepositoryLocationList) {
-				repoLocations = ((RepositoryLocationList) transferData).getAll().stream();
-			} else if (transferData instanceof RepositoryLocation[]) {
+			if (transferData instanceof RepositoryLocation[]) {
 				repoLocations = Arrays.stream((RepositoryLocation[]) transferData);
 			} else {
 				LogService.getRoot().log(Level.WARNING,
@@ -269,7 +295,7 @@ public abstract class ReceivingOperatorTransferHandler extends OperatorTransferH
 				dropEnds();
 				return false;
 			}
-			newOperators = repoLocations.map(this::createOperator).filter(Objects::nonNull).collect(Collectors.toList());
+			newOperators = repoLocations.map(this::createOperators).filter(Objects::nonNull).flatMap(Collection::stream).collect(Collectors.toList());
 			if (newOperators.isEmpty()) {
 				dropEnds();
 				return false;
@@ -376,11 +402,11 @@ public abstract class ReceivingOperatorTransferHandler extends OperatorTransferH
 	 *            the location which should be imported
 	 * @return the operator or {@code null}
 	 */
-	private Operator createOperator(RepositoryLocation repositoryLocation) {
-		Entry entry;
+	private List<Operator> createOperators(RepositoryLocation repositoryLocation) {
+		DataEntry entry;
 
 		try {
-			entry = repositoryLocation.locateEntry();
+			entry = repositoryLocation.locateData();
 		} catch (Exception e) {
 			// no valid entry
 			return null;
@@ -393,8 +419,7 @@ public abstract class ReceivingOperatorTransferHandler extends OperatorTransferH
 			resolvedLocation = repositoryLocation.getAbsoluteLocation();
 		}
 
-		if (!(entry instanceof DataEntry)) {
-			// can't handle non-data entries (like folders)
+		if (entry == null) {
 			return null;
 		} else if (entry instanceof BlobEntry) {
 			// create Retrieve Blob operator
@@ -403,7 +428,7 @@ public abstract class ReceivingOperatorTransferHandler extends OperatorTransferH
 				source.setParameter(LoadFileOperator.PARAMETER_REPOSITORY_LOCATION, resolvedLocation);
 				source.setParameter(LoadFileOperator.PARAMETER_SOURCE_TYPE,
 						String.valueOf(LoadFileOperator.SOURCE_TYPE_REPOSITORY));
-				return source;
+				return Collections.singletonList(source);
 			} catch (OperatorCreationException e1) {
 				LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
 						"com.rapidminer.gui.dnd.ReceivingOperatorTransferHandler.creating_repositorysource_error", e1), e1);
@@ -415,11 +440,52 @@ public abstract class ReceivingOperatorTransferHandler extends OperatorTransferH
 				Operator embedder = OperatorService.createOperator(ProcessEmbeddingOperator.OPERATOR_KEY);
 				embedder.setParameter(ProcessEmbeddingOperator.PARAMETER_PROCESS_FILE, resolvedLocation);
 				embedder.rename("Execute " + repositoryLocation.getName());
-				return embedder;
+				return Collections.singletonList(embedder);
 			} catch (OperatorCreationException e1) {
 				LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
 						"com.rapidminer.gui.dnd.ReceivingOperatorTransferHandler.creating_repositorysource_error", e1), e1);
 				return null;
+
+			}
+		} else if (entry instanceof BinaryEntry) {
+			BinaryEntry binEntry = (BinaryEntry) entry;
+			String suffix = binEntry.getSuffix();
+			DropBinaryEntryIntoProcessCallback callback = DropBinaryEntryIntoProcessActionRegistry.getInstance().getCallback(suffix);
+			if (callback != null) {
+				if (callback.willReturnOperator(binEntry)) {
+					try {
+						return callback.createAndConfigureOperatorsForDroppedEntry(binEntry, getProcess());
+					} catch (OperatorCreationException e1) {
+						LogService.getRoot().log(Level.WARNING, "com.rapidminer.gui.dnd.ReceivingOperatorTransferHandler.custom_drop_operator_failed", e1);
+						return null;
+					}
+				} else {
+					// some other action is to be triggered, has to happen async
+					new ProgressThread("binary_entry_dropped_custom_action") {
+
+						@Override
+						public void run() {
+							try {
+								callback.triggerAction(binEntry);
+							} catch (Exception e) {
+								LogService.getRoot().log(Level.WARNING, "com.rapidminer.repository.gui.actions.OpenInOperatingSystemAction.open_binary_registry_error", e);
+							}
+						}
+					}.start();
+					return null;
+				}
+			} else {
+				// create Open File operator
+				try {
+					LoadFileOperator source = OperatorService.createOperator(LoadFileOperator.class);
+					source.setParameter(LoadFileOperator.PARAMETER_REPOSITORY_LOCATION, resolvedLocation);
+					source.setParameter(LoadFileOperator.PARAMETER_SOURCE_TYPE,
+							String.valueOf(LoadFileOperator.SOURCE_TYPE_REPOSITORY));
+					return Collections.singletonList(source);
+				} catch (OperatorCreationException e1) {
+					LogService.getRoot().log(Level.WARNING, "com.rapidminer.gui.dnd.ReceivingOperatorTransferHandler.creating_repositorysource_error", e1);
+					return null;
+				}
 			}
 		} else {
 			// create Retrieve operator
@@ -427,7 +493,7 @@ public abstract class ReceivingOperatorTransferHandler extends OperatorTransferH
 				RepositorySource source = OperatorService.createOperator(RepositorySource.class);
 				source.setParameter(RepositorySource.PARAMETER_REPOSITORY_ENTRY, resolvedLocation);
 				source.rename("Retrieve " + repositoryLocation.getName());
-				return source;
+				return Collections.singletonList(source);
 			} catch (OperatorCreationException e1) {
 				LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
 						"com.rapidminer.gui.dnd.ReceivingOperatorTransferHandler.creating_repositorysource_error", e1), e1);

@@ -56,12 +56,13 @@ public class ResourceConnectionEntry extends ResourceIOObjectEntry implements Co
 	@Override
 	protected IOObject readDataObject(InputStream in) throws IOException {
 		return new ConnectionInformationContainerIOObject(
-				ConnectionInformationSerializer.LOCAL.loadConnection(in, getLocation()));
+				ConnectionInformationSerializer.INSTANCE.loadConnection(in, getLocation(), getRepository().getEncryptionContext()));
 	}
 
 	@Override
-	protected MetaData readMetaDataObject(InputStream in) throws IOException {
-		return new ConnectionInformationMetaData(ConnectionInformationSerializer.LOCAL.loadConfiguration(in));
+	MetaData readMetaDataObject(InputStream in) throws IOException {
+		// we don't care about encrypted values in the meta data. They should not be accessible via MD at all, so we don't try to decrypt them
+		return new ConnectionInformationMetaData(ConnectionInformationSerializer.INSTANCE.loadConfiguration(in, null));
 	}
 
 	@Override

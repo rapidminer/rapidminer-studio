@@ -21,6 +21,8 @@ package com.rapidminer.repository.resource;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.logging.Level;
 
 import com.rapidminer.operator.IOObject;
@@ -30,8 +32,11 @@ import com.rapidminer.operator.ports.metadata.MetaDataFactory;
 import com.rapidminer.operator.tools.IOObjectSerializer;
 import com.rapidminer.repository.IOObjectEntry;
 import com.rapidminer.repository.RepositoryException;
+import com.rapidminer.repository.versioned.IOObjectClassDetector;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.ProgressListener;
+
+import sun.misc.ObjectInputFilter.Config;
 
 
 /**
@@ -124,6 +129,17 @@ public class ResourceIOObjectEntry extends ResourceDataEntry implements IOObject
 
 	@Override
 	public Class<? extends IOObject> getObjectClass() {
+		// if metadata are not loaded yet, retrieve IO class from stream
+		if (metaData == null) {
+			try (InputStream stream = getResourceStream(getSuffix())) {
+				Class<? extends IOObject> iooClass = IOObjectClassDetector.findClass(stream);
+				if (iooClass != null && iooClass != IOObject.class) {
+					return iooClass;
+				}
+			} catch (IOException | RepositoryException e) {
+				// ignore
+			}
+		}
 		try {
 			return retrieveMetaData().getObjectClass();
 		} catch (RepositoryException e) {
@@ -143,8 +159,13 @@ public class ResourceIOObjectEntry extends ResourceDataEntry implements IOObject
 	 * 		if deserialization is not possible due to the missing class
 	 * @since 9.3
 	 */
-	protected MetaData readMetaDataObject(InputStream in) throws IOException, ClassNotFoundException {
+	MetaData readMetaDataObject(InputStream in) throws IOException, ClassNotFoundException {
 		try (ObjectInputStream objectIn = new ObjectInputStream(in)) {
+			// lift deserialize restriction
+			AccessController.doPrivileged((PrivilegedAction<Void>) () -> {
+				Config.setObjectInputFilter(objectIn, null);
+				return null;
+			});
 			return (MetaData) objectIn.readObject();
 		}
 	}

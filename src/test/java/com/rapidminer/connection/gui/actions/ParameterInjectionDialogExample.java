@@ -20,6 +20,7 @@ package com.rapidminer.connection.gui.actions;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JButton;
@@ -27,8 +28,7 @@ import javax.swing.JDialog;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.rapidminer.connection.ConnectionInformationSerializer;
 import com.rapidminer.connection.gui.model.ConnectionParameterModel;
 import com.rapidminer.connection.gui.model.MyConnectionParameterModel;
 import com.rapidminer.connection.valueprovider.ValueProvider;
@@ -36,6 +36,7 @@ import com.rapidminer.connection.valueprovider.ValueProviderImpl;
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.look.RapidLookAndFeel;
 import com.rapidminer.tools.ParameterService;
+import com.rapidminer.tools.encryption.EncryptionProvider;
 
 
 /**
@@ -48,6 +49,7 @@ public class ParameterInjectionDialogExample extends JDialog {
 
 	public static void main(String[] args) {
 		ParameterService.init();
+		EncryptionProvider.initialize();
 		ParameterService.setParameterValue(RapidMinerGUI.PROPERTY_FONT_CONFIG, "Standard fonts");
 		try {
 			UIManager.setLookAndFeel(new RapidLookAndFeel());
@@ -67,8 +69,8 @@ public class ParameterInjectionDialogExample extends JDialog {
 
 	private void save(List<ConnectionParameterModel> connectionParameterModels) {
 		try {
-			System.out.println(new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(connectionParameterModels));
-		} catch (JsonProcessingException e) {
+			System.out.println(ConnectionInformationSerializer.INSTANCE.createJsonFromObject(connectionParameterModels, EncryptionProvider.DEFAULT_CONTEXT));
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}

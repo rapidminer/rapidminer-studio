@@ -18,9 +18,6 @@
 */
 package com.rapidminer.io;
 
-import javax.xml.bind.DatatypeConverter;
-
-
 /**
  * (Though the RapidMiner license is automatically prepended to this file, the code is actually
  * provided by Robert Harder who placed in the public domain. It is available from
@@ -168,9 +165,9 @@ import javax.xml.bind.DatatypeConverter;
  * @author Robert Harder
  * @author rob@iharder.net
  * @version 2.3.5
- * @deprecated For newly introduced base64 encoding please use Javas' {@link DatatypeConverter}
+ * @deprecated For newly introduced base64 encoding please use Javas' {@link java.util.Base64}
  *             instead. Do not replace old calls to this class with calls to
- *             {@link DatatypeConverter} as the results might not be compatible.
+ *             {@link java.util.Base64} as the results might not be compatible.
  */
 @Deprecated
 public class Base64 {

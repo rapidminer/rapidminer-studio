@@ -21,13 +21,16 @@ package com.rapidminer.gui.properties;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collection;
+import java.util.Objects;
 
 import com.rapidminer.gui.properties.SettingsItem.Type;
 import com.rapidminer.parameter.ParameterHandler;
 import com.rapidminer.parameter.ParameterType;
+import com.rapidminer.parameter.ParameterTypePassword;
 import com.rapidminer.parameter.Parameters;
 import com.rapidminer.tools.ParameterService;
 import com.rapidminer.tools.Tools;
+import com.rapidminer.tools.encryption.EncryptionProvider;
 
 
 /**
@@ -95,10 +98,15 @@ public final class SettingsItems extends AbstractSettingsItemProvider {
 			if (parameterKeys.contains(k)) {
 				ParameterType type = parameters.getParameterType(k);
 				String value = parameters.getParameterOrNull(k);
-				if (type != null && value != null) {
-					value = type.toString(value);
+				if (type instanceof ParameterTypePassword && value != null) {
+					value = type.toXMLString(value, EncryptionProvider.DEFAULT_CONTEXT);
 				}
-				ParameterService.setParameterValue(k, value);
+				if (value == null) {
+					value = "";
+				}
+				if (!Objects.equals(value, ParameterService.getParameterValue(k))) {
+					ParameterService.setParameterValue(k, value);
+				}
 			}
 		}
 	}

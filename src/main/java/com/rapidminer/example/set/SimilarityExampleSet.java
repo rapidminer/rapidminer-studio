@@ -147,6 +147,16 @@ public class SimilarityExampleSet extends AbstractExampleSet {
 	}
 
 	@Override
+	public Object getUserData(String key) {
+		return parent.getUserData(key);
+	}
+
+	@Override
+	public Object setUserData(String key, Object value) {
+		return parent.setUserData(key, value);
+	}
+
+	@Override
 	public boolean equals(Object o) {
 		if (!super.equals(o)) {
 			return false;

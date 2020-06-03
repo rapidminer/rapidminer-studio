@@ -173,7 +173,7 @@ public class NewProcessUndoManager {
 	/**
 	 * Restores a {@link Process} from the given undo index if possible, setting the user data from
 	 * the stored state. May skip unreadable user data. Throws an Exception if an error occurs while
-	 * parsing the XML string ({@link Process#Process(String)}).
+	 * parsing the XML string ({@link Process#Process(String, String)}).
 	 *
 	 * @return the restored process or null if the index is invalid
 	 *
@@ -185,7 +185,7 @@ public class NewProcessUndoManager {
 		} catch (IndexOutOfBoundsException e) {
 			return null;
 		}
-		Process p = new Process(state.processXML);
+		Process p = new Process(state.processXML, Process.NO_ENCRYPTION);
 		if (state.viewUserData == null) {
 			return p;
 		}

@@ -56,7 +56,7 @@ public final class TableViewingTools {
 
 	/**
 	 * If the result is a {@link IOTable} it is replaced by a view allowing to read and display it as an {@link
-	 * ExampleSet}. Custom columns are replaced by a nominal column containing an error message.
+	 * ExampleSet}. Advanced columns are replaced by a nominal column containing an error message.
 	 *
 	 * @param result
 	 * 		the result to check and maybe convert
@@ -69,7 +69,7 @@ public final class TableViewingTools {
 				return getView(ioTable);
 			} catch (BeltConverter.ConversionException e) {
 				ExampleSet view =
-						TableViewCreator.INSTANCE.createView(TableViewCreator.INSTANCE.replacedCustomsWithError(ioTable.getTable()));
+						TableViewCreator.INSTANCE.createView(TableViewCreator.INSTANCE.replacedAdvancedWithError(ioTable.getTable()));
 				copySourceAndAnnotations(ioTable, view);
 				return view;
 			}
@@ -85,7 +85,7 @@ public final class TableViewingTools {
 	 * 		the result to check and maybe convert
 	 * @return the input object or a view on a {@link Table}
 	 * @throws BeltConverter.ConversionException
-	 * 		if the table cannot be converted because it contains custom columns
+	 * 		if the table cannot be converted because it contains advanced columns
 	 */
 	public static Object replaceTableObject(Object result) {
 		if (result instanceof IOTable) {
@@ -114,7 +114,7 @@ public final class TableViewingTools {
 	 * 		the table object to wrap
 	 * @return a view example set
 	 * @throws BeltConverter.ConversionException
-	 * 	 	if the table cannot be converted because it contains custom columns
+	 * 	 	if the table cannot be converted because it contains advanced columns
 	 */
 	public static ExampleSet getView(IOTable object) {
 		Table table = object.getTable();

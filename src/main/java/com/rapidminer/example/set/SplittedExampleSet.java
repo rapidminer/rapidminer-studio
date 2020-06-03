@@ -38,7 +38,7 @@ import com.rapidminer.tools.Tools;
  *
  * @author Simon Fischer, Ingo Mierswa, Felix Jungermann
  */
-public class SplittedExampleSet extends AbstractExampleSet {
+public class SplittedExampleSet extends AbstractExampleSet implements MappingBasedExampleSet {
 
 	public static final OperatorVersion VERSION_SAMPLING_CHANGED = new OperatorVersion(5, 1, 2);
 
@@ -223,6 +223,26 @@ public class SplittedExampleSet extends AbstractExampleSet {
 	}
 
 	@Override
+	public Object getUserData(String key) {
+		return parent.getUserData(key);
+	}
+
+	@Override
+	public Object setUserData(String key, Object value) {
+		return parent.setUserData(key, value);
+	}
+
+	@Override
+	public Map<String, Object> getAllUserData() {
+		return parent.getAllUserData();
+	}
+
+	@Override
+	public void setAllUserData(Map<String, Object> userDataMap) {
+		parent.setAllUserData(userDataMap);
+	}
+
+	@Override
 	public int hashCode() {
 		return super.hashCode() ^ partition.hashCode();
 	}
@@ -404,5 +424,20 @@ public class SplittedExampleSet extends AbstractExampleSet {
 	@Override
 	public void cleanup() {
 		parent.cleanup();
+	}
+
+	@Override
+	public int[] getMappingCopy() {
+		return partition.getTableIndexMapCopy();
+	}
+
+	@Override
+	public boolean isParentSimpleOrMapped() {
+		return parent instanceof SimpleExampleSet || parent instanceof MappingBasedExampleSet;
+	}
+
+	@Override
+	public ExampleSet getParentClone() {
+		return (ExampleSet) parent.clone();
 	}
 }

@@ -23,17 +23,13 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 
 import java.io.IOException;
-import java.security.Key;
 
 import org.apache.commons.lang.RandomStringUtils;
-import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
-import com.rapidminer.tools.cipher.KeyGenerationException;
-import com.rapidminer.tools.cipher.KeyGeneratorTool;
+import com.rapidminer.connection.ConnectionInformationSerializer;
+import com.rapidminer.tools.encryption.EncryptionProvider;
 
 
 /**
@@ -49,23 +45,10 @@ public class ConfigurationParameterImplTest {
 	private static String value;
 	private static String injectorName;
 	private static ConfigurationParameter[] parameters;
-	private static ObjectMapper mapper;
-	private static ObjectWriter writer;
 
-	private static final Key USER_KEY;
-
-	static {
-		Key userKey = null;
-		try {
-			userKey = KeyGeneratorTool.getUserKey();
-		} catch (IOException e) {
-			// ignore
-		}
-		USER_KEY = userKey;
-	}
 
 	@BeforeClass
-	public static void setup() throws KeyGenerationException {
+	public static void setup() {
 		name = RandomStringUtils.randomAlphabetic(5);
 		value = RandomStringUtils.randomAlphanumeric(10);
 		injectorName = RandomStringUtils.randomAlphabetic(5);
@@ -73,29 +56,25 @@ public class ConfigurationParameterImplTest {
 		for (int i = 0; i < parameters.length; i++) {
 			parameters[i] = new ConfigurationParameterImpl(name, value, (i & 1) == 1, (i & 2) == 2 ? injectorName : null, i > 4);
 		}
-		mapper = new ObjectMapper();
-		writer = mapper.writerWithDefaultPrettyPrinter();
-		KeyGeneratorTool.setUserKey(KeyGeneratorTool.createSecretKey());
-	}
-
-	@AfterClass
-	public static void restoreValues() {
-		KeyGeneratorTool.setUserKey(USER_KEY);
+		EncryptionProvider.initialize();
 	}
 
 	@Test
 	public void testSerialisation() throws IOException {
 		for (ConfigurationParameter parameter : parameters) {
-			String serialized = writer.writeValueAsString(parameter);
-			System.out.println(serialized + "\n");
-			ConfigurationParameter deserialized = mapper.readValue(serialized, ConfigurationParameter.class);
+			String serialized = ConnectionInformationSerializer.INSTANCE.createJsonFromObject(parameter, EncryptionProvider.DEFAULT_CONTEXT);
+			ConfigurationParameter deserialized = ConnectionInformationSerializer.INSTANCE.createObjectFromJson(serialized, ConfigurationParameter.class, null, EncryptionProvider.DEFAULT_CONTEXT);
 			assertEquals("encryption state not equal after serialization", parameter.isEncrypted(), deserialized.isEncrypted());
 			assertEquals("injector name not equal after serialization", parameter.getInjectorName(), deserialized.getInjectorName());
 			assertEquals("enabled state not equal after serialization", parameter.isEnabled(), deserialized.isEnabled());
 			assertEquals("names not equal after serialization", parameter.getName(), deserialized.getName());
 			assertEquals("values not equal after serialization", parameter.getValue(), deserialized.getValue());
-			String doubleSerialized = writer.writeValueAsString(deserialized);
-			assertEquals("double serialization breaks json", serialized, doubleSerialized);
+
+			// can only check for equality if the parameter is not encrypted, as encrypting the same input multiple times yields different outputs each time for increased security
+			if (!parameter.isEncrypted()) {
+				String doubleSerialized = ConnectionInformationSerializer.INSTANCE.createJsonFromObject(deserialized, EncryptionProvider.DEFAULT_CONTEXT);
+				assertEquals("double serialization breaks json", serialized, doubleSerialized);
+			}
 		}
 	}
 
@@ -103,33 +82,27 @@ public class ConfigurationParameterImplTest {
 	public void testUnsetInjectionInSerialization() throws IOException {
 		ConfigurationParameter parameter = new ConfigurationParameterImpl(name, value, false);
 		parameter.setInjectorName(injectorName);
-		String serialized = writer.writeValueAsString(parameter);
+		String serialized = ConnectionInformationSerializer.INSTANCE.createJsonFromObject(parameter, EncryptionProvider.DEFAULT_CONTEXT);
 		serialized = serialized.replace("null", "\"" + value + "\"");
 		serialized = serialized.replace("\"injectorName\" : \"" + injectorName + "\"", "\"injectorName\" : null");
-		ConfigurationParameter deserialized = mapper.readValue(serialized, ConfigurationParameter.class);
+		ConfigurationParameter deserialized = ConnectionInformationSerializer.INSTANCE.createObjectFromJson(serialized, ConfigurationParameter.class, null, EncryptionProvider.DEFAULT_CONTEXT);
 		assertNotEquals("Values equal after disabling injection", parameter.getValue(), deserialized.getValue());
 	}
 
 	@Test
 	public void testSetInjectionInSerialization() throws IOException {
 		String otherValue = RandomStringUtils.randomAlphanumeric(8);
-		ConfigurationParameter parameters[] = {new ConfigurationParameterImpl(name, value, true),
+		ConfigurationParameter[] parameters = {new ConfigurationParameterImpl(name, value, true),
 				new ConfigurationParameterImpl(name, otherValue, true),
 				new ConfigurationParameterImpl(name, value, false),
 				new ConfigurationParameterImpl(name, otherValue, false)};
 		for (ConfigurationParameter parameter : parameters) {
-			String serialized = writer.writeValueAsString(parameter);
+			String serialized = ConnectionInformationSerializer.INSTANCE.createJsonFromObject(parameter, EncryptionProvider.DEFAULT_CONTEXT);
 			serialized = serialized.replace("\"injectorName\" : null", "\"injectorName\" : \"" + injectorName + "\"");
-			ConfigurationParameter deserialized = mapper.readValue(serialized, ConfigurationParameter.class);
+			ConfigurationParameter deserialized = ConnectionInformationSerializer.INSTANCE.createObjectFromJson(serialized, ConfigurationParameter.class, null, EncryptionProvider.DEFAULT_CONTEXT);
 			assertNotEquals("Values equal after enabling injection", parameter.getValue(), deserialized.getValue());
 			assertNull("Value not null after injection turned on", deserialized.getValue());
 		}
 	}
 
-	@AfterClass
-	public static void tearDown() {
-		writer = null;
-		mapper = null;
-		parameters = null;
-	}
 }

@@ -342,6 +342,9 @@ public final class ProcessTools {
 	 * @since 9.6
 	 */
 	public static Process getParentProcess(Process process) {
+		if (process == null) {
+			return null;
+		}
 		UserData<Object> parentData = process.getRootOperator().getUserData(KEY_PARENT_PROCESS);
 		if (parentData instanceof ParentUserData) {
 			return ((ParentUserData) parentData).getParent();

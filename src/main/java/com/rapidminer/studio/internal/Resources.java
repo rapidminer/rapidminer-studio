@@ -99,7 +99,7 @@ public class Resources {
 		}
 
 		// if anyone has set a ConcurrencyContext that should override the regular ones, use it
-		// currently used by RapidMiner Server web services
+		// currently used by RapidMiner AI Hub web services
 		ProcessRootOperator rootOperator = operator.getProcess().getRootOperator();
 		if (rootOperator.getUserData(ConcurrencyExecutionService.OVERRIDING_CONTEXT) != null) {
 			ContextUserData data = (ContextUserData) rootOperator.getUserData(ConcurrencyExecutionService.OVERRIDING_CONTEXT);

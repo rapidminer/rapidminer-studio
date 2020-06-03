@@ -26,7 +26,9 @@ import java.io.OutputStream;
  * A byte blob with no specified contents.
  * 
  * @author Simon Fischer
- * */
+ * @deprecated in 9.7, now anything not known is stored as a {@link BinaryEntry}
+ */
+@Deprecated
 public interface BlobEntry extends DataEntry {
 
 	String TYPE_NAME = "blob";

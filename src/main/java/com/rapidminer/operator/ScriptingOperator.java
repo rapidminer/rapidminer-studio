@@ -30,7 +30,7 @@ import org.codehaus.groovy.GroovyBugError;
 
 import com.rapidminer.adaption.belt.IOTable;
 import com.rapidminer.belt.table.BeltConverter;
-import com.rapidminer.core.concurrency.ConcurrencyContext;
+import com.rapidminer.belt.table.TableViewCreator;
 import com.rapidminer.operator.ProcessSetupError.Severity;
 import com.rapidminer.operator.ports.InputPortExtender;
 import com.rapidminer.operator.ports.OutputPortExtender;
@@ -39,7 +39,6 @@ import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeText;
 import com.rapidminer.parameter.TextType;
 import com.rapidminer.parameter.UndefinedParameterError;
-import com.rapidminer.studio.internal.Resources;
 import com.rapidminer.tools.plugin.Plugin;
 
 import groovy.lang.Binding;
@@ -160,7 +159,7 @@ public class ScriptingOperator extends Operator {
 	 * this map contains lock objects for each script. This is necessary because we only want to
 	 * block a particular script which has not yet been parsed, but not other scripts. If there was
 	 * only synchronization on a static object, all script execution would be blocked JVM-wide
-	 * (think background process execution or RM Server) until parsing is finished.
+	 * (think background process execution or RapidMiner AI Hub) until parsing is finished.
 	 */
 	private static final Map<String, Object> LOCK_MAP = Collections
 			.synchronizedMap(new LinkedHashMap<String, Object>(MAX_CACHE_SIZE + 1, 0.75f, true) {
@@ -229,7 +228,7 @@ public class ScriptingOperator extends Operator {
 		try {
 			convertIOTables(input);
 		} catch (BeltConverter.ConversionException e) {
-			throw new UserError(this, "scriptingOperator.custom_columns", e.getColumnName(), e.getType().customTypeID());
+			throw new UserError(this, "scriptingOperator.advanced_columns", e.getColumnName(), e.getType());
 		}
 		Object result;
 		try {
@@ -301,14 +300,13 @@ public class ScriptingOperator extends Operator {
 	 * tables here. Later, when more operators return belt tables, we should introduce a compatibility level for this.
 	 *
 	 * @throws BeltConverter.ConversionException
-	 * 		if a table cannot be converted because it contains custom columns
+	 * 		if a table cannot be converted because it contains advanced columns
 	 */
 	private void convertIOTables(List<IOObject> input) {
-		ConcurrencyContext concurrencyContext = Resources.getConcurrencyContext(this);
 		for (int i = 0; i < input.size(); i++) {
 			IOObject object = input.get(i);
 			if (object instanceof IOTable) {
-				input.set(i, BeltConverter.convert((IOTable) object, concurrencyContext));
+				input.set(i, TableViewCreator.INSTANCE.convertOnWriteView((IOTable) object, true));
 			}
 		}
 	}

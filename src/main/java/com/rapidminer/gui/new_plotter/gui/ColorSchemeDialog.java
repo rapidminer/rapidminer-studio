@@ -42,7 +42,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
 import javax.swing.AbstractButton;
 import javax.swing.Action;
 import javax.swing.BorderFactory;
@@ -99,7 +98,7 @@ import com.rapidminer.gui.tools.dialogs.ConfirmDialog;
 import com.rapidminer.repository.IOObjectEntry;
 import com.rapidminer.repository.MalformedRepositoryLocationException;
 import com.rapidminer.repository.RepositoryException;
-import com.rapidminer.repository.RepositoryLocation;
+import com.rapidminer.repository.RepositoryLocationBuilder;
 import com.rapidminer.tools.FontTools;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.math.function.aggregation.AbstractAggregationFunction.AggregationFunctionType;
@@ -1092,8 +1091,8 @@ public class ColorSchemeDialog extends ButtonDialog implements PlotConfiguration
 		DataTable dataTable;
 		// retrieve data for showing example data
 		try {
-			ExampleSet exampleSet = (ExampleSet) ((IOObjectEntry) new RepositoryLocation("//Samples/data/Iris")
-					.locateEntry()).retrieveData(null);
+			ExampleSet exampleSet = (ExampleSet) ((IOObjectEntry) new RepositoryLocationBuilder().withExpectedDataEntryType(IOObjectEntry.class).
+					buildFromAbsoluteLocation("//Samples/data/Iris").locateData()).retrieveData(null);
 			dataTable = new DataTableExampleSetAdapter(exampleSet, null);
 		} catch (MalformedRepositoryLocationException e) {
 			return;

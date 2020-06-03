@@ -721,7 +721,8 @@ public class ProcessPanel extends JPanel implements Dockable, ProcessEditor {
 	 * 		MainFrame used to get the currently active process.
 	 */
 	private void fireCopyProcess(MainFrame mainFrame) {
-		String processXML = mainFrame.getProcess().getRootOperator().getXML(false);
+		// we cannot encrypt anything when copying to clipboard (otherwise nobody we share the process with could decrypt it)
+		String processXML = mainFrame.getProcess().getRootOperator().getXML(false, null);
 		Clipboard clipBoard = Toolkit.getDefaultToolkit().getSystemClipboard();
 		StringSelection stringSelection = new StringSelection(processXML);
 		clipBoard.setContents(stringSelection, null);
@@ -742,11 +743,15 @@ public class ProcessPanel extends JPanel implements Dockable, ProcessEditor {
 				// we check for the appropriate data flavor and handle the clipboard contents accordingly
 				if (Arrays.asList(dataFlavors).contains(DataFlavor.stringFlavor)) {
 					String xml = ((String) clipBoard.getContents(mainFrame.getProcessPanel()).getTransferData(DataFlavor.stringFlavor));
-					process = new Process(xml);
+					// pasted process XMLs will likely not contain encrypted values
+					// (and if they do nothing we can do, as they could originate from a repo with a different encryption context than the default one)
+					process = new Process(xml, Process.NO_ENCRYPTION);
 				} else if (Arrays.asList(dataFlavors).contains(DataFlavor.javaFileListFlavor)) {
 					String xml = loadProcessFromFileList(clipBoard, mainFrame);
 					if (xml != null) {
-						process = new Process(xml);
+						// pasted process XMLs will likely not contain encrypted values
+						// (and if they do nothing we can do, as they could originate from a repo with a different encryption context than the default one)
+						process = new Process(xml, Process.NO_ENCRYPTION);
 					} // else: no .rmp file in the file list
 				} // else: no string and no .rmp file on the clipboard
 			} catch (XMLException | UnsupportedFlavorException | IOException e) {

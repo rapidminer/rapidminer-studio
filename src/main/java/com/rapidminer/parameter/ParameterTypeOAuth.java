@@ -24,13 +24,16 @@ import org.w3c.dom.Element;
 
 
 /**
- * A ParameterType for OAuth. Requires an {@link OAuthMechanism} for the authentication.
- * Authentication workflow is triggered by the {@link OAuthValueCellEditor}.
- * 
+ * A ParameterType for OAuth. Requires an {@link OAuthMechanism} for the authentication. Authentication workflow is
+ * triggered by the {@link OAuthValueCellEditor}.
+ *
  * @author Marcel Michel
  * @since 6.0.003
- * 
+ * @deprecated since 9.7, DO NOT USE THIS ANYMORE!!! Always use the new connection framework introduced in 9.3 when
+ * secure credential storage is necessary! See {@link com.rapidminer.connection.ConnectionInformation}.
+ * ParameterTypeOAuth is NOT guaranteed to work properly when it comes to repository encryption!!!
  */
+@Deprecated
 public class ParameterTypeOAuth extends ParameterTypePassword {
 
 	private static final long serialVersionUID = -2367046707430250941L;
@@ -57,14 +60,6 @@ public class ParameterTypeOAuth extends ParameterTypePassword {
 	public boolean isNumerical() {
 		return false;
 	}
-
-	@Override
-	public Object getDefaultValue() {
-		return null;
-	}
-
-	@Override
-	public void setDefaultValue(Object defaultValue) {}
 
 	@Override
 	protected void writeDefinitionToXML(Element typeElement) {}

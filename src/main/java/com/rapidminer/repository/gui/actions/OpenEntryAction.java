@@ -18,11 +18,8 @@
 */
 package com.rapidminer.repository.gui.actions;
 
-import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.repository.ConnectionEntry;
+import com.rapidminer.gui.actions.OpenAction;
 import com.rapidminer.repository.DataEntry;
-import com.rapidminer.repository.IOObjectEntry;
-import com.rapidminer.repository.ProcessEntry;
 import com.rapidminer.repository.gui.RepositoryTree;
 
 
@@ -41,15 +38,7 @@ public class OpenEntryAction extends AbstractRepositoryAction<DataEntry> {
 
 	@Override
 	public void actionPerformed(DataEntry data) {
-		if (data instanceof ConnectionEntry){
-			com.rapidminer.gui.actions.OpenAction.showConnectionInformationDialog((ConnectionEntry) data);
-		} else if (data instanceof IOObjectEntry) {
-			com.rapidminer.gui.actions.OpenAction.showAsResult((IOObjectEntry) data);
-		} else if (data instanceof ProcessEntry) {
-			RepositoryTree.openProcess((ProcessEntry) data);
-		} else {
-			SwingTools.showVerySimpleErrorMessage("no_data_or_process");
-		}
+		OpenAction.open(data, true);
 	}
 
 }

@@ -18,19 +18,18 @@
 */
 package com.rapidminer.gui.processeditor;
 
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.util.List;
+import javax.swing.JPanel;
+
 import com.rapidminer.Process;
-import com.rapidminer.gui.MainFrame;
+import com.rapidminer.gui.properties.OperatorPropertyPanel;
 import com.rapidminer.gui.tools.ResourceDockKey;
 import com.rapidminer.gui.tools.ViewToolBar;
 import com.rapidminer.operator.Operator;
 import com.vlsolutions.swing.docking.DockKey;
 import com.vlsolutions.swing.docking.Dockable;
-
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.util.List;
-
-import javax.swing.JPanel;
 
 
 /**
@@ -65,10 +64,10 @@ public class ProcessContextProcessEditor extends JPanel implements ProcessEditor
 	@Override
 	public void setSelection(List<Operator> selection) {}
 
-	private final DockKey DOCK_KEY = new ResourceDockKey(PROCESS_CONTEXT_DOCKKEY);
+	private final DockKey dockKey = new ResourceDockKey(PROCESS_CONTEXT_DOCKKEY);
 	private Component dockComponent;
 	{
-		DOCK_KEY.setDockGroup(MainFrame.DOCK_GROUP_ROOT);
+		dockKey.putProperty(ResourceDockKey.PROPERTY_KEY_NEXT_TO_DOCKABLE, OperatorPropertyPanel.PROPERTY_EDITOR_DOCK_KEY);
 	}
 
 	@Override
@@ -81,6 +80,6 @@ public class ProcessContextProcessEditor extends JPanel implements ProcessEditor
 
 	@Override
 	public DockKey getDockKey() {
-		return DOCK_KEY;
+		return dockKey;
 	}
 }

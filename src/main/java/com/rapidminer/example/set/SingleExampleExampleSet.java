@@ -18,6 +18,9 @@
 */
 package com.rapidminer.example.set;
 
+import java.util.Iterator;
+import java.util.Map;
+
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.Example;
@@ -25,8 +28,6 @@ import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.DataRow;
 import com.rapidminer.example.table.ExampleTable;
 import com.rapidminer.operator.Annotations;
-
-import java.util.Iterator;
 
 
 /**
@@ -114,6 +115,26 @@ public class SingleExampleExampleSet extends AbstractExampleSet {
 		} else {
 			return null;
 		}
+	}
+
+	@Override
+	public Object getUserData(String key) {
+		return parent.getUserData(key);
+	}
+
+	@Override
+	public Object setUserData(String key, Object value) {
+		return parent.setUserData(key, value);
+	}
+
+	@Override
+	public Map<String, Object> getAllUserData() {
+		return parent.getAllUserData();
+	}
+
+	@Override
+	public void setAllUserData(Map<String, Object> userDataMap) {
+		parent.setAllUserData(userDataMap);
 	}
 
 	@Override

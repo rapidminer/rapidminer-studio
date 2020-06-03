@@ -1,35 +1,37 @@
 /**
  * Copyright (C) 2001-2020 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.generator;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Attributes;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.AttributeFactory;
+import com.rapidminer.example.table.BinominalMapping;
+import com.rapidminer.example.table.NominalMapping;
 import com.rapidminer.example.utils.ExampleSetBuilder;
 import com.rapidminer.example.utils.ExampleSets;
 import com.rapidminer.operator.OperatorDescription;
@@ -43,6 +45,7 @@ import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeDouble;
 import com.rapidminer.parameter.ParameterTypeInt;
+import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.tools.Ontology;
 import com.rapidminer.tools.RandomGenerator;
 import com.rapidminer.tools.math.container.Range;
@@ -83,18 +86,17 @@ public class MultipleLabelGenerator extends AbstractExampleSource {
 	@Override
 	public MetaData getGeneratedMetaData() throws OperatorException {
 		int numberOfExamples = getParameterAsInt(PARAMETER_NUMBER_EXAMPLES);
-		double lower = getParameterAsDouble(PARAMETER_ATTRIBUTES_LOWER_BOUND);
-		double upper = getParameterAsDouble(PARAMETER_ATTRIBUTES_UPPER_BOUND);
+		final Range bounds = getBounds();
 
 		ExampleSetMetaData emd = new ExampleSetMetaData();
 		for (int i = 1; i <= NUMBER_OF_ATTRIBUTES; i++) {
-			emd.addAttribute(new AttributeMetaData("att" + i, null, Ontology.REAL, new Range(lower, upper)));
+			emd.addAttribute(new AttributeMetaData("att" + i, null, Ontology.REAL, bounds));
 		}
-		int labelType;
+		final int labelType;
 		Consumer<AttributeMetaData> amdFinisher;
 		if (getParameterAsBoolean(PARAMETER_REGRESSION)) {
 			labelType = Ontology.REAL;
-			amdFinisher = amd -> amd.setValueRange(new Range(3 * lower, 3 * upper), SetRelation.EQUAL);
+			amdFinisher = amd -> amd.setValueRange(new Range(3 * bounds.getLower(), 3 * bounds.getUpper()), SetRelation.EQUAL);
 		} else {
 			labelType = Ontology.NOMINAL;
 			Set<String> values = new TreeSet<>();
@@ -115,38 +117,38 @@ public class MultipleLabelGenerator extends AbstractExampleSource {
 	@Override
 	public ExampleSet createExampleSet() throws OperatorException {
 		// init
-		int numberOfExamples = getParameterAsInt(PARAMETER_NUMBER_EXAMPLES);
-		double lower = getParameterAsDouble(PARAMETER_ATTRIBUTES_LOWER_BOUND);
-		double upper = getParameterAsDouble(PARAMETER_ATTRIBUTES_UPPER_BOUND);
-		boolean regression = getParameterAsBoolean(PARAMETER_REGRESSION);
+		final int numberOfExamples = getParameterAsInt(PARAMETER_NUMBER_EXAMPLES);
+		final Range bounds = getBounds();
+		final double lower = bounds.getLower();
+		final double upper = bounds.getUpper();
+		final boolean regression = getParameterAsBoolean(PARAMETER_REGRESSION);
 
 		// create table
-		List<Attribute> attributes = new ArrayList<>();
+		final List<Attribute> attributes = new ArrayList<>();
 		for (int m = 1; m <= NUMBER_OF_ATTRIBUTES; m++) {
 			attributes.add(AttributeFactory.createAttribute("att" + m, Ontology.REAL));
 		}
 
 		// generate labels
-		int type = Ontology.NOMINAL;
-		if (regression) {
-			type = Ontology.REAL;
-		}
-		List<Attribute> labels = new ArrayList<>();
+		final int type = regression ? Ontology.REAL : Ontology.NOMINAL;
+		final NominalMapping mapping = new BinominalMapping();
+		// This is inverted from the expected mapping, but it's here for compatibility reasons
+		final int positiveIndex = mapping.mapString(POSITIVE_LABEL);
+		final int negativeIndex = mapping.mapString(NEGATIVE_LABEL);
+		final Map<Attribute, String> roles = new HashMap<>();
 		for (int i = 1; i <= NUMBER_OF_LABELS; i++) {
 			Attribute label = AttributeFactory.createAttribute(Attributes.LABEL_NAME + i, type);
 			if (!regression) {
-				label.getMapping().mapString(POSITIVE_LABEL);
-				label.getMapping().mapString(NEGATIVE_LABEL);
+				label.setMapping(mapping);
 			}
-			labels.add(label);
+			roles.put(label, label.getName());
+			attributes.add(label);
 		}
-		int positiveIndex = 0;
-		int negativeIndex = 1;
 
-		ExampleSetBuilder builder = ExampleSets.from(attributes).withExpectedSize(numberOfExamples);
+		final ExampleSetBuilder builder = ExampleSets.from(attributes).withExpectedSize(numberOfExamples).withRoles(roles);
 
 		// create data
-		RandomGenerator random = RandomGenerator.getRandomGenerator(this);
+		final RandomGenerator random = RandomGenerator.getRandomGenerator(this);
 
 		// init operator progress
 		getProgress().setTotal(numberOfExamples);
@@ -169,8 +171,7 @@ public class MultipleLabelGenerator extends AbstractExampleSource {
 		}
 
 		// create example set and return it
-		ExampleSet result = builder.withRoles(labels.stream().collect(Collectors
-				.toMap(l->l, Attribute::getName, (a, b) -> a, LinkedHashMap::new))).build();
+		final ExampleSet result = builder.build();
 
 		getProgress().complete();
 
@@ -198,4 +199,20 @@ public class MultipleLabelGenerator extends AbstractExampleSource {
 
 		return types;
 	}
+
+	/**
+	 * Returns the attribute bounds
+	 *
+	 * @return {@link #PARAMETER_ATTRIBUTES_LOWER_BOUND} and {@link #PARAMETER_ATTRIBUTES_UPPER_BOUND} ascending by value
+	 * @throws UndefinedParameterError if one of the two parameter is not defined
+	 */
+	private Range getBounds() throws UndefinedParameterError {
+		final double lower = getParameterAsDouble(PARAMETER_ATTRIBUTES_LOWER_BOUND);
+		final double upper = getParameterAsDouble(PARAMETER_ATTRIBUTES_UPPER_BOUND);
+		if (lower > upper) {
+			return new Range(upper, lower);
+		}
+		return new Range(lower, upper);
+	}
+
 }

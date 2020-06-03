@@ -43,6 +43,9 @@ public abstract class FileObject extends ResultObjectAdapter {
 
 	/**
 	 * Open Stream to read data in this Object.
+	 * <p>
+	 * <strong>Attention:</strong> Do not forget to close this stream again in all cases once you are done!
+	 * </p>
 	 *
 	 * @throws OperatorException
 	 */

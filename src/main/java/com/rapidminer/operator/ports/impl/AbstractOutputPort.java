@@ -34,7 +34,7 @@ import com.rapidminer.operator.ports.metadata.MetaData;
  * @author Nils Woehler
  *
  */
-public abstract class AbstractOutputPort extends AbstractPort implements OutputPort {
+public abstract class AbstractOutputPort extends AbstractPort<OutputPort, InputPort> implements OutputPort {
 
 	private InputPort connectedTo;
 
@@ -42,8 +42,13 @@ public abstract class AbstractOutputPort extends AbstractPort implements OutputP
 
 	private MetaData realMetaData;
 
-	protected AbstractOutputPort(Ports<? extends Port> owner, String name, boolean simulatesStack) {
+	protected AbstractOutputPort(Ports<OutputPort> owner, String name, boolean simulatesStack) {
 		super(owner, name, simulatesStack);
+	}
+
+	@Override
+	public final boolean canConnectTo(Port other) {
+		return OutputPort.super.canConnectTo(other);
 	}
 
 	@Override
@@ -63,6 +68,9 @@ public abstract class AbstractOutputPort extends AbstractPort implements OutputP
 		}
 	}
 
+	/**
+	 * @return the connected input port or {@code null}
+	 */
 	@Override
 	public InputPort getDestination() {
 		return connectedTo;
@@ -120,7 +128,7 @@ public abstract class AbstractOutputPort extends AbstractPort implements OutputP
 	 */
 
 	@Override
-	public void connectTo(InputPort inputPort) throws PortException {
+	public synchronized void connectTo(InputPort inputPort) throws PortException {
 		if (this.connectedTo == inputPort) {
 			return;
 		}
@@ -130,18 +138,8 @@ public abstract class AbstractOutputPort extends AbstractPort implements OutputP
 					+ this.getPorts().getOwner().getConnectionContext().getName() + " and "
 					+ inputPort.getPorts().getOwner().getConnectionContext().getName() + ".");
 		}
-		boolean destConnected = inputPort.isConnected();
-		boolean sourceConnected = this.isConnected();
-		boolean bothConnected = destConnected && sourceConnected;
-		boolean connected = destConnected || sourceConnected;
-		if (connected) {
-			if (bothConnected) {
-				throw new CannotConnectPortException(this, inputPort, this.getDestination(), inputPort.getSource());
-			} else if (sourceConnected) {
-				throw new CannotConnectPortException(this, inputPort, this.getDestination());
-			} else {
-				throw new CannotConnectPortException(this, inputPort, inputPort.getSource());
-			}
+		if (inputPort.isConnected() || this.isConnected()) {
+			throw new CannotConnectPortException(this, inputPort);
 		}
 		this.connectedTo = inputPort;
 		((AbstractInputPort) inputPort).connect(this);
@@ -149,7 +147,7 @@ public abstract class AbstractOutputPort extends AbstractPort implements OutputP
 	}
 
 	@Override
-	public void disconnect() throws PortException {
+	public synchronized void disconnect() throws PortException {
 		assertConnected();
 		((AbstractInputPort) this.connectedTo).connect(null);
 		this.connectedTo.receive(null);

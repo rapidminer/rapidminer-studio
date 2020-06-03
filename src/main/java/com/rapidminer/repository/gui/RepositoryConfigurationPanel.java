@@ -18,15 +18,14 @@
 */
 package com.rapidminer.repository.gui;
 
-import com.rapidminer.repository.Repository;
-import com.rapidminer.repository.RepositoryException;
-import com.rapidminer.repository.RepositoryManager;
-
 import java.util.List;
-
 import javax.swing.AbstractButton;
 import javax.swing.JButton;
 import javax.swing.JComponent;
+
+import com.rapidminer.repository.Repository;
+import com.rapidminer.repository.RepositoryException;
+import com.rapidminer.repository.RepositoryManager;
 
 
 /**
@@ -38,32 +37,33 @@ import javax.swing.JComponent;
 public interface RepositoryConfigurationPanel {
 
 	/**
-	 * (Asynchronously) creates a new repository and adds it to the {@link RepositoryManager}.
-	 * 
-	 * @throws RepositoryException
+	 * Creates a new repository and adds it to the {@link RepositoryManager}. This method is called in a {@link
+	 * com.rapidminer.gui.tools.ProgressThread}, so no need to worry about blocking anything.
+	 *
+	 * @throws RepositoryException if creation fails
 	 */
-	public void makeRepository() throws RepositoryException;
+	void makeRepository() throws RepositoryException;
 
 	/** Configures the UI elements to show the properties defined by the given repository. */
-	public void configureUIElementsFrom(Repository repository);
+	void configureUIElementsFrom(Repository repository);
 
 	/**
 	 * Configures given repository with the values entered into the dialog.
 	 * 
-	 * @return true if configuration is ok
+	 * @return {@code true} if configuration is ok
 	 */
-	public boolean configure(Repository repository);
+	boolean configure(Repository repository);
 
 	/** Returns the actual component. */
-	public JComponent getComponent();
+	JComponent getComponent();
 
 	/** This button should be disabled when invalid values are entered. */
-	public void setOkButton(JButton okButton);
+	void setOkButton(JButton okButton);
 
 	/**
 	 * Additional buttons that will be shown left of the cancel button. If no additional buttons
 	 * should be added an empty list should be returned.
 	 */
-	public List<AbstractButton> getAdditionalButtons();
+	List<AbstractButton> getAdditionalButtons();
 
 }

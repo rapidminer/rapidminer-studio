@@ -18,6 +18,7 @@
  */
 package com.rapidminer.tools;
 
+import java.util.Base64;
 import java.util.Map;
 import java.util.function.UnaryOperator;
 import java.util.logging.Level;
@@ -27,6 +28,9 @@ import com.rapidminer.RapidMiner;
 import com.rapidminer.operator.MailNotSentException;
 import com.rapidminer.tools.cipher.CipherException;
 import com.rapidminer.tools.cipher.CipherTools;
+import com.rapidminer.tools.encryption.EncryptionProviderBuilder;
+import com.rapidminer.tools.encryption.exceptions.EncryptionContextNotFound;
+import com.rapidminer.tools.encryption.exceptions.EncryptionNotInitializedException;
 
 
 /**
@@ -41,13 +45,30 @@ public class MailUtilities {
 
 	/** @since 9.4.1 */
 	public static final UnaryOperator<String> DECRYPT_WITH_CIPHER_KEY = pwd -> {
+		try {
+			return new String(new EncryptionProviderBuilder().buildSymmetricProvider().decryptString(Base64.getDecoder().decode(pwd)));
+		} catch (EncryptionContextNotFound e) {
+			LogService.getRoot().log(Level.SEVERE,
+					"com.rapidminer.parameter.ParameterTypePassword.decrypting_password_error_unknown_context", e.getContext());
+			return pwd;
+		} catch (EncryptionNotInitializedException e) {
+			// something has gone horribly wrong, do not decrypt
+			LogService.getRoot().log(Level.SEVERE,
+					"com.rapidminer.parameter.ParameterTypePassword.decrypting_password_error_not_initialized");
+			return pwd;
+		} catch (Exception e) {
+			// try to decrypt with legacy CipherTools now, might still be old encryption
+			LogService.getRoot().log(Level.INFO,
+					"com.rapidminer.parameter.ParameterTypePassword.decrypting_password_error_failure");
+		}
+
+		// The above failed, fall back to legacy CipherTools
 		if (CipherTools.isKeyAvailable()) {
 			try {
 				return CipherTools.decrypt(pwd);
 			} catch (CipherException e) {
-				// passwd is in plaintext
-				LogService.getRoot().log(Level.WARNING,
-						"com.rapidminer.tools.DefaultMailSessionFactory.smtp_password_decode_failed");
+				LogService.getRoot().log(Level.FINE,
+						"com.rapidminer.parameter.ParameterTypePassword.password_looks_like_unencrypted_plain_text");
 			}
 		} else {
 			LogService.getRoot().log(Level.WARNING,

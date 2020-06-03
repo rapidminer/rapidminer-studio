@@ -27,14 +27,19 @@ import org.apache.commons.lang.StringUtils;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonGetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSetter;
-import com.rapidminer.tools.ValidationUtil;
+import com.rapidminer.connection.ConnectionInformationSerializer;
 import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.ValidationUtil;
 import com.rapidminer.tools.cipher.CipherException;
 import com.rapidminer.tools.cipher.CipherTools;
 import com.rapidminer.tools.cipher.KeyGeneratorTool;
+import com.rapidminer.tools.encryption.EncryptionProviderBuilder;
+import com.rapidminer.tools.encryption.EncryptionProviderSymmetric;
+import com.rapidminer.tools.encryption.exceptions.EncryptionContextNotFound;
+import com.rapidminer.tools.encryption.exceptions.EncryptionNotInitializedException;
+
 
 /**
  * The implementation of {@link ValueProviderParameter}. This is a (enabled or disabled and possibly encrypted)
@@ -49,20 +54,11 @@ import com.rapidminer.tools.cipher.KeyGeneratorTool;
  */
 public class ValueProviderParameterImpl implements ValueProviderParameter {
 
-	/**
-	 * Mix-In that allows to serialize "value" unencrypted
-	 */
-	public abstract class UnencryptedValueMixIn {
-		@JsonIgnore abstract String getJsonValue();
-		@JsonIgnore abstract void setJsonValue(String value);
-		@JsonGetter("value") abstract String getValue();
-		@JsonSetter("value") abstract String setValue();
-	}
-
 	private String name;
 	private boolean encrypted;
 	private boolean enabled = true;
 	private String value;
+
 
 	/** Minimal constructor */
 	@JsonCreator
@@ -104,26 +100,37 @@ public class ValueProviderParameterImpl implements ValueProviderParameter {
 	}
 
 	/**
-	 * Json specific getter for the value. Will simply return the value if this parameter is not encrypted.
-	 * If this parameter is encrypted, will return the encrypted value using the {@link Key} defined per Studio user.
-	 * If a key cannot be found, or encrypting does not work, will return {@code null} to prevent leaking the value.
+	 * Json specific getter for the value. Will simply return the value if this parameter is not encrypted. If this
+	 * parameter is encrypted, will return the encrypted value using the encryption context defined in {@link
+	 * ConnectionInformationSerializer#getEncryptionContextForCurrentThread()}. If encrypting does not work, will return {@code
+	 * null} to prevent leaking the value.
 	 */
 	@JsonGetter(value = "value")
 	private String getJsonValue() {
 		if (!encrypted || getValue() == null) {
 			return getValue();
 		}
-		Key key;
-		try {
-			key = KeyGeneratorTool.getUserKey();
-		} catch (IOException e) {
-			LogService.getRoot().log(Level.WARNING, "com.rapidminer.connection.encryption.could_not_retrieve_key", e);
-			return null;
+		// we have no state associated here during serialization, so we have to use a thread local to get the encryption context
+		String encryptionContext = ConnectionInformationSerializer.INSTANCE.getEncryptionContextForCurrentThread();
+		// no encryption at all
+		if (encryptionContext == null) {
+			return value;
 		}
+
+		EncryptionProviderSymmetric encryptionProvider = new EncryptionProviderBuilder().withContext(encryptionContext).buildSymmetricProvider();
 		try {
-			return CipherTools.encrypt(getValue(), key);
-		} catch (CipherException e) {
-			LogService.getRoot().log(Level.WARNING, "com.rapidminer.connection.encryption.could_not_encrypt", e);
+			return encryptionProvider.encodeToBase64(encryptionProvider.encryptString(getValue().toCharArray()));
+		} catch (EncryptionContextNotFound e) {
+			LogService.getRoot().log(Level.WARNING,
+					"com.rapidminer.connection.encryption.encrypting_value_error_unknown_context", new Object[] {getName(), e.getContext()});
+			return null;
+		} catch (EncryptionNotInitializedException e) {
+			LogService.getRoot().log(Level.WARNING,
+					"com.rapidminer.connection.encryption.encrypting_value_error_not_initialized", new Object[] {getName()});
+			return null;
+		} catch (Exception e) {
+			LogService.getRoot().log(Level.WARNING,
+					"com.rapidminer.connection.encryption.encrypting_value_error_failure", new Object[] {getName()});
 			return null;
 		}
 	}
@@ -135,9 +142,10 @@ public class ValueProviderParameterImpl implements ValueProviderParameter {
 	}
 
 	/**
-	 * Json specific setter for the value. Will simply set the value if this parameter is not encrypted.
-	 * If this parameter is encrypted, will try to decrypt the value using the {@link Key} defined per Studio user.
-	 * If a key cannot be found, or decrypting does not work, will set the value to {@code null}.
+	 * Json specific setter for the value. Will simply set the value if this parameter is not encrypted. If this
+	 * parameter is encrypted, will try to decrypt the value using the encryption context defined in {@link
+	 * ConnectionInformationSerializer#getEncryptionContextForCurrentThread()}. If decrypting does not work, will set the value to
+	 * {@code null}.
 	 */
 	@JsonSetter(value = "value")
 	private void setJsonValue(String value) {
@@ -146,6 +154,37 @@ public class ValueProviderParameterImpl implements ValueProviderParameter {
 			setValue(value);
 			return;
 		}
+
+		// try to decrypt with new encryption framework (introduced in 9.7) first
+		try {
+			// we have no state associated here during serialization, so we have to use a thread local to get the encryption context
+			String encryptionContext = ConnectionInformationSerializer.INSTANCE.getEncryptionContextForCurrentThread();
+			// no decryption at all, so we can return the input directly
+			if (encryptionContext == null) {
+				setValue(value);
+			} else {
+				EncryptionProviderSymmetric encryptionProvider = new EncryptionProviderBuilder().withContext(encryptionContext).buildSymmetricProvider();
+				setValue(new String(encryptionProvider.decryptString(encryptionProvider.decodeFromBase64(value))));
+			}
+			return;
+		} catch (EncryptionContextNotFound e) {
+			LogService.getRoot().log(Level.WARNING,
+					"com.rapidminer.connection.encryption.decrypting_value_error_unknown_context", new Object[] {getName(), e.getContext()});
+			setValue(null);
+			return;
+		} catch (EncryptionNotInitializedException e) {
+			// something has gone horribly wrong, do not decrypt
+			LogService.getRoot().log(Level.WARNING,
+					"com.rapidminer.connection.encryption.decrypting_value_error_not_initialized", new Object[] {getName()});
+			setValue(null);
+			return;
+		} catch (Exception e) {
+			// try to decrypt with legacy CipherTools now, might still be old encryption
+			LogService.getRoot().log(Level.INFO,
+					"com.rapidminer.connection.encryption.decrypting_value_error_failure", new Object[] {getName()});
+		}
+
+		// The above failed, fall back to legacy CipherTools
 		Key key;
 		try {
 			key = KeyGeneratorTool.getUserKey();
@@ -156,8 +195,9 @@ public class ValueProviderParameterImpl implements ValueProviderParameter {
 		}
 		try {
 			setValue(CipherTools.decrypt(value, key));
+			LogService.getRoot().log(Level.INFO, "com.rapidminer.connection.encryption.decrypting_value_old_decryption_success", new Object[] {getName()});
 		} catch (CipherException e) {
-			LogService.getRoot().log(Level.WARNING, "com.rapidminer.connection.encryption.could_not_decrypt", e);
+			LogService.getRoot().log(Level.WARNING, "com.rapidminer.connection.encryption.decrypting_value_old_decryption_failure");
 			setValue(null);
 		}
 	}

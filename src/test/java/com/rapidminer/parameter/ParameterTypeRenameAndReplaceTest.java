@@ -28,7 +28,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
-import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -155,7 +154,7 @@ public class ParameterTypeRenameAndReplaceTest {
 					.map(g -> g.apply(sub(os, 0), sub(ps, 0))).toArray(String[]::new));
 		});
 		valueGenerator.put(ParameterTypeOperatorParameterTupel.class, t -> (os, ps) ->
-				t.transformNewValue(ParameterTypeTupel.transformTupel2String(new String[]{os[0], ps[0]})));
+				t.transformNewValue(ParameterTypeTupel.transformTupel2String(new String[]{os[0], ps[0]}), null));
 	}
 
 	private static String[] sub(String[] strings, int i) {

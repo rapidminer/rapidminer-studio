@@ -56,8 +56,9 @@ import com.rapidminer.tools.mail.connection.MailConnectionUtilities;
 /**
  *
  * @author Simon Fischer, Nils Woehler
- *
+ * @deprecated since 9.7.0 use {@link SendMailAttachmentsOperator} instead
  */
+@Deprecated
 public class SendMailOperator extends Operator implements ConnectionSelectionProvider {
 
 	public static final OperatorVersion VERSION_SWAPPED_INPUT_PORTS = new OperatorVersion(5, 2, 6);

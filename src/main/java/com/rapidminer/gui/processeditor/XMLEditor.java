@@ -24,7 +24,6 @@ import java.awt.event.ActionEvent;
 import java.io.IOException;
 import java.util.List;
 import java.util.logging.Level;
-
 import javax.swing.BorderFactory;
 import javax.swing.JPanel;
 import javax.swing.JToolBar;
@@ -121,7 +120,10 @@ public class XMLEditor extends JPanel implements ProcessEditor, Dockable {
 
 	@Override
 	public void processUpdated(Process process) {
-		setText(process.getRootOperator().getXML(false));
+		// we don't use an encryption context because:
+		// a) encrypted values in operator parameters are deprecated since 9.7, they should no longer be used in the future
+		// b) each encryption results in a different output for more security, so this would be very confusing and break the "is process changed?" logic
+		setText(process.getRootOperator().getXML(false, getEncryptionContext(process)));
 	}
 
 	@Override
@@ -155,14 +157,15 @@ public class XMLEditor extends JPanel implements ProcessEditor, Dockable {
 	public synchronized void validateProcess() throws IOException, XMLException {
 		String editorContent = getXMLFromEditor();
 		Process oldProcess = RapidMinerGUI.getMainFrame().getProcess();
-		String oldXML = oldProcess.getRootOperator().getXML(false);
+		String encryptionContext = getEncryptionContext(oldProcess);
+		String oldXML = oldProcess.getRootOperator().getXML(false, encryptionContext);
 		if (oldXML.trim().equals(editorContent)) {
 			return;
 		}
-		Process newProcess = new Process(editorContent);
+		Process newProcess = new Process(editorContent, getEncryptionContext(oldProcess));
 		ProcessRendererView processRenderer = mainFrame.getProcessPanel().getProcessRenderer();
 		ProcessDrawUtils.ensureOperatorsHaveLocation(newProcess, processRenderer.getModel());
-		String newXML = newProcess.getRootOperator().getXML(false);
+		String newXML = newProcess.getRootOperator().getXML(false, encryptionContext);
 		if (!newXML.equals(oldXML)) {
 			newProcess.setProcessLocation(oldProcess.getProcessLocation());
 			mainFrame.setProcess(newProcess, false);
@@ -184,5 +187,13 @@ public class XMLEditor extends JPanel implements ProcessEditor, Dockable {
 	@Override
 	public DockKey getDockKey() {
 		return DOCK_KEY;
+	}
+
+	/**
+	 * @return always {@code null} because each encryption results in a different output for more security, so this
+	 * would be very confusing and break the "is process changed?" logic if we actually did encrypt here. See comment
+	 */
+	private String getEncryptionContext(Process process) {
+		return null;
 	}
 }

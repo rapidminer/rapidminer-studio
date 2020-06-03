@@ -40,7 +40,6 @@ import com.rapidminer.operator.ports.quickfix.ParameterSettingQuickFix;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeRepositoryLocation;
 import com.rapidminer.parameter.UndefinedParameterError;
-import com.rapidminer.repository.Entry;
 import com.rapidminer.repository.IOObjectEntry;
 import com.rapidminer.repository.RepositoryEntryNotFoundException;
 import com.rapidminer.repository.RepositoryEntryWrongTypeException;
@@ -57,10 +56,17 @@ public class RepositorySource extends AbstractReader<IOObject> {
 
 	public static final String PARAMETER_REPOSITORY_ENTRY = "repository_entry";
 
-	private static final Map<Class<?>, String> REPO_ERROR_KEYS = new HashMap<>();
+	/**
+	 * Map from Exception to i18n key.
+	 *
+	 * @since 9.7
+	 */
+	protected static final Map<Class<?>, String> REPO_ERROR_KEYS;
 	static {
-		REPO_ERROR_KEYS.put(RepositoryEntryNotFoundException.class, "repository_location_does_not_exist");
-		REPO_ERROR_KEYS.put(RepositoryEntryWrongTypeException.class, "repository_location_wrong_type");
+		Map<Class<?>, String> tempMap = new HashMap<>();
+		tempMap.put(RepositoryEntryNotFoundException.class, "repository_location_does_not_exist");
+		tempMap.put(RepositoryEntryWrongTypeException.class, "repository_location_wrong_type");
+		REPO_ERROR_KEYS = Collections.unmodifiableMap(tempMap);
 	}
 
 	public RepositorySource(OperatorDescription description) {
@@ -81,7 +87,9 @@ public class RepositorySource extends AbstractReader<IOObject> {
 		}
 		try {
 			MetaData metaData = entry.retrieveMetaData();
-			metaData.getAnnotations().setAnnotation(Annotations.KEY_SOURCE, entry.getLocation().toString());
+			if (metaData != null) {
+				metaData.getAnnotations().setAnnotation(Annotations.KEY_SOURCE, entry.getLocation().toString());
+			}
 			return metaData;
 		} catch (RepositoryException e) {
 			getLogger().log(Level.INFO, "Error retrieving meta data from " + entry.getLocation() + ": " + e, e);
@@ -102,9 +110,9 @@ public class RepositorySource extends AbstractReader<IOObject> {
 	 *
 	 * @return the progress thread
 	 * @see #getCachedMetaData()
-	 * @since 9.3
+	 * @since 9.7
 	 */
-	private ProgressThread getPrecheckThread() {
+	protected ProgressThread getPrecheckThread() {
 		ProgressThread precheckThread = new ProgressThread("RepositorySource.precheck_metadata", false, getName()) {
 
 			@Override
@@ -145,18 +153,6 @@ public class RepositorySource extends AbstractReader<IOObject> {
 		return precheckThread;
 	}
 
-	private IOObjectEntry getRepositoryEntry() throws RepositoryException, UserError {
-		RepositoryLocation location = getParameterAsRepositoryLocation(PARAMETER_REPOSITORY_ENTRY);
-		Entry entry = location.locateEntry();
-		if (entry == null) {
-			throw new RepositoryEntryNotFoundException(location);
-		} else if (entry instanceof IOObjectEntry) {
-			return (IOObjectEntry) entry;
-		} else {
-			throw new RepositoryEntryWrongTypeException(location, IOObjectEntry.TYPE_NAME, entry.getType());
-		}
-	}
-
 	/**
 	 * Handles the given exception by returning an {@link UserSetupError} containing an appropriate
 	 * {@link com.rapidminer.operator.ProcessSetupError ProcessSetupError} for this operator.
@@ -164,40 +160,31 @@ public class RepositorySource extends AbstractReader<IOObject> {
 	 * A specific error is created for entries that can not be found or are of the wrong type.
 	 * Otherwise a generic error is created.
 	 *
-	 * @since 9.2.0
+	 * @since 9.7
 	 */
-	private UserSetupError handleSetupError(RepositoryException e) throws UserError {
+	protected UserSetupError handleSetupError(RepositoryException e) throws UserError {
 		if (e instanceof RepositoryEntryNotFoundException || e instanceof RepositoryEntryWrongTypeException) {
 			return new UserSetupError(this, new InvalidRepositoryEntryError(Severity.WARNING, getPortOwner(),
 					PARAMETER_REPOSITORY_ENTRY,
 					Collections.singletonList(new ParameterSettingQuickFix(this, PARAMETER_REPOSITORY_ENTRY)),
-					REPO_ERROR_KEYS.get(e.getClass()), getParameterAsRepositoryLocation(PARAMETER_REPOSITORY_ENTRY),
+					REPO_ERROR_KEYS.get(e.getClass()), getRepositoryLocation(false),
 					e.getMessage()));
 		}
 		return new UserSetupError(this, new SimpleProcessSetupError(Severity.WARNING, getPortOwner(),
-				"repository_access_error", getParameterAsRepositoryLocation(PARAMETER_REPOSITORY_ENTRY),
+				"repository_access_error", getRepositoryLocation(false),
 				e.getMessage()));
 	}
 
 	@Override
 	public IOObject read() throws OperatorException {
 		try {
-			final IOObject data = getRepositoryEntry().retrieveData(null);
-			data.getAnnotations().setAnnotation(Annotations.KEY_SOURCE, getRepositoryEntry().getLocation().toString());
+			IOObjectEntry repositoryEntry = getRepositoryEntry();
+			final IOObject data = repositoryEntry.retrieveData(null);
+			data.getAnnotations().setAnnotation(Annotations.KEY_SOURCE, repositoryEntry.getLocation().toString());
 			logConnection(data);
 			return data;
 		} catch (RepositoryException e) {
 			throw new UserError(this, e, 312, getParameterAsString(PARAMETER_REPOSITORY_ENTRY), e.getMessage());
-		}
-	}
-
-	/**
-	 * Logs if the data is a connection.
-	 */
-	private void logConnection(IOObject data) {
-		if (data instanceof ConnectionInformationContainerIOObject) {
-			ActionStatisticsCollector.INSTANCE.logNewConnection(this,
-					((ConnectionInformationContainerIOObject) data).getConnectionInformation());
 		}
 	}
 
@@ -210,5 +197,42 @@ public class RepositorySource extends AbstractReader<IOObject> {
 		type.setPrimary(true);
 		types.add(type);
 		return types;
+	}
+
+	/**
+	 * Logs if the data is a connection.
+	 */
+	private void logConnection(IOObject data) {
+		if (data instanceof ConnectionInformationContainerIOObject) {
+			ActionStatisticsCollector.INSTANCE.logNewConnection(this,
+					((ConnectionInformationContainerIOObject) data).getConnectionInformation());
+		}
+	}
+
+	/**
+	 * Returns the entry specified by the parameter
+	 *
+	 * @return the {@link IOObjectEntry} specified by the parameter
+	 * @throws RepositoryException
+	 * 		if the repository entry could not be located
+	 * @throws UserError
+	 * 		if the parameter does not lead to a repository location
+	 * @since 9.7
+	 */
+	protected IOObjectEntry getRepositoryEntry() throws RepositoryException, UserError {
+		RepositoryLocation location = getRepositoryLocation(true);
+		IOObjectEntry entry = location.locateData();
+		if (entry == null) {
+			throw new RepositoryEntryNotFoundException(location);
+		}
+
+		return entry;
+	}
+
+	private RepositoryLocation getRepositoryLocation(boolean failIfDuplicateIOObjectExists) throws UserError {
+		RepositoryLocation location = getParameterAsRepositoryLocationData(PARAMETER_REPOSITORY_ENTRY, IOObjectEntry.class);
+		// we do not allow to use the Retrieve operator when there is more than 1 IOObject entry with the same name (prefix)
+		location.setFailIfDuplicateIOObjectExists(failIfDuplicateIOObjectExists);
+		return location;
 	}
 }

@@ -21,7 +21,6 @@ package com.rapidminer.gui.flow.processrendering.background;
 import java.awt.BorderLayout;
 import java.awt.Dialog.ModalityType;
 import java.awt.event.ActionEvent;
-
 import javax.swing.JPanel;
 
 import com.rapidminer.gui.ApplicationFrame;
@@ -31,6 +30,7 @@ import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.dialogs.ButtonDialog;
 import com.rapidminer.operator.ExecutionUnit;
 import com.rapidminer.repository.MalformedRepositoryLocationException;
+import com.rapidminer.repository.RepositoryLocation;
 import com.rapidminer.repository.gui.RepositoryLocationChooser;
 
 
@@ -47,8 +47,6 @@ public final class ProcessBackgroundImageVisualizer {
 	/** the process renderer */
 	private final ProcessRendererView view;
 
-	/** the draw decorator */
-	private final ProcessBackgroundImageDecorator decorator;
 
 	/**
 	 * Creates the visualizer for {@link ProcessBackgroundImage}s.
@@ -58,7 +56,7 @@ public final class ProcessBackgroundImageVisualizer {
 	 */
 	public ProcessBackgroundImageVisualizer(final ProcessRendererView view) {
 		this.view = view;
-		this.decorator = new ProcessBackgroundImageDecorator(view);
+		ProcessBackgroundImageDecorator decorator = new ProcessBackgroundImageDecorator(view);
 
 		// start background image decorators
 		decorator.registerDecorators();
@@ -73,7 +71,7 @@ public final class ProcessBackgroundImageVisualizer {
 	 * @return the action, never {@code null}
 	 */
 	public ResourceAction makeSetBackgroundImageAction(final ExecutionUnit process) {
-		ResourceAction setBackgroundImage = new ResourceAction(true, "process_background.set") {
+		return new ResourceAction(true, "process_background.set") {
 
 			private static final long serialVersionUID = 1L;
 
@@ -86,8 +84,6 @@ public final class ProcessBackgroundImageVisualizer {
 			}
 
 		};
-
-		return setBackgroundImage;
 	}
 
 	/**
@@ -99,7 +95,7 @@ public final class ProcessBackgroundImageVisualizer {
 	 * @return the action, never {@code null}
 	 */
 	public ResourceAction makeRemoveBackgroundImageAction(final ExecutionUnit process) {
-		ResourceAction removeBackgroundImage = new ResourceAction(true, "process_background.remove") {
+		return new ResourceAction(true, "process_background.remove") {
 
 			private static final long serialVersionUID = 1L;
 
@@ -117,8 +113,6 @@ public final class ProcessBackgroundImageVisualizer {
 				targetProcess.getEnclosingOperator().rename(targetProcess.getEnclosingOperator().getName());
 			}
 		};
-
-		return removeBackgroundImage;
 	}
 
 	/**
@@ -141,11 +135,12 @@ public final class ProcessBackgroundImageVisualizer {
 		final JPanel mainPanel = new JPanel(new BorderLayout());
 
 		ProcessBackgroundImage prevImg = model.getBackgroundImage(process);
-		final RepositoryLocationChooser chooser = new RepositoryLocationChooser(null, null,
+		RepositoryLocation folderLoc = ProcessBackgroundDrawDecorator.getFolderOfExecutionUnit(process);
+		final RepositoryLocationChooser chooser = new RepositoryLocationChooser(null, folderLoc,
 				prevImg != null ? prevImg.getLocation() : "");
 		mainPanel.add(chooser, BorderLayout.CENTER);
 
-		ButtonDialog dialog = new ButtonDialog(ApplicationFrame.getApplicationFrame(), "process_background",
+		return new ButtonDialog(ApplicationFrame.getApplicationFrame(), "process_background",
 				ModalityType.DOCUMENT_MODAL, new Object[] {}) {
 
 			private static final long serialVersionUID = 1L;
@@ -174,7 +169,6 @@ public final class ProcessBackgroundImageVisualizer {
 				super.ok();
 			}
 		};
-		return dialog;
 	}
 
 }

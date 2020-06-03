@@ -18,56 +18,43 @@
 */
 package com.rapidminer.operator.preprocessing.transformation.aggregation;
 
-import com.rapidminer.example.Attribute;
-import com.rapidminer.example.Example;
-import com.rapidminer.example.table.DataRow;
-
 
 /**
- * This is an {@link Aggregator} for the {@link LeastOccuringAggregationFunction}. If the least
+ * This is an {@link Aggregator} for the {@link LeastOccurringAggregationFunction}. If the least
  * value that at least occurrs once is not unique, the first value from the nominal mapping will be
  * used.
  * 
  * @author Sebastian Land
  */
-public class LeastOccurringAggregator implements Aggregator {
-
-	private Attribute sourceAttribute;
-	private double[] frequencies;
+public class LeastOccurringAggregator extends LeastAggregator {
 
 	public LeastOccurringAggregator(AggregationFunction function) {
-		this.sourceAttribute = function.getSourceAttribute();
-		frequencies = new double[sourceAttribute.getMapping().size()];
+		super(function);
 	}
 
+
+	/**
+	 * @return always {@code false}
+	 */
 	@Override
-	public void count(Example example) {
-		count(example, 1d);
+	protected boolean handlesZeroMapEntries() {
+		return false;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 * Additionally checks that the frequency is bigger than zero.
+	 */
 	@Override
-	public void count(Example example, double weight) {
-		double value = example.getValue(sourceAttribute);
-		if (!Double.isNaN(value)) {
-			frequencies[(int) value] += weight;
-		}
+	protected boolean testCriteria(double frequency, double resultFrequency) {
+		return frequency > 0 && super.testCriteria(frequency, resultFrequency);
 	}
 
+	/**
+	 * @return always {@code 1}
+	 */
 	@Override
-	public void set(Attribute attribute, DataRow row) {
-		int minIndex = -1;
-		double minFrequency = Double.POSITIVE_INFINITY;
-		for (int i = 0; i < frequencies.length; i++) {
-			if (frequencies[i] > 0 && frequencies[i] < minFrequency) {
-				minIndex = i;
-				minFrequency = frequencies[i];
-			}
-		}
-		// if any counter was greater 0, set result to maximum
-		if (minIndex > -1) {
-			row.set(attribute, attribute.getMapping().mapString(sourceAttribute.getMapping().mapIndex(minIndex)));
-		} else {
-			row.set(attribute, Double.NaN);
-		}
+	protected int absoluteExtremum() {
+		return 1;
 	}
 }

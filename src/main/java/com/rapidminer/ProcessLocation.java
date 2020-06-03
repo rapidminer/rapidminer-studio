@@ -58,7 +58,7 @@ public interface ProcessLocation {
 	String getShortName();
 
 	/**
-	 * The icon name without size modifier that visualizes where this process is stored, e.g. RM Server repo, local repo, Cloud, ...
+	 * The icon name without size modifier that visualizes where this process is stored, e.g. RapidMiner AI Hub repo, local repo, Cloud, ...
 	 *
 	 * @return the name of the icon to visualize the origin of this recent process
 	 * @since 8.2

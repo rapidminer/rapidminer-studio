@@ -36,10 +36,15 @@ import java.io.OutputStream;
 import java.io.Reader;
 import java.io.StreamTokenizer;
 import java.net.URL;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.security.AccessControlException;
 import java.security.AccessController;
 import java.text.DateFormat;
@@ -75,6 +80,8 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
@@ -94,7 +101,7 @@ import com.rapidminer.operator.internal.ProcessEmbeddingOperator;
 import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.OutputPort;
 import com.rapidminer.parameter.UndefinedParameterError;
-import com.rapidminer.repository.Entry;
+import com.rapidminer.repository.ProcessEntry;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryLocation;
 import com.rapidminer.security.PluginSandboxPolicy;
@@ -232,6 +239,8 @@ public class Tools {
 	public static final int SYSTEM_TIME_ZONE = 0;
 
 	public static final String SYSTEM_TIME_ZONE_NAME = "SYSTEM";
+
+	private static final int COPY_BUFFER_SIZE = 1024 * 20;
 
 	static {
 		String[] allTimeZoneNames = TimeZone.getAvailableIDs();
@@ -678,7 +687,7 @@ public class Tools {
 		if (number < 0) {
 			number = 0;
 		}
-		StringBuffer result = new StringBuffer();
+		StringBuilder result = new StringBuilder();
 		for (int i = 0; i < number; i++) {
 			result.append(LINE_SEPARATOR);
 		}
@@ -796,7 +805,7 @@ public class Tools {
 	 * Reads the output of the reader and delivers it as string.
 	 */
 	public static String readOutput(BufferedReader in) throws IOException {
-		StringBuffer output = new StringBuffer();
+		StringBuilder output = new StringBuilder();
 		String line = null;
 		while ((line = in.readLine()) != null) {
 			output.append(line);
@@ -914,9 +923,9 @@ public class Tools {
 		int lastSeparatorIndex = canonicalFirstPath.substring(0, index).lastIndexOf(File.separator);
 		if (lastSeparatorIndex != -1) {
 			String absRest = canonicalSecondPath.substring(lastSeparatorIndex + 1);
-			StringBuffer relPathBuffer = new StringBuffer();
-			while (absRest.indexOf(File.separator) >= 0) {
-				relPathBuffer.append(".." + File.separator);
+			StringBuilder relPathBuffer = new StringBuilder();
+			while (absRest.contains(File.separator)) {
+				relPathBuffer.append("..").append(File.separator);
 				absRest = absRest.substring(absRest.indexOf(File.separator) + 1);
 			}
 			relPathBuffer.append(canonicalFirstPath.substring(lastSeparatorIndex + 1));
@@ -1174,7 +1183,7 @@ public class Tools {
 	}
 
 	public static String readTextFile(InputStream in) throws IOException {
-		return readTextFile(new InputStreamReader(in, "UTF-8"));
+		return readFirstNLines(new InputStreamReader(in, StandardCharsets.UTF_8), Long.MAX_VALUE, false);
 	}
 
 	/**
@@ -1237,15 +1246,31 @@ public class Tools {
 	}
 
 	public static String readTextFile(Reader r) throws IOException {
+		return readFirstNLines(r, Long.MAX_VALUE, false);
+	}
+
+	/**
+	 * Reads the first n lines of a reader. If the reader contains less lines than specified, reads the entire text.
+	 *
+	 * @param r                     the reader which contains the text
+	 * @param numberOfLines         the maximum number of lines to read. Must be greater than {@code 0}.
+	 * @param appendCutoffIndicator if {@code true} and if the file contains more lines than the limit, adds {@code
+	 *                              (...)} as the last line
+	 * @return the string containing everything
+	 * @throws IOException if reading goes wrong
+	 * @since 9.7
+	 */
+	public static String readFirstNLines(Reader r, long numberOfLines, boolean appendCutoffIndicator) throws IOException {
 		StringBuilder contents = new StringBuilder();
-		BufferedReader reader = new BufferedReader(r);
-		String line = "";
-		try {
-			while ((line = reader.readLine()) != null) {
-				contents.append(line + Tools.getLineSeparator());
+		try (BufferedReader reader = new BufferedReader(r)) {
+			String line;
+			long counter = 0;
+			while (counter++ < numberOfLines && (line = reader.readLine()) != null) {
+				contents.append(line).append(Tools.getLineSeparator());
 			}
-		} finally {
-			reader.close();
+			if (appendCutoffIndicator && counter >= numberOfLines) {
+				contents.append("(...)");
+			}
 		}
 		return contents.toString();
 	}
@@ -1566,7 +1591,7 @@ public class Tools {
 				start = i;
 			}
 			if (start >= 0) {
-				StringBuffer current = new StringBuffer();
+				StringBuilder current = new StringBuilder();
 				while (end < 0 && i < splittedTokens.length) {
 					if (splittedTokens[i].endsWith(quoteString)) {
 						end = i;
@@ -1624,10 +1649,10 @@ public class Tools {
 
 	/** Delivers the next token and skip empty lines. */
 	public static void getFirstToken(StreamTokenizer tokenizer) throws IOException {
-		// skip empty lines
+
 		while (tokenizer.nextToken() == StreamTokenizer.TT_EOL) {
+			// skip empty lines
 		}
-		;
 
 		if (tokenizer.ttype == '\'' || tokenizer.ttype == '"') {
 			tokenizer.ttype = StreamTokenizer.TT_WORD;
@@ -1660,10 +1685,10 @@ public class Tools {
 
 	/** Skips all tokens before next end of line (EOL). */
 	public static void waitForEOL(StreamTokenizer tokenizer) throws IOException {
-		// skip everything until EOL
+
 		while (tokenizer.nextToken() != StreamTokenizer.TT_EOL) {
+			// skip everything until EOL
 		}
-		;
 		tokenizer.pushBack();
 	}
 
@@ -1731,7 +1756,7 @@ public class Tools {
 
 	/** Returns a whitespace with length indent. */
 	public static String indent(int indent) {
-		StringBuffer s = new StringBuffer();
+		StringBuilder s = new StringBuilder();
 		for (int i = 0; i < indent; i++) {
 			s.append(" ");
 		}
@@ -1755,6 +1780,49 @@ public class Tools {
 	}
 
 	/**
+	 * Writes the content stream to the fileLocation.
+	 * Any conflicting files and folders inside the rootFolder are deleted.
+	 *
+	 * @param content
+	 * 		the file content stream, which is <b>not</b> closed by this method
+	 * @param rootFolder
+	 * 		only files and folders in this path are deleted
+	 * @param fileLocation
+	 * 		the file location, must be inside the rootFolder
+	 * @return the number of written bytes
+	 * @throws IOException if anything goes wrong
+	 * @since 9.7.0
+	 */
+	public static long forceWriteFile(InputStream content, Path rootFolder, Path fileLocation) throws IOException {
+		rootFolder = rootFolder.normalize();
+		fileLocation = rootFolder.resolve(fileLocation).normalize();
+		if (!fileLocation.startsWith(rootFolder) || fileLocation.getNameCount() <= rootFolder.getNameCount()) {
+			throw new IOException("fileLocation \"" + fileLocation + "\" is not inside the rootFolder \"" + rootFolder + '"');
+		}
+		// remove file -> folder conflicts
+		if (Files.exists(rootFolder.resolve(fileLocation.getName(rootFolder.getNameCount())))) {
+			for (Path p = fileLocation.getParent(); p.getNameCount() > rootFolder.getNameCount(); p = p.getParent()) {
+				if (Files.exists(p) && !Files.isDirectory(p)) {
+					Files.delete(p);
+					// if it's a file the parent must be a folder
+					break;
+				}
+			}
+		}
+		// remove folder -> file conflicts
+		if (Files.isDirectory(fileLocation)) {
+			FileUtils.forceDelete(fileLocation.toFile());
+		}
+		// create parent folders
+		if (!Files.exists(fileLocation.getParent())) {
+			Files.createDirectories(fileLocation.toAbsolutePath().getParent());
+		}
+		try (OutputStream out = Files.newOutputStream(fileLocation, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
+			return IOUtils.copy(content, out, COPY_BUFFER_SIZE);
+		}
+	}
+
+	/**
 	 * Copies the contents read from the input stream to the output stream in the current thread.
 	 * Both streams will be closed, even in case of a failure.
 	 *
@@ -1762,7 +1830,7 @@ public class Tools {
 	 */
 	public static void copyStreamSynchronously(InputStream in, OutputStream out, boolean closeOutputStream)
 			throws IOException {
-		byte[] buffer = new byte[1024 * 20];
+		byte[] buffer = new byte[COPY_BUFFER_SIZE];
 		try {
 			int length;
 			while ((length = in.read(buffer)) != -1) {
@@ -1895,21 +1963,21 @@ public class Tools {
 
 		// then build new line:
 		if (!rememberQuotePosition.isEmpty()) {
-			String newLine = "";
+			StringBuilder newLine = new StringBuilder();
 			int pos = rememberQuotePosition.remove(0);
 			int i = 0;
 			for (Character c : line.toCharArray()) {
 				if (i == pos) {
-					newLine += Character.toString(escapeChar) + c;
+					newLine.append(escapeChar).append(c);
 					if (!rememberQuotePosition.isEmpty()) {
 						pos = rememberQuotePosition.remove(0);
 					}
 				} else {
-					newLine += c;
+					newLine.append(c);
 				}
 				i++;
 			}
-			line = newLine;
+			line = newLine.toString();
 		}
 		return line;
 	}
@@ -2321,7 +2389,7 @@ public class Tools {
 			if (op instanceof ProcessEmbeddingOperator) {
 				try {
 					RepositoryLocation loc = op
-							.getParameterAsRepositoryLocation(ProcessEmbeddingOperator.PARAMETER_PROCESS_FILE);
+							.getParameterAsRepositoryLocationData(ProcessEmbeddingOperator.PARAMETER_PROCESS_FILE, ProcessEntry.class);
 					com.rapidminer.Process embeddedProcess = loadEmbeddedProcess(loc);
 					if (embeddedProcess != null) {
 						String embeddedLoc = embeddedProcess.getProcessLocation().toString();
@@ -2352,7 +2420,7 @@ public class Tools {
 	 */
 	private static com.rapidminer.Process loadEmbeddedProcess(RepositoryLocation location) {
 		try {
-			Entry entry = location.locateEntry();
+			ProcessEntry entry = location.locateData();
 			if (entry == null) {
 				return null;
 			} else {
@@ -2430,5 +2498,34 @@ public class Tools {
 		} catch (AccessControlException e) {
 			throw new UnsupportedOperationException(I18N.getErrorMessage("access_control.no_internal_permission"), e);
 		}
+	}
+
+	/**
+	 * Convert the given char array to a byte array, using {@link StandardCharsets#UTF_8}.
+	 *
+	 * @param chars the char array, must not be {@code null}
+	 * @return the byte array, never {@code null}
+	 * @since 9.7
+	 */
+	public static byte[] convertCharArrayToByteArray(char[] chars) {
+		CharBuffer charBuffer = CharBuffer.wrap(chars);
+		ByteBuffer byteBuffer = StandardCharsets.UTF_8.encode(charBuffer);
+		byte[] bytes = Arrays.copyOfRange(byteBuffer.array(), byteBuffer.position(), byteBuffer.limit());
+		Arrays.fill(byteBuffer.array(), (byte) 0);
+		return bytes;
+	}
+
+	/**
+	 * Convert the given byte array to a char array, using {@link StandardCharsets#UTF_8}.
+	 *
+	 * @param bytes the byte array, must not be {@code null}
+	 * @return the char array, never {@code null}
+	 * @since 9.7
+	 */
+	public static char[] convertByteArrayToCharArray(byte[] bytes) {
+		CharBuffer charBuffer = StandardCharsets.UTF_8.decode(ByteBuffer.wrap(bytes));
+		char[] chars = Arrays.copyOfRange(charBuffer.array(), charBuffer.position(), charBuffer.limit());
+		Arrays.fill(charBuffer.array(), (char) 0);
+		return chars;
 	}
 }

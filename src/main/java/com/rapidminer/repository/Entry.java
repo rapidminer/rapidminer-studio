@@ -19,7 +19,6 @@
 package com.rapidminer.repository;
 
 import java.util.Collection;
-
 import javax.swing.Action;
 
 import com.rapidminer.operator.io.RepositorySource;
@@ -39,7 +38,7 @@ public interface Entry {
 	/** Returns the name, the last part of the location. */
 	String getName();
 
-	/** Returns a string describing the type: "folder", "data", "blob", or "process". */
+	/** Returns a string describing the type: "folder", "process", "data", "connection", "external_file", or "blob" (legacy). */
 	String getType();
 
 	/**
@@ -62,23 +61,20 @@ public interface Entry {
 	boolean rename(String newName) throws RepositoryException;
 
 	/**
-	 * Needs to be implemented only for folders in the same repository. Moving between different
-	 * repositories is implemented by
-	 * {@link RepositoryManager#move(RepositoryLocation, Folder, com.rapidminer.tools.ProgressListener)}
-	 * using a sequence of copy and delete.
+	 * Needs to be implemented only for folders in the same repository. Moving between different repositories is
+	 * implemented by {@link RepositoryManager#move(RepositoryLocation, Folder,
+	 * com.rapidminer.tools.ProgressListener)} using a sequence of copy and delete.
 	 *
 	 * @throws RepositoryException
 	 */
 	boolean move(Folder newParent) throws RepositoryException;
 
 	/**
-	 * Needs to be implemented only for folders in the same repository. Moving between different
-	 * repositories is implemented by
-	 * {@link RepositoryManager#move(RepositoryLocation, Folder, com.rapidminer.tools.ProgressListener)}
-	 * using a sequence of copy and delete.
+	 * Needs to be implemented only for folders in the same repository. Moving between different repositories is
+	 * implemented by {@link RepositoryManager#move(RepositoryLocation, Folder,
+	 * com.rapidminer.tools.ProgressListener)} using a sequence of copy and delete.
 	 *
-	 * @param newName
-	 *            New name for moved entry. If moved entry shouldn't be renamed: newName=null.
+	 * @param newName New name for moved entry. If moved entry shouldn't be renamed: newName=null.
 	 * @throws RepositoryException
 	 */
 	boolean move(Folder newParent, String newName) throws RepositoryException;
@@ -93,8 +89,9 @@ public interface Entry {
 	boolean willBlock();
 
 	/**
-	 * A location, that can be used, e.g. as a parameter in the {@link RepositorySource} or which
-	 * can be used to locate the entry using {@link RepositoryManager#resolve(String)}.
+	 * A location, that can be used, e.g. as a parameter in the {@link RepositorySource} or which can be used to locate
+	 * the entry using {@link RepositoryManager#locateFolder(Repository, String, boolean)} or {@link
+	 * RepositoryManager#locateData(Repository, String, Class, boolean, boolean)}.
 	 */
 	RepositoryLocation getLocation();
 
@@ -107,4 +104,5 @@ public interface Entry {
 
 	/** Returns custom actions to be displayed in this entry's popup menu. */
 	Collection<Action> getCustomActions();
+
 }

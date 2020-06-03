@@ -47,8 +47,7 @@ public class AsserterRegistry {
 	public List<Asserter> getAsserterForObject(Object object) {
 		List<Asserter> availableAsserters = new LinkedList<>();
 		for (Asserter asserter : registeredAsserters) {
-			Class<?> assertable = asserter.getAssertable();
-			if (assertableCovered(assertable, object)) {
+			if (asserter.getAssertable().isInstance(object)) {
 				availableAsserters.add(asserter);
 			}
 		}
@@ -64,7 +63,7 @@ public class AsserterRegistry {
 		List<Asserter> availableAsserters = new LinkedList<>();
 		for (Asserter asserter : registeredAsserters) {
 			Class<?> clazz = asserter.getAssertable();
-			if (assertableCovered(clazz, o1) && assertableCovered(clazz, o2)) {
+			if (clazz.isInstance(o1) && clazz.isInstance(o2) || exampleSetAndTable(clazz, o1, o2)) {
 				availableAsserters.add(asserter);
 			}
 		}
@@ -73,12 +72,22 @@ public class AsserterRegistry {
 		} else {
 			return availableAsserters;
 		}
+	}
+
+	/**
+	 * Currently process test results are stored as {@link ExampleSet}s even if the result is an {@link IOTable}, so we
+	 * want to compare as {@link ExampleSet} in that case using a view.
+	 */
+	private boolean exampleSetAndTable(Class<?> clazz, Object o1, Object o2) {
+		return clazz.equals(ExampleSet.class) &&
+				((o1 instanceof ExampleSet && o2 instanceof IOTable)
+						|| (o2 instanceof ExampleSet && o1 instanceof IOTable));
 	}
 
 	public List<Asserter> getAsserterForClass(Class<?> clazz) {
 		List<Asserter> availableAsserters = new LinkedList<>();
 		for (Asserter asserter : registeredAsserters) {
-			if (assertableCovered(asserter.getAssertable(), clazz)) {
+			if (asserter.getAssertable().isAssignableFrom(clazz)) {
 				availableAsserters.add(asserter);
 			}
 		}
@@ -89,11 +98,4 @@ public class AsserterRegistry {
 		}
 	}
 
-	private boolean assertableCovered(Class<?> assertable, Object object) {
-		return assertable.isInstance(object) || (ExampleSet.class.equals(assertable) && (object instanceof IOTable));
-	}
-
-	private boolean assertableCovered(Class<?> assertable, Class<?> clazz) {
-		return assertable.isAssignableFrom(clazz) || (ExampleSet.class.equals(assertable) && IOTable.class.isAssignableFrom(clazz));
-	}
 }

@@ -18,13 +18,9 @@
 */
 package com.rapidminer.operator.ports.impl;
 
-import com.rapidminer.operator.Operator;
-import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.OutputPort;
 import com.rapidminer.operator.ports.OutputPorts;
 import com.rapidminer.operator.ports.PortOwner;
-
-import java.util.List;
 
 
 /**
@@ -33,57 +29,21 @@ import java.util.List;
 public class OutputPortsImpl extends AbstractPorts<OutputPort> implements OutputPorts {
 
 	public OutputPortsImpl(PortOwner owner) {
-		super(owner);
+		super(owner, OutputPortImpl::new);
 	}
 
 	@Override
 	public OutputPort createPort(String name) {
-		return createPort(name, true);
+		return super.createPort(name);
 	}
 
 	@Override
 	public OutputPort createPort(String name, boolean add) {
-		OutputPort out = new OutputPortImpl(this, name, true);
-		if (add) {
-			addPort(out);
-		}
-		return out;
+		return super.createPort(name, add);
 	}
 
 	@Override
 	public OutputPort createPassThroughPort(String name) {
-		OutputPort in = new OutputPortImpl(this, name, false);
-		addPort(in);
-		return in;
-	}
-
-	@Override
-	public void disconnectAll() {
-		disconnectAllBut(null);
-	}
-
-	@Override
-	public void disconnectAllBut(List<Operator> exceptions) {
-		boolean success;
-		disconnect: do {
-			success = false;
-			for (OutputPort port : getAllPorts()) {
-				if (port.isConnected()) {
-					InputPort destination = port.getDestination();
-					boolean isException = false;
-					if (exceptions != null) {
-						Operator destOp = destination.getPorts().getOwner().getOperator();
-						if (exceptions.contains(destOp)) {
-							isException = true;
-						}
-					}
-					if (!isException) {
-						port.disconnect();
-						success = true;
-						continue disconnect;
-					}
-				}
-			}
-		} while (success);
+		return super.createPassThroughPort(name);
 	}
 }

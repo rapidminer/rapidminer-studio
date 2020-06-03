@@ -18,14 +18,16 @@
 */
 package com.rapidminer.operator;
 
-import com.rapidminer.operator.ports.OutputPort;
-import com.rapidminer.operator.ports.ProcessingStep;
-import com.rapidminer.tools.LoggingHandler;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+
+import com.rapidminer.operator.ports.OutputPort;
+import com.rapidminer.operator.ports.ProcessingStep;
+import com.rapidminer.tools.LoggingHandler;
 
 
 /**
@@ -99,4 +101,19 @@ public interface IOObject extends Serializable {
 	 *         key.)
 	 */
 	public Object setUserData(String key, Object value);
+
+	/**
+	 * Returns all the user data as (immutable) map.
+	 */
+	default Map<String, Object> getAllUserData() {
+		// does nothing, overwritten by {@link AbstractIOObject}
+		return Collections.emptyMap();
+	}
+
+	/**
+	 * Returns all the user data as (immutable) map.
+	 */
+	default void setAllUserData(Map<String, Object> userDataMap) {
+		// does nothing, overwritten by {@link AbstractIOObject}
+	}
 }

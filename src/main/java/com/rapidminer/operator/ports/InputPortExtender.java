@@ -162,7 +162,7 @@ public class InputPortExtender extends SinglePortExtender<InputPort> {
 				results.add(desiredClass.cast(AtPortConverter.convert(data, port)));
 			} catch (BeltConverter.ConversionException e) {
 				throw new UserError(getPorts().getOwner().getOperator(), "table_not_convertible.custom_column",
-						e.getColumnName(), e.getType().customTypeID());
+						e.getColumnName(), e.getType());
 			}
 		} else {
 			throw new UserError(getPorts().getOwner().getOperator(), 156,

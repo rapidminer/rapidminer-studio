@@ -194,7 +194,9 @@ public class PasswordDialog extends ButtonDialog {
 		if (forceRefresh && authentication != null) {
 			oldPassword = authentication.getPassword();
 			authentication.setPassword(null);
-			Wallet.getInstance().registerCredentials(id, authentication);
+			if (id != null) {
+				Wallet.getInstance().registerCredentials(id, authentication);
+			}
 		}
 		if (authentication == null) {
 			authentication = new UserCredential(forUrl, null, null);

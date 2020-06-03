@@ -37,8 +37,7 @@ import org.junit.Test;
 
 import com.rapidminer.RapidMiner;
 import com.rapidminer.adaption.belt.IOTable;
-import com.rapidminer.belt.column.ColumnType;
-import com.rapidminer.belt.column.ColumnTypes;
+import com.rapidminer.belt.column.type.StringSet;
 import com.rapidminer.belt.table.BeltConverter;
 import com.rapidminer.belt.table.Builders;
 import com.rapidminer.belt.table.Table;
@@ -146,13 +145,10 @@ public class SerializationToStreamTest {
 	}
 
 	@Test(expected = InvalidObjectException.class)
-	public void testTableWithCustomColumn() throws IOException {
-		ColumnType<Double> customType = ColumnTypes.objectType("com.rapidminer.custom.double", Double.class, null);
-		ColumnType<Integer> customType2 = ColumnTypes.categoricalType("com.rapidminer.custom.integer", Integer.class,
-				null);
+	public void testTableWithAdvancedColumn() throws IOException {
 		Table table = Builders.newTableBuilder(11).addReal("real", i -> 3 * i / 5.0)
-				.addObject("custom", i -> (double) i, customType).addInt("int", i -> 5 * i)
-				.addCategorical("custom2", i -> i, customType2)
+				.addTextset("advanced", i -> new StringSet(Arrays.asList("val"+i, "val"+(i+1))))
+				.addInt53Bit("int", i -> 5 * i)
 				.build(Belt.defaultContext());
 
 		writeToArray(new IOTable(table));

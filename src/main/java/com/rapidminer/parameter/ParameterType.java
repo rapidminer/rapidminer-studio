@@ -23,7 +23,6 @@ import java.lang.reflect.Constructor;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.logging.Level;
 
 import org.w3c.dom.Document;
@@ -34,8 +33,8 @@ import com.rapidminer.io.process.XMLTools;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.parameter.conditions.ParameterCondition;
 import com.rapidminer.tools.LogService;
-import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.XMLException;
+import com.rapidminer.tools.encryption.EncryptionProvider;
 
 
 /**
@@ -138,7 +137,25 @@ public abstract class ParameterType implements Comparable<ParameterType>, Serial
 		this.description = description;
 	}
 
+	/**
+	 * @deprecated since 9.7, use {@link #getXML(String, String, boolean, String, Document)} instead
+	 */
+	@Deprecated
 	public abstract Element getXML(String key, String value, boolean hideDefault, Document doc);
+
+	/**
+	 * @param key               the parameter key for which to get the XML
+	 * @param value             the parameter value for which to get the XML
+	 * @param hideDefault       if {@code true}, default values are omitted
+	 * @param encryptionContext the encryption context that will be used to potentially encrypt values (see {@link
+	 *                          com.rapidminer.tools.encryption.EncryptionProvider})
+	 * @param doc               the document for which the elements are created
+	 * @return the created element
+	 * @since 9.7
+	 */
+	public Element getXML(String key, String value, boolean hideDefault, String encryptionContext, Document doc) {
+		return getXML(key, value, hideDefault, doc);
+	}
 
 	/** Returns a human readable description of the range. */
 	public abstract String getRange();
@@ -164,15 +181,6 @@ public abstract class ParameterType implements Comparable<ParameterType>, Serial
 	 */
 	public abstract boolean isNumerical();
 
-	/**
-	 * Writes an xml representation of the given key-value pair.
-	 *
-	 * @deprecated Use the DOM version of this method. At the moment, we cannot delete it, because
-	 *             {@link Parameters#equals(Object)} and {@link Parameters#hashCode()} rely on it.
-	 */
-	@Deprecated
-	public abstract String getXML(String indent, String key, String value, boolean hideDefault);
-
 	public boolean showRange() {
 		return showRange;
 	}
@@ -182,11 +190,25 @@ public abstract class ParameterType implements Comparable<ParameterType>, Serial
 	}
 
 	/**
-	 * This method will be invoked by the Parameters after a parameter was set. The default
-	 * implementation is empty but subclasses might override this method, e.g. for a decryption of
-	 * passwords.
+	 * @deprecated since 9.7, use {@link #transformNewValue(String, String)}
 	 */
+	@Deprecated
 	public String transformNewValue(String value) {
+		return transformNewValue(value, EncryptionProvider.DEFAULT_CONTEXT);
+	}
+
+	/**
+	 * This method will be invoked by the Parameters after a parameter was set. The default implementation is empty but
+	 * subclasses might override this method, e.g. for a decryption of passwords.
+	 *
+	 * @param value             the value to transform
+	 * @param encryptionContext the encryption context that will be used to potentially decrypt values (see {@link
+	 *                          com.rapidminer.tools.encryption.EncryptionProvider}). If {@code null}, no decryption
+	 *                          takes place
+	 * @return the value in plain form
+	 * @since 9.7
+	 */
+	public String transformNewValue(String value, String encryptionContext) {
 		return value;
 	}
 
@@ -391,8 +413,28 @@ public abstract class ParameterType implements Comparable<ParameterType>, Serial
 		}
 	}
 
+	/**
+	 * Subclasses may override this method to transform the string before writing it to XML.
+	 * {@link ParameterTypePassword} uses this to encrypt the string.
+	 * @deprecated since 9.7, use {@link #toXMLString(Object, String)}
+	 */
+	@Deprecated
 	public String toXMLString(Object value) {
-		return Tools.escapeXML(toString(value));
+		return toXMLString(value, EncryptionProvider.DEFAULT_CONTEXT);
+	}
+
+	/**
+	 * Subclasses may override this method to transform the string before writing it to XML. {@link
+	 * ParameterTypePassword} uses this to encrypt the string.
+	 *
+	 * @param value             the original value
+	 * @param encryptionContext the encryption context that will be used to potentially encrypt values (see {@link
+	 *                          com.rapidminer.tools.encryption.EncryptionProvider}). If {@code null}, no encryption
+	 *                          takes place.
+	 * @since 9.7
+	 */
+	public String toXMLString(Object value, String encryptionContext) {
+		return toString(value);
 	}
 
 	@Override

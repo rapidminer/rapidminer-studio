@@ -18,14 +18,13 @@
 */
 package com.rapidminer.operator.ports;
 
-import com.rapidminer.tools.Observable;
-import com.rapidminer.tools.Observer;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+
+import com.rapidminer.tools.Observer;
 
 
 /**
@@ -40,26 +39,20 @@ import java.util.List;
  * @author Simon Fischer TODO: Unchecked?
  */
 @SuppressWarnings("unchecked")
-public class MultiPortPairExtender<S extends Port, M extends Port> implements PortExtender {
+public class MultiPortPairExtender<S extends Port<S, M>, M extends Port<M, S>> implements PortExtender {
 
 	private final String name;
 	private final Ports<S> singlePorts;
 	private final ArrayList<Ports<M>> multiPortsList;
 	private int minNumber = 0;
 
-	private final List<MultiPortPair> managedPairs = new LinkedList<MultiPortPair>();
+	private final List<MultiPortPair> managedPairs = new LinkedList<>();
 
 	private boolean isChanging = false;
 
 	private int runningId = 0;
 
-	private final Observer<Port> observer = new Observer<Port>() {
-
-		@Override
-		public void update(Observable<Port> observable, Port arg) {
-			updatePorts();
-		}
-	};
+	private final Observer<Port> observer = (observable, arg) -> updatePorts();
 
 	protected class MultiPortPair {
 
@@ -87,7 +80,7 @@ public class MultiPortPairExtender<S extends Port, M extends Port> implements Po
 	public MultiPortPairExtender(String name, Ports<S> singlePorts, Ports<M>[] multiPortsList) {
 		this.name = name;
 		this.singlePorts = singlePorts;
-		this.multiPortsList = new ArrayList<Ports<M>>(Arrays.asList(multiPortsList));
+		this.multiPortsList = new ArrayList<>(Arrays.asList(multiPortsList));
 		singlePorts.registerPortExtender(this);
 		for (Ports<M> ports : multiPortsList) {
 			ports.registerPortExtender(this);
@@ -117,43 +110,44 @@ public class MultiPortPairExtender<S extends Port, M extends Port> implements Po
 	}
 
 	private void updatePorts() {
-		if (!isChanging) {
-			isChanging = true;
-			boolean first = true;
-			MultiPortPair foundDisconnected = null;
-			Iterator<MultiPortPair> i = managedPairs.iterator();
-			while (i.hasNext()) {
-				MultiPortPair pair = i.next();
-				if (pair.isDisconnected()) {
-					// we don't remove the first disconnected port.
-					if (first) {
-						first = false;
-						foundDisconnected = pair;
-					} else {
-						if (minNumber == 0) {
-							deletePorts(pair);
-							i.remove();
-						}
-					}
-				}
-			}
-			if ((foundDisconnected == null) || (managedPairs.size() < minNumber)) {
-				do {
-					managedPairs.add(createPort());
-				} while (managedPairs.size() < minNumber);
-			} else {
-				if (minNumber == 0) {
-					managedPairs.remove(foundDisconnected);
-					managedPairs.add(foundDisconnected);
-					singlePorts.pushDown(foundDisconnected.singlePort);
-					for (int j = 0; j < multiPortsList.size(); j++) {
-						multiPortsList.get(j).pushDown(foundDisconnected.multiPorts.get(j));
-					}
-				}
-			}
-			fixNames();
-			isChanging = false;
+		if (isChanging) {
+			return;
 		}
+		isChanging = true;
+		boolean first = true;
+		MultiPortPair foundDisconnected = null;
+		Iterator<MultiPortPair> i = managedPairs.iterator();
+		while (i.hasNext()) {
+			MultiPortPair pair = i.next();
+			if (pair.isDisconnected()) {
+				// we don't remove the first disconnected port.
+				if (first) {
+					first = false;
+					foundDisconnected = pair;
+				} else {
+					if (minNumber == 0) {
+						deletePorts(pair);
+						i.remove();
+					}
+				}
+			}
+		}
+		if ((foundDisconnected == null) || (managedPairs.size() < minNumber)) {
+			do {
+				managedPairs.add(createPort());
+			} while (managedPairs.size() < minNumber);
+		} else {
+			if (minNumber == 0) {
+				managedPairs.remove(foundDisconnected);
+				managedPairs.add(foundDisconnected);
+				singlePorts.pushDown(foundDisconnected.singlePort);
+				for (int j = 0; j < multiPortsList.size(); j++) {
+					multiPortsList.get(j).pushDown(foundDisconnected.multiPorts.get(j));
+				}
+			}
+		}
+		fixNames();
+		isChanging = false;
 	}
 
 	/** Creates an initial port and starts to listen. */
@@ -169,7 +163,7 @@ public class MultiPortPairExtender<S extends Port, M extends Port> implements Po
 	private MultiPortPair createPort() {
 		runningId++;
 		S singlePort = singlePorts.createPassThroughPort(name + " " + runningId);
-		ArrayList<M> newMultiPorts = new ArrayList<M>(multiPortsList.size());
+		ArrayList<M> newMultiPorts = new ArrayList<>(multiPortsList.size());
 
 		for (Ports<M> ports : multiPortsList) {
 			M out = ports.createPassThroughPort(name + " " + runningId);
@@ -180,13 +174,8 @@ public class MultiPortPairExtender<S extends Port, M extends Port> implements Po
 
 	private void deletePorts(MultiPortPair pair) {
 		singlePorts.removePort(pair.singlePort);
-		for (Port multiPort : pair.multiPorts) {
-			if (multiPort instanceof OutputPort) {
-				if (multiPort.isConnected()) {
-					((OutputPort) multiPort).disconnect();
-				}
-			}
-			((Ports<M>) multiPort.getPorts()).removePort((M) multiPort);
+		for (M multiPort : pair.multiPorts) {
+			multiPort.getPorts().removePort(multiPort);
 		}
 	}
 
@@ -195,16 +184,16 @@ public class MultiPortPairExtender<S extends Port, M extends Port> implements Po
 		for (MultiPortPair pair : managedPairs) {
 			runningId++;
 			singlePorts.renamePort(pair.singlePort, name + "_tmp_" + runningId);
-			for (Port port : pair.multiPorts) {
-				((Ports<M>) port.getPorts()).renamePort((M) port, name + "_tmp_" + runningId);
+			for (M port : pair.multiPorts) {
+				port.getPorts().renamePort(port, name + "_tmp_" + runningId);
 			}
 		}
 		runningId = 0;
 		for (MultiPortPair pair : managedPairs) {
 			runningId++;
 			singlePorts.renamePort(pair.singlePort, name + " " + runningId);
-			for (Port port : pair.multiPorts) {
-				((Ports<M>) port.getPorts()).renamePort((M) port, name + " " + runningId);
+			for (M port : pair.multiPorts) {
+				port.getPorts().renamePort(port, name + " " + runningId);
 			}
 		}
 	}

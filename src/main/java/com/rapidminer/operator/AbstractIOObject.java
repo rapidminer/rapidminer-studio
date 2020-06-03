@@ -25,9 +25,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.OutputStream;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
 import com.rapidminer.operator.ports.OutputPort;
@@ -163,6 +165,19 @@ public abstract class AbstractIOObject implements IOObject {
 			userData = new HashMap<>();
 		}
 		return userData.put(key, value);
+	}
+
+	@Override
+	public Map<String, Object> getAllUserData() {
+		if (userData == null) {
+			return Collections.emptyMap();
+		}
+		return Collections.unmodifiableMap(userData);
+	}
+
+	@Override
+	public void setAllUserData(Map<String, Object> userDataMap) {
+		userData.putAll(userDataMap);
 	}
 
 	/**

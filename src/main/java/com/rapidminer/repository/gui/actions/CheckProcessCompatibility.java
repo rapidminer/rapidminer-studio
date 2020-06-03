@@ -35,7 +35,7 @@ import java.util.List;
 
 
 /**
- * This action checks if the Server could run this Process
+ * This action checks if the AI Hub could run this Process
  *
  * @author Andreas Timm
  * @since 9.5.0

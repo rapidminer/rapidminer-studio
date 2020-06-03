@@ -30,14 +30,17 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.Reader;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.AccessController;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
+import java.security.PrivilegedActionException;
+import java.security.PrivilegedExceptionAction;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,35 +57,34 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.type.CollectionType;
 import com.rapidminer.connection.configuration.ConnectionConfiguration;
 import com.rapidminer.connection.configuration.ConnectionConfigurationBuilder;
-import com.rapidminer.tools.ValidationUtil;
-import com.rapidminer.connection.valueprovider.ValueProviderParameterImpl;
 import com.rapidminer.operator.Annotations;
 import com.rapidminer.operator.ports.metadata.ConnectionInformationMetaData;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryLocation;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.NonClosingZipInputStream;
+import com.rapidminer.tools.ValidationUtil;
+import com.rapidminer.tools.encryption.EncryptionProvider;
 
 
 /**
  * ConnectionInformationSerializer used for reading and writing of {@link ConnectionInformation} objects
  *
- * @author Jan Czogalla, Andreas Timm, Jonas Wilms-Pfau
+ * @author Jan Czogalla, Andreas Timm, Jonas Wilms-Pfau, Marco Boeck
  * @since 9.3
  */
 public final class ConnectionInformationSerializer {
 
 	/**
-	 * Local serializer, protected by local encryption key
+	 * Serializer which must be used to convert JSON to Connection related objects / the other way around.
+	 *
+	 * @since 9.7
 	 */
-	public static final ConnectionInformationSerializer LOCAL = new ConnectionInformationSerializer(getObjectMapper());
-
-	/**
-	 * Server Serializer, protected by transport security
-	 */
-	public static final ConnectionInformationSerializer REMOTE = new ConnectionInformationSerializer(getRemoteObjectMapper());
+	public static final ConnectionInformationSerializer INSTANCE = new ConnectionInformationSerializer(createObjectMapper());
 
 	/**
 	 * Default Charset used for storing
@@ -100,9 +102,25 @@ public final class ConnectionInformationSerializer {
 	private static final char ZIP_FILE_SEPARATOR_CHAR = '/';
 
 	/**
+	 * The encryption context provider for each thread. As we need to encrypt fields that need to be encrypted when
+	 * writing JSON, but it's not easily possible to get a stateful handler to those places, we need to reference the
+	 * currently required encryption context per thread. As only one write/load operation can take place in any given
+	 * thread at the same time, this works fine. It's not the most elegant solution, but works without problems.
+	 *
+	 * @since 9.7
+	 */
+	private static final ThreadLocal<String> ENCRYPTION_CONTEXT_PROVIDER = ThreadLocal.withInitial(() -> EncryptionProvider.DEFAULT_CONTEXT);
+
+
+	/**
 	 * ObjectWriter, kept a cache version for faster access
 	 */
 	private final ObjectWriter objectWriter;
+
+	/**
+	 * ObjectMapper, cached for faster access
+	 */
+	private final ObjectMapper objectMapper;
 
 	/**
 	 * Reader for ConnectionStatistics
@@ -114,6 +132,7 @@ public final class ConnectionInformationSerializer {
 	 */
 	private final ObjectReader connectionConfigurationReader;
 
+
 	/**
 	 * Creates a new ConnectionInformationSerializer
 	 *
@@ -121,73 +140,53 @@ public final class ConnectionInformationSerializer {
 	 */
 	private ConnectionInformationSerializer(ObjectMapper objectMapper) {
 		ValidationUtil.requireNonNull(objectMapper, "objectMapper");
-		this.objectWriter = objectMapper.writerWithDefaultPrettyPrinter();
+		this.objectMapper = objectMapper;
+		this.objectWriter = objectMapper.writer();
 		ObjectReader reader = objectMapper.reader();
-		this.connectionStatisticsReader = reader.withType(ConnectionStatistics.class);
-		this.connectionConfigurationReader = reader.withType(ConnectionConfiguration.class);
+		this.connectionStatisticsReader = reader.forType(ConnectionStatistics.class);
+		this.connectionConfigurationReader = reader.forType(ConnectionConfiguration.class);
 	}
 
 	/**
-	 * Load a {@link ConnectionConfiguration} from the given {@link Reader}
+	 * Load a {@link ConnectionConfiguration} from the inputStream. Will use the specified encryption context (see
+	 * {@link EncryptionProvider}) when trying to decrypt encrypted values.
 	 *
-	 * @param src
-	 * 		the source that contains the {@link ConnectionConfiguration}
-	 * @return a loaded {@link ConnectionConfiguration}, can be null if the src was null
-	 * @throws IOException
-	 * 		in case the {@link Reader} fails
+	 * @param inputStream       the input stream, must not be {@code null}
+	 * @param encryptionContext the encryption context that will be used to potentially decrypt values (see {@link
+	 *                          com.rapidminer.tools.encryption.EncryptionProvider})
+	 * @return the configuration or {@code null} if {@code null} was passed
+	 * @throws IOException if converting the stream to the configuration goes wrong
+	 * @since 9.7
 	 */
-	public ConnectionConfiguration loadConfiguration(Reader src) throws IOException {
-		if (src == null) {
-			return null;
-		}
-		return connectionConfigurationReader.readValue(src);
-	}
-
-	/**
-	 * Load a {@link ConnectionConfiguration} from the inputStream.
-	 *
-	 * @param inputStream
-	 * @return
-	 * @throws IOException
-	 */
-	public ConnectionConfiguration loadConfiguration(InputStream inputStream) throws IOException {
+	public ConnectionConfiguration loadConfiguration(InputStream inputStream, String encryptionContext) throws IOException {
 		if (inputStream == null) {
 			return null;
 		}
-		return connectionConfigurationReader.readValue(inputStream);
+
+		try (ConnectionEncryptionContextSwapper swapper = ConnectionEncryptionContextSwapper.withEncryptionContext(encryptionContext, ENCRYPTION_CONTEXT_PROVIDER::get, ENCRYPTION_CONTEXT_PROVIDER::set)) {
+			return connectionConfigurationReader.readValue(inputStream);
+		}
 	}
 
 	/**
-	 * Load a {@link ConnectionInformation} from the given {@link InputStream}
+	 * Load a {@link ConnectionInformation} from the given {@link InputStream} and {@link RepositoryLocation}. The
+	 * {@link ConnectionConfiguration} will get the repository location's name as its name. Will use the specified
+	 * encryption context (see {@link EncryptionProvider}) when trying to decrypt encrypted values.
 	 *
-	 * @param stream
-	 * 		the {@link InputStream} to read the {@link ConnectionInformation} content from. This should be the data that
-	 * 		was produced by {@link ConnectionInformationSerializer#serialize(ConnectionInformation, OutputStream)}
+	 * @param stream             the {@link InputStream} to read the {@link ConnectionInformation} content from. This
+	 *                           should be the data that was produced by {@link ConnectionInformationSerializer#serialize(ConnectionInformation,
+	 *                           OutputStream, String)}
+	 * @param repositoryLocation the repository location this entry belongs too; might be {@code null}
+	 * @param encryptionContext  the encryption context that will be used to potentially decrypt values (see {@link
+	 *                           com.rapidminer.tools.encryption.EncryptionProvider})
 	 * @return the {@link ConnectionInformation} the stream contained
-	 * @throws IOException
-	 * 		in case of reading errors
+	 * @throws IOException in case of reading errors
+	 * @since 9.7
 	 */
-	public ConnectionInformation loadConnection(InputStream stream) throws IOException {
-		return loadConnection(stream, null);
-	}
-
-	/**
-	 * Load a {@link ConnectionInformation} from the given {@link InputStream} and {@link RepositoryLocation}.
-	 * The {@link ConnectionConfiguration} will get the repository location's name as its name.
-	 *
-	 * @param stream
-	 * 		the {@link InputStream} to read the {@link ConnectionInformation} content from. This should be the data that
-	 * 		was produced by {@link ConnectionInformationSerializer#serialize(ConnectionInformation, OutputStream)}
-	 * @param repositoryLocation
-	 * 		the repository location this entry belongs too; might be {@code null}
-	 * @return the {@link ConnectionInformation} the stream contained
-	 * @throws IOException
-	 * 		in case of reading errors
-	 */
-	public ConnectionInformation loadConnection(InputStream stream, RepositoryLocation repositoryLocation) throws IOException {
+	public ConnectionInformation loadConnection(InputStream stream, RepositoryLocation repositoryLocation, String encryptionContext) throws IOException {
 		ConnectionInformationImpl ci = new ConnectionInformationImpl();
 		NonClosingZipInputStream zis = new NonClosingZipInputStream(stream);
-		// track found files, need the file's inputstream and the md5 to add it
+		// track found files, need the file's input stream and the md5 to add it
 		Map<String, String> md5hashForLibFile = new HashMap<>();
 		Map<String, String> md5hashForOtherFile = new HashMap<>();
 		Map<String, InputStream> libFileStreams = new HashMap<>();
@@ -199,7 +198,7 @@ public final class ConnectionInformationSerializer {
 				continue;
 			}
 			if (ENTRY_NAME_CONFIG.equals(zipEntry.getName())) {
-				ConnectionConfiguration configuration = loadConfiguration(zis);
+				ConnectionConfiguration configuration = loadConfiguration(zis, encryptionContext);
 				// sync config name with repo location
 				if (repositoryLocation != null) {
 					String name = repositoryLocation.getName();
@@ -271,15 +270,17 @@ public final class ConnectionInformationSerializer {
 	/**
 	 * Get an {@link InputStream} containing the storage structure of a {@link ConnectionInformation}. It is a zipped
 	 * file containing a Config entry for standard configuration, a Stats entry for usage stats and two folder for Lib
-	 * and Other files.
+	 * and Other files. Will use the specified encryption context (see {@link EncryptionProvider}) when trying to
+	 * decrypt encrypted values.
 	 *
-	 * @param connectionInformation
-	 * 		the {@link ConnectionInformation} to be stored
-	 * @param out the outputStream to write to
-	 * @throws IOException
-	 * 		in case creating the result was not possible
+	 * @param connectionInformation the {@link ConnectionInformation} to be stored
+	 * @param out                   the outputStream to write to
+	 * @param encryptionContext     the encryption context that will be used to potentially encrypt values (see {@link
+	 *                              com.rapidminer.tools.encryption.EncryptionProvider})
+	 * @throws IOException in case creating the result was not possible
+	 * @since 9.7
 	 */
-	public void serialize(ConnectionInformation connectionInformation, OutputStream out) throws IOException {
+	public void serialize(ConnectionInformation connectionInformation, OutputStream out, String encryptionContext) throws IOException {
 		if (connectionInformation == null) {
 			throw new IOException("Object connection information is null");
 		}
@@ -288,37 +289,131 @@ public final class ConnectionInformationSerializer {
 			throw new IOException("The output stream is null");
 		}
 
-		ZipOutputStream zos = new ZipOutputStream(out);
-		zos.setLevel(ZipOutputStream.STORED);
-		serializeAsZipEntry(ENTRY_NAME_CONFIG, connectionInformation.getConfiguration(), zos);
+		try (ZipOutputStream zos = new ZipOutputStream(out)) {
+			zos.setLevel(ZipOutputStream.STORED);
+			try (ConnectionEncryptionContextSwapper swapper = ConnectionEncryptionContextSwapper.withEncryptionContext(encryptionContext, ENCRYPTION_CONTEXT_PROVIDER::get, ENCRYPTION_CONTEXT_PROVIDER::set)) {
+				serializeAsZipEntry(ENTRY_NAME_CONFIG, connectionInformation.getConfiguration(), zos);
+			}
 
-		if (connectionInformation.getStatistics() != null) {
-			serializeAsZipEntry(ENTRY_NAME_STATS, connectionInformation.getStatistics(), zos);
+			if (connectionInformation.getStatistics() != null) {
+				serializeAsZipEntry(ENTRY_NAME_STATS, connectionInformation.getStatistics(), zos);
+			}
+
+			if (connectionInformation.getAnnotations() != null) {
+				serializeAsZipEntry(ENTRY_NAME_ANNOTATIONS, connectionInformation.getAnnotations(), zos);
+			}
+
+			writeAsZipEntriesWithMD5(Paths.get(DIRECTORY_NAME_LIB), connectionInformation.getLibraryFiles(), zos);
+			writeAsZipEntriesWithMD5(Paths.get(DIRECTORY_NAME_FILES), connectionInformation.getOtherFiles(), zos);
+			zos.finish();
 		}
-
-		if (connectionInformation.getAnnotations() != null) {
-			serializeAsZipEntry(ENTRY_NAME_ANNOTATIONS, connectionInformation.getAnnotations(), zos);
-		}
-
-		writeAsZipEntriesWithMD5(Paths.get(DIRECTORY_NAME_LIB), connectionInformation.getLibraryFiles(), zos);
-		writeAsZipEntriesWithMD5(Paths.get(DIRECTORY_NAME_FILES), connectionInformation.getOtherFiles(), zos);
-		zos.finish();
 	}
 
 	/**
-	 * Helper methods to create the serialized {@link ConnectionInformation}. Write an {@link Object} as JSON format to
+	 * Helper method to create the serialized {@link ConnectionInformation}. Write an {@link Object} as JSON format to
 	 * the {@link OutputStream}.
 	 *
-	 * @param out
-	 * 		{@link OutputStream} to write to
-	 * @param object
-	 * 		to be written
-	 * @throws IOException
-	 * 		if writing failed
+	 * @param out               {@link OutputStream} to write to
+	 * @param object            to be written
+	 * @param encryptionContext the encryption context that will be used to potentially encrypt values (see {@link
+	 *                          com.rapidminer.tools.encryption.EncryptionProvider})
+	 * @throws IOException if writing failed
+	 * @since 9.7
 	 */
-	public void writeJson(OutputStream out, Object object) throws IOException {
+	public void writeJson(OutputStream out, Object object, String encryptionContext) throws IOException {
 		if (out != null && object != null) {
-			objectWriter.writeValue(out, object);
+			try (ConnectionEncryptionContextSwapper swapper = ConnectionEncryptionContextSwapper.withEncryptionContext(encryptionContext, ENCRYPTION_CONTEXT_PROVIDER::get, ENCRYPTION_CONTEXT_PROVIDER::set)) {
+				objectWriter.writeValue(out, object);
+			}
+		}
+	}
+
+
+	/**
+	 * Helper method to create a JSON representation of the given input object related to connections.
+	 *
+	 * @param object            the input object that should be serialized to JSON, must not be {@code null}
+	 * @param encryptionContext the encryption context that will be used to potentially encrypt values (see {@link
+	 *                          com.rapidminer.tools.encryption.EncryptionProvider})
+	 * @return the json of the input object
+	 * @throws IOException if serialization fails
+	 * @since 9.7
+	 */
+	public String createJsonFromObject(Object object, String encryptionContext) throws IOException {
+		try (ConnectionEncryptionContextSwapper swapper = ConnectionEncryptionContextSwapper.withEncryptionContext(encryptionContext, ENCRYPTION_CONTEXT_PROVIDER::get, ENCRYPTION_CONTEXT_PROVIDER::set)) {
+			return objectWriter.writeValueAsString(object);
+		}
+	}
+
+	/**
+	 * Helper method to create a deserialized object related to connections from the given JSON string.
+	 *
+	 * @param json              the json string, must not be {@code null}
+	 * @param targetClass       the target class that the JSON should be deserialized to
+	 * @param collectionClass   optional. If the expected output is a collection of the targetClass, this needs to be
+	 *                          set to the collection type, e.g. {@code List.class}. If {@code null}, a single instance
+	 *                          of type targetClass is expected
+	 * @param encryptionContext the encryption context that will be used to potentially decrypt values (see {@link
+	 *                          com.rapidminer.tools.encryption.EncryptionProvider})
+	 * @return the deserialized object
+	 * @throws IOException if deserialization fails
+	 * @since 9.7
+	 */
+	@SuppressWarnings({"rawtypes"})
+	public <T> T createObjectFromJson(String json, Class<T> targetClass, Class<? extends Collection> collectionClass, String encryptionContext) throws IOException {
+		try (ConnectionEncryptionContextSwapper swapper = ConnectionEncryptionContextSwapper.withEncryptionContext(encryptionContext, ENCRYPTION_CONTEXT_PROVIDER::get, ENCRYPTION_CONTEXT_PROVIDER::set)) {
+			if (collectionClass != null) {
+				CollectionType collectionType = objectMapper.getTypeFactory().constructCollectionType(collectionClass, targetClass);
+				return objectMapper.readValue(json, collectionType);
+			} else {
+				return objectMapper.readValue(json, targetClass);
+			}
+		}
+	}
+
+	/**
+	 * Creates a deep copy of the given JSON Java object. Will also take care of cases where the given object is a
+	 * collection of objects. Note: Do not pass collections of collections, those will fail.
+	 *
+	 * @param jsonObject the input object that is serializable to JSON; will not be modified. If it contains encrypted
+	 *                   values, they will be passed as-is to the new copy
+	 * @return a object of the same type and with the same values, but technically is a completely separate object with
+	 * no references to the input object. Encrypted values will be the same as before
+	 * @throws IOException if something goes wrong during the copy or a non-JSON capable object has been provided
+	 */
+	@SuppressWarnings({"unchecked, rawtypes"})
+	public <T> T createDeepCopy(T jsonObject) throws IOException {
+		if (jsonObject == null) {
+			return null;
+		}
+
+		try {
+			return AccessController.doPrivileged((PrivilegedExceptionAction<T>) () -> {
+				ObjectMapper mapper = createObjectMapper();
+
+				// we need to check if its a regular simple POJO or if it is a collection of POJOs
+				Class<? extends Collection> collectionClass = Collection.class.isAssignableFrom(jsonObject.getClass()) ? (Class<? extends Collection>) jsonObject.getClass() : null;
+				if (collectionClass != null) {
+					Collection collection = (Collection) jsonObject;
+					if (collection.isEmpty()) {
+						return (T) mapper.readValue(mapper.writeValueAsString(jsonObject), jsonObject.getClass());
+					} else {
+						Object innerObject = collection.iterator().next();
+						CollectionType collectionType = mapper.getTypeFactory().constructCollectionType(collectionClass, innerObject.getClass());
+						return mapper.readValue(mapper.writeValueAsString(jsonObject), collectionType);
+					}
+				} else {
+					return (T) mapper.readValue(mapper.writeValueAsString(jsonObject), jsonObject.getClass());
+				}
+			});
+		} catch (PrivilegedActionException e) {
+			if (e.getException() instanceof IOException) {
+				throw (IOException) e.getException();
+			} else if (e.getException() instanceof RuntimeException) {
+				throw (RuntimeException) e.getException();
+			} else {
+				throw new IOException(e.getException());
+			}
 		}
 	}
 
@@ -334,6 +429,18 @@ public final class ConnectionInformationSerializer {
 			return null;
 		}
 		return new ConnectionInformationMetaData(connectionInformation.getConfiguration());
+	}
+
+	/**
+	 * <p>Internal API, do not use!</p>
+	 * The encryption context is set via {@link ThreadLocal} whenever {@link #writeJson(OutputStream, Object, String)},
+	 * {@link #serialize(ConnectionInformation, OutputStream, String)}, {@link #loadConfiguration(InputStream, String)},
+	 * or {@link #loadConnection(InputStream, RepositoryLocation, String)} are called.
+	 *
+	 * @return the encryption context for the current thread
+	 */
+	public String getEncryptionContextForCurrentThread() {
+		return ENCRYPTION_CONTEXT_PROVIDER.get();
 	}
 
 	/**
@@ -354,9 +461,9 @@ public final class ConnectionInformationSerializer {
 	 * Copies the given files to the specified {@code root/dirName} and creates {@code .md5} hash files for each.
 	 *
 	 * @param targetFolder the target folder
-	 * @param filesToCopy the files to write
-	 * @param zos the ZipOutputStream to write to
-	 * @throws IOException
+	 * @param filesToCopy  the files to write
+	 * @param zos          the ZipOutputStream to write to
+	 * @throws IOException if writing the zip entry goes wrong
 	 */
 	static void writeAsZipEntriesWithMD5(Path targetFolder, List<Path> filesToCopy, ZipOutputStream zos) throws IOException {
 		if (filesToCopy == null || filesToCopy.isEmpty()) {
@@ -403,9 +510,9 @@ public final class ConnectionInformationSerializer {
 	 * Writes a single zip entry
 	 *
 	 * @param filePath The file path
-	 * @param object The object to serialize
-	 * @param zos The zip outputStream
-	 * @throws IOException
+	 * @param object   The object to serialize
+	 * @param zos      The zip outputStream
+	 * @throws IOException if writing the zip entry goes wrong
 	 */
 	private void serializeAsZipEntry(String filePath, Object object, ZipOutputStream zos) throws IOException {
 		zos.putNextEntry(new ZipEntry(filePath));
@@ -417,17 +524,13 @@ public final class ConnectionInformationSerializer {
 	 * Handle finding a lib file's MD5 hash. See if the corresponding {@link File File's} ({@link InputStream}) was
 	 * found or add the MD5 to the list of MD5s.
 	 *
-	 * @param ci
-	 * 		{@link ConnectionInformation} to add the lib file to
-	 * @param md5hashForLibFile
-	 * 		map of known filenames and their MD5 hashes
-	 * @param libFileStreams
-	 * 		map of filenames to the {@link InputStream}
-	 * @param md5Hash
-	 * 		md5Hash to check, either the corresponding file was found before then it can be added, else we store the MD5
-	 * @param filename
-	 * 		for which the MD5 is
-	 * @throws IOException
+	 * @param ci                {@link ConnectionInformation} to add the lib file to
+	 * @param md5hashForLibFile map of known filenames and their MD5 hashes
+	 * @param libFileStreams    map of filenames to the {@link InputStream}
+	 * @param md5Hash           md5Hash to check, either the corresponding file was found before then it can be added,
+	 *                          else we store the MD5
+	 * @param filename          for which the MD5 is
+	 * @throws IOException if adding the lib md5 file goes wrong
 	 */
 	private static void handleLibMD5(ConnectionInformationImpl ci, Map<String, String> md5hashForLibFile, Map<String, InputStream> libFileStreams, String md5Hash, String filename) throws IOException {
 		if (libFileStreams.containsKey(filename)) {
@@ -442,17 +545,13 @@ public final class ConnectionInformationSerializer {
 	 * Handle 'other' file's MD5 hash. See if the corresponding {@link File File's} ({@link InputStream}) was found or
 	 * add the MD5 to the list of MD5s.
 	 *
-	 * @param ci
-	 * 		{@link ConnectionInformation} to add the lib file to
-	 * @param md5hashForOtherFile
-	 * 		map of known filenames and their MD5 hashes
-	 * @param otherFileStreams
-	 * 		map of filenames to the {@link InputStream}
-	 * @param md5Hash
-	 * 		md5Hash to check, either the corresponding file was found before then it can be added, else we store the MD5
-	 * @param filename
-	 * 		for which the MD5 is
-	 * @throws IOException
+	 * @param ci                  {@link ConnectionInformation} to add the lib file to
+	 * @param md5hashForOtherFile map of known filenames and their MD5 hashes
+	 * @param otherFileStreams    map of filenames to the {@link InputStream}
+	 * @param md5Hash             md5Hash to check, either the corresponding file was found before then it can be added,
+	 *                            else we store the MD5
+	 * @param filename            for which the MD5 is
+	 * @throws IOException if adding the other md5 file goes wrong
 	 */
 	private static void handleOtherMD5(ConnectionInformationImpl ci, Map<String, String> md5hashForOtherFile, Map<String, InputStream> otherFileStreams, String md5Hash, String filename) throws IOException {
 		if (otherFileStreams.containsKey(filename)) {
@@ -467,17 +566,12 @@ public final class ConnectionInformationSerializer {
 	 * Handle the lib file, add it to the {@link ConnectionInformation} if the MD5 was found or keep it to add when the
 	 * MD5 was found
 	 *
-	 * @param ci
-	 * 		{@link ConnectionInformation} to add the lib file to
-	 * @param md5hashForLibFile
-	 * 		map of known filenames and their MD5 hashes
-	 * @param libFileStreams
-	 * 		map of filenames to the {@link InputStream}
-	 * @param inputStream
-	 * 		the {@link InputStream} of he lib file
-	 * @param filename
-	 * 		for which the MD5 is
-	 * @throws IOException
+	 * @param ci                {@link ConnectionInformation} to add the lib file to
+	 * @param md5hashForLibFile map of known filenames and their MD5 hashes
+	 * @param libFileStreams    map of filenames to the {@link InputStream}
+	 * @param inputStream       the {@link InputStream} of he lib file
+	 * @param filename          for which the MD5 is
+	 * @throws IOException if adding the lib file goes wrong
 	 */
 	private static void handleLibFile(ConnectionInformationImpl ci, Map<String, String> md5hashForLibFile, Map<String, InputStream> libFileStreams, InputStream inputStream, String filename) throws IOException {
 		if (md5hashForLibFile.containsKey(filename)) {
@@ -492,17 +586,12 @@ public final class ConnectionInformationSerializer {
 	 * Handle the file, add it to the {@link ConnectionInformation} if the MD5 was found or keep it to add when the MD5
 	 * was found
 	 *
-	 * @param ci
-	 * 		{@link ConnectionInformation} to add the file to
-	 * @param md5hashForOtherFile
-	 * 		map of known filenames and their MD5 hashes
-	 * @param otherFileStreams
-	 * 		map of filenames to the {@link InputStream}
-	 * @param inputStream
-	 * 		the {@link InputStream} of he lib file
-	 * @param filename
-	 * 		for which the MD5 is
-	 * @throws IOException
+	 * @param ci                  {@link ConnectionInformation} to add the file to
+	 * @param md5hashForOtherFile map of known filenames and their MD5 hashes
+	 * @param otherFileStreams    map of filenames to the {@link InputStream}
+	 * @param inputStream         the {@link InputStream} of he lib file
+	 * @param filename            for which the MD5 is
+	 * @throws IOException if adding the other file goes wrong
 	 */
 	private static void handleOtherFile(ConnectionInformationImpl ci, Map<String, String> md5hashForOtherFile, Map<String, InputStream> otherFileStreams, InputStream inputStream, String filename) throws IOException {
 		if (md5hashForOtherFile.containsKey(filename)) {
@@ -514,26 +603,17 @@ public final class ConnectionInformationSerializer {
 	}
 
 	/**
-	 * Creates a Server Object Mapper
-	 *
-	 * @return an object mapper that does not encrypt values
-	 */
-	public static ObjectMapper getRemoteObjectMapper() {
-		ObjectMapper objectMapper = getObjectMapper();
-		objectMapper.addMixIn(ValueProviderParameterImpl.class, ValueProviderParameterImpl.UnencryptedValueMixIn.class);
-		return objectMapper;
-	}
-
-	/**
 	 * Creates an ObjectMapper that doesn't close output streams
 	 *
 	 * @return a preconfigured ObjectMapper
 	 */
-	private static ObjectMapper getObjectMapper(){
+	private static ObjectMapper createObjectMapper() {
 		JsonFactory jsonFactory = new JsonFactory();
 		// Don't close underlying streams
 		jsonFactory.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
-		return new ObjectMapper(jsonFactory);
+		ObjectMapper mapper = new ObjectMapper(jsonFactory);
+		mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+		return mapper;
 	}
 
 	/**

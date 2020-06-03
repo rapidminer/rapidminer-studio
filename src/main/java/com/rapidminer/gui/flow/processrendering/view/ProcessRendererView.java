@@ -124,7 +124,9 @@ import com.rapidminer.operator.ports.Port;
 import com.rapidminer.operator.ports.Ports;
 import com.rapidminer.operator.ports.quickfix.QuickFix;
 import com.rapidminer.parameter.ParameterType;
+import com.rapidminer.repository.IOObjectEntry;
 import com.rapidminer.repository.RepositoryLocation;
+import com.rapidminer.repository.RepositoryLocationBuilder;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.ParameterService;
@@ -1112,7 +1114,7 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 	 */
 	public void processUpdated() {
 		Operator hoveredOp = model.getHoveringOperator();
-		boolean hoveredOperatorFound = hoveredOp == null ? true : false;
+		boolean hoveredOperatorFound = hoveredOp == null;
 		List<Operator> movedOperators = new LinkedList<>();
 		List<Operator> portChangedOperators = new LinkedList<>();
 
@@ -1534,7 +1536,7 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 				menu.add(showResult);
 				try {
 					String locationString = mainFrame.getProcess().getRepositoryLocation().getAbsoluteLocation();
-					menu.add(new StoreInRepositoryAction(data, new RepositoryLocation(
+					menu.add(new StoreInRepositoryAction(data, new RepositoryLocationBuilder().withExpectedDataEntryType(IOObjectEntry.class).buildFromAbsoluteLocation(
 							locationString.substring(0, locationString.lastIndexOf(RepositoryLocation.SEPARATOR)))));
 				} catch (Exception e1) {
 					menu.add(new StoreInRepositoryAction(data));
@@ -1566,17 +1568,13 @@ public class ProcessRendererView extends JPanel implements PrintableComponent {
 					@Override
 					public void loggedActionPerformed(final ActionEvent e) {
 						if (hoveringPort.isConnected()) {
-							if (hoveringPort instanceof OutputPort) {
-								((OutputPort) hoveringPort).disconnect();
-							} else {
-								((InputPort) hoveringPort).getSource().disconnect();
-							}
+							hoveringPort.disconnect();
 						}
 					}
 				});
 			}
 
-			Ports<? extends Port> ports = hoveringPort.getPorts();
+			Ports<?> ports = hoveringPort.getPorts();
 			ExecutionUnit subprocess = displayedChain.getSubprocess(0);
 			if (displayedChain instanceof ProcessRootOperator &&
 					(ports == subprocess.getInnerSources() || ports == subprocess.getInnerSinks())) {

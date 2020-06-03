@@ -58,7 +58,12 @@ public class RepositoryLocationValueCellEditor extends AbstractCellEditor implem
 
 	private final JButton button;
 
+	protected final Predicate<Entry> repositoryFilterDefinedInParameterType;
+
+
 	public RepositoryLocationValueCellEditor(final ParameterTypeRepositoryLocation type) {
+		repositoryFilterDefinedInParameterType = type.getRepositoryFilter();
+
 		GridBagLayout gridBagLayout = new GridBagLayout();
 		panel.setLayout(gridBagLayout);
 		panel.setToolTipText(type.getDescription());
@@ -149,14 +154,16 @@ public class RepositoryLocationValueCellEditor extends AbstractCellEditor implem
 
 	/**
 	 * If the items in a RepositoryLocationChooserDialog, containing a {@link com.rapidminer.repository.gui.RepositoryTree},
-	 * should show only a subset of the whole tree, provide a {@link Predicate<Entry>} to accept those. Defaults to null,
-	 * meaning everything is visible.
+	 * should show only a subset of the whole tree, provide a {@link Predicate<Entry>} to accept those. Defaults to the
+	 * filter defined in the {@link ParameterTypeRepositoryLocation#getRepositoryFilter()}, which itself defaults to
+	 * {@code null}, meaning everything is visible.
 	 *
-	 * @return the {@link Predicate<Entry>} that accepts {@link Entry Entries} that should be visualized in the {@link com.rapidminer.repository.gui.RepositoryTree}
+	 * @return the {@link Predicate<Entry>} that accepts {@link Entry Entries} that should be visualized in the {@link
+	 * com.rapidminer.repository.gui.RepositoryTree}
 	 * @since 9.4
 	 */
 	protected Predicate<Entry> getRepositoryFilter() {
-		return null;
+		return repositoryFilterDefinedInParameterType;
 	}
 
 	@Override

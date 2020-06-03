@@ -53,7 +53,6 @@ public final class ExampleSets {
 	/** Set of primitive attribute types that are known to be thread safe for read accesses. */
 	private static final Set<Class<? extends Attribute>> SAFE_ATTRIBUTES = new HashSet<>(5);
 	static {
-		SAFE_ATTRIBUTES.add(DateAttribute.class);
 		SAFE_ATTRIBUTES.add(BinominalAttribute.class);
 		SAFE_ATTRIBUTES.add(PolynominalAttribute.class);
 		SAFE_ATTRIBUTES.add(DateAttribute.class);

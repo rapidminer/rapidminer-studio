@@ -53,8 +53,8 @@ public class IOObjectSerializer {
 		try {
 			object = TableViewingTools.replaceTableObject(object);
 		} catch (BeltConverter.ConversionException e) {
-			throw new InvalidObjectException("Custom column " + e.getColumnName()
-					+ " of type " + e.getType().customTypeID() + " not serializable");
+			throw new InvalidObjectException("Advanced column " + e.getColumnName()
+					+ " of type " + e.getType() + " not serializable");
 		}
 		SerializationType type;
 		if (object instanceof ExampleSet) {

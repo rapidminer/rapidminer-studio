@@ -218,8 +218,7 @@ public class OperatorInfoScreen extends ButtonDialog {
 		return super.getTitle();
 	}
 
-	public static JPanel createPortsDescriptionPanel(String inKey, String outKey, Ports<? extends Port> inputPorts,
-			Ports<? extends Port> outputPorts) {
+	public static JPanel createPortsDescriptionPanel(String inKey, String outKey, Ports<?> inputPorts, Ports<?> outputPorts) {
 		int numberOfInputPorts = inputPorts.getNumberOfPorts();
 		int numberOfOutputPorts = outputPorts.getNumberOfPorts();
 		GridBagLayout layout = new GridBagLayout();

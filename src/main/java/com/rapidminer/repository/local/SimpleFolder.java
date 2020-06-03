@@ -18,6 +18,12 @@
  */
 package com.rapidminer.repository.local;
 
+import static com.rapidminer.repository.RepositoryTools.NAME_FILTER;
+import static com.rapidminer.repository.RepositoryTools.ONLY_BLOB_ENTRIES;
+import static com.rapidminer.repository.RepositoryTools.ONLY_CONNECTION_ENTRIES;
+import static com.rapidminer.repository.RepositoryTools.ONLY_IOOBJECT_ENTRIES;
+import static com.rapidminer.repository.RepositoryTools.ONLY_PROCESS_ENTRIES;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -28,6 +34,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Predicate;
 
 import com.rapidminer.connection.ConnectionInformation;
 import com.rapidminer.connection.ConnectionInformationContainerIOObject;
@@ -40,11 +47,14 @@ import com.rapidminer.repository.DateEntry;
 import com.rapidminer.repository.EntryCreator;
 import com.rapidminer.repository.Folder;
 import com.rapidminer.repository.IOObjectEntry;
+import com.rapidminer.repository.MalformedRepositoryLocationException;
 import com.rapidminer.repository.ProcessEntry;
 import com.rapidminer.repository.Repository;
 import com.rapidminer.repository.RepositoryConnectionsFolderImmutableException;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryLocation;
+import com.rapidminer.repository.RepositoryLocationBuilder;
+import com.rapidminer.repository.RepositoryLocationType;
 import com.rapidminer.repository.RepositoryNotConnectionsFolderException;
 import com.rapidminer.repository.RepositoryStoreOtherInConnectionsFolderException;
 import com.rapidminer.repository.RepositoryTools;
@@ -110,7 +120,7 @@ public class SimpleFolder extends SimpleEntry implements Folder, DateEntry {
 		moveFile(getFile(), ((SimpleFolder) newParent).getFile(), newName, "");
 	}
 
-	protected File getFile() {
+	public File getFile() {
 		return getFile("");
 	}
 
@@ -149,6 +159,19 @@ public class SimpleFolder extends SimpleEntry implements Folder, DateEntry {
 			return Collections.unmodifiableList(new ArrayList<>(folders));
 		} finally {
 			releaseWriteLock();
+		}
+	}
+
+	@Override
+	public RepositoryLocation getLocation() {
+		try {
+			if (getContainingFolder() != null) {
+				return new RepositoryLocationBuilder().withLocationType(RepositoryLocationType.FOLDER).buildFromParentLocation(getContainingFolder().getLocation(), getName());
+			} else {
+				return new RepositoryLocationBuilder().withLocationType(RepositoryLocationType.FOLDER).buildFromPathComponents(getRepository().getName(), new String[] { getName() });
+			}
+		} catch (MalformedRepositoryLocationException e) {
+			throw new RuntimeException(e);
 		}
 	}
 
@@ -244,12 +267,6 @@ public class SimpleFolder extends SimpleEntry implements Folder, DateEntry {
 							I18N.getMessage(I18N.getErrorBundle(), "repository.repository_folder_already_exists", name));
 				}
 			}
-			for (DataEntry entry : data) {
-				if (entry.getName().equals(name)) {
-					throw new RepositoryException(I18N.getMessage(I18N.getErrorBundle(),
-							"repository.repository_entry_with_same_name_already_exists", name));
-				}
-			}
 			newFolder.mkdir();
 			folders.add(newFolder);
 		} finally {
@@ -282,11 +299,11 @@ public class SimpleFolder extends SimpleEntry implements Folder, DateEntry {
 	}
 
 	@Override
-	public boolean containsEntry(String name) throws RepositoryException {
+	public boolean containsFolder(String folderName) throws RepositoryException {
 		acquireReadLock();
 		try {
 			if (isLoaded()) {
-				return containsEntryNotThreadSafe(name);
+				return containsFolderNotThreadSafe(folderName);
 			}
 		} finally {
 			releaseReadLock();
@@ -294,24 +311,35 @@ public class SimpleFolder extends SimpleEntry implements Folder, DateEntry {
 		acquireWriteLock();
 		try {
 			ensureLoaded();
-			return containsEntryNotThreadSafe(name);
+			return containsFolderNotThreadSafe(folderName);
 		} finally {
 			releaseWriteLock();
 		}
 	}
 
-	private boolean containsEntryNotThreadSafe(String name) {
-		for (Folder folder : folders) {
-			if (folder.getName().equals(name)) {
-				return true;
+	@Override
+	public boolean containsData(String dataName, Class<? extends DataEntry> expectedDataType) throws RepositoryException {
+		acquireReadLock();
+		try {
+			if (isLoaded()) {
+				return containsDataNotThreadSafe(dataName, expectedDataType);
 			}
+		} finally {
+			releaseReadLock();
 		}
-		for (DataEntry entry : data) {
-			if (entry.getName().equals(name)) {
-				return true;
-			}
+		acquireWriteLock();
+		try {
+			ensureLoaded();
+			return containsDataNotThreadSafe(dataName, expectedDataType);
+		} finally {
+			releaseWriteLock();
 		}
-		return false;
+	}
+
+	@Override
+	@Deprecated
+	public boolean containsEntry(String name) throws RepositoryException {
+		return containsData(name, DataEntry.class) || containsFolder(name);
 	}
 
 	@Override
@@ -416,11 +444,21 @@ public class SimpleFolder extends SimpleEntry implements Folder, DateEntry {
 	}
 
 	@Override
-	public boolean canRefreshChild(String childName) throws RepositoryException {
+	public boolean canRefreshChildFolder(String folderName) throws RepositoryException {
+		File folder = new File(getFile(), folderName);
+		return folder.exists() && folder.isDirectory();
+	}
+
+	@Override
+	public boolean canRefreshChildData(String dataName) throws RepositoryException {
 		// check existence of properties file
-		childName += PROPERTIES_SUFFIX;
-		File propFile = new File(getFile(), childName);
+		dataName += PROPERTIES_SUFFIX;
+		File propFile = new File(getFile(), dataName);
 		if (!propFile.exists()) {
+			return false;
+		}
+		File folder = new File(getFile(), dataName);
+		if (folder.exists() && folder.isDirectory()) {
 			return false;
 		}
 		try {
@@ -428,13 +466,19 @@ public class SimpleFolder extends SimpleEntry implements Folder, DateEntry {
 			// that the referenced path is correct in regards to cases; the canonical path on Windows
 			// will return the proper cased path (if it exists)
 			// see https://stackoverflow.com/a/7896461, especially second comment
-			if (!propFile.getCanonicalPath().endsWith(childName)) {
+			if (!propFile.getCanonicalPath().endsWith(dataName)) {
 				return false;
 			}
 		} catch (IOException e) {
 			return false;
 		}
 		return true;
+	}
+
+	@Override
+	@Deprecated
+	public boolean canRefreshChild(String childName) throws RepositoryException {
+		return canRefreshChildData(childName) || canRefreshChildFolder(childName);
 	}
 
 	/**
@@ -453,6 +497,32 @@ public class SimpleFolder extends SimpleEntry implements Folder, DateEntry {
 		return containingFolder instanceof Repository
 				// and has the special name (case-insensitive)
 				&& Folder.isConnectionsFolderName(getName(), false);
+	}
+
+	private boolean containsFolderNotThreadSafe(String name) {
+		return folders.stream().anyMatch(f -> NAME_FILTER.test(f, name));
+	}
+
+	/**
+	 * Totally ignores expectedDataType because it can only contain a single data entry with the same name (due to the prefix.md and prefix.properties) structure.
+	 */
+	private boolean containsDataNotThreadSafe(String name, Class<? extends DataEntry> expectedDataType) {
+		if (ProcessEntry.class.isAssignableFrom(expectedDataType)) {
+			return containsData(name, ONLY_PROCESS_ENTRIES);
+		} else if (ConnectionEntry.class.isAssignableFrom(expectedDataType)) {
+			return containsData(name, ONLY_CONNECTION_ENTRIES);
+		} else if (BlobEntry.class.isAssignableFrom(expectedDataType)) {
+			return containsData(name, ONLY_BLOB_ENTRIES);
+		} else if (IOObjectEntry.class.isAssignableFrom(expectedDataType)) {
+			return containsData(name, ONLY_IOOBJECT_ENTRIES);
+		} else {
+			// either unknown or super type, prevent if anything is named like it to be sure
+			return containsData(name, e -> true);
+		}
+	}
+
+	private boolean containsData(String name, Predicate<DataEntry> instanceCheck) {
+		return data.stream().filter(instanceCheck).anyMatch(d -> NAME_FILTER.test(d, name));
 	}
 
 	private void acquireReadLock() throws RepositoryException {

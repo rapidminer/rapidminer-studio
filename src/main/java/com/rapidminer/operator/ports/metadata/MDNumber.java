@@ -18,9 +18,10 @@
 */
 package com.rapidminer.operator.ports.metadata;
 
-import com.rapidminer.tools.Tools;
-
 import java.io.Serializable;
+import java.util.Arrays;
+
+import com.rapidminer.tools.Tools;
 
 
 /**
@@ -36,7 +37,32 @@ public abstract class MDNumber<T extends Number> implements Serializable, Compar
 	private static final long serialVersionUID = 1L;
 
 	public enum Relation {
-		AT_LEAST, EQUAL, AT_MOST, UNKNOWN
+		AT_LEAST("\u2265"), EQUAL("="), AT_MOST("\u2264"), UNKNOWN("unknown");
+
+		private String representation;
+
+		Relation(String representation) {
+			this.representation = representation;
+		}
+
+		/**
+		 * Returns the String representation of this {@link Relation}.
+		 *
+		 * @since 9.7.0
+		 */
+		public String getRepresentation() {
+			return representation;
+		}
+
+		/**
+		 * Returns the {@link Relation} with the given description, or {@link Relation#UNKNOWN} if the description
+		 * does not match any value.
+		 *
+		 * @since 9.7.0
+		 */
+		public static Relation fromDescription(String description) {
+			return Arrays.stream(Relation.values()).filter(r -> r.getRepresentation().equals(description)).findFirst().orElse(UNKNOWN);
+		}
 	}
 
 	private Relation relation = Relation.UNKNOWN;

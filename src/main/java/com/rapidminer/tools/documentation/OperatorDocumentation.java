@@ -178,7 +178,7 @@ public class OperatorDocumentation {
 	public void addExample(Process process, String comment) {
 		Element exampleElement = element != null ? element.getOwnerDocument().createElement("example") : null;
 		ExampleProcess exampleProcess = new ExampleProcess(exampleElement);
-		exampleProcess.setProcessXML(process.getRootOperator().getXML(true));
+		exampleProcess.setProcessXML(process.getRootOperator().getXML(true, null));
 		if (comment != null) {
 			exampleProcess.setComment(comment);
 		}

@@ -34,7 +34,6 @@ import com.rapidminer.operator.ports.metadata.CollectionPrecondition;
 import com.rapidminer.operator.ports.metadata.MDTransformationRule;
 import com.rapidminer.operator.ports.metadata.MetaData;
 import com.rapidminer.operator.ports.metadata.SimplePrecondition;
-import com.rapidminer.tools.Observable;
 import com.rapidminer.tools.Observer;
 
 
@@ -83,13 +82,7 @@ public class PortPairExtender implements PortExtender {
 
 	private int runningId = 0;
 
-	private final Observer<Port> observer = new Observer<Port>() {
-
-		@Override
-		public void update(Observable<Port> observable, Port arg) {
-			updatePorts();
-		}
-	};
+	private final Observer<Port> observer = (observable, arg) -> updatePorts();
 
 	private int minNumber = 0;
 
@@ -185,42 +178,43 @@ public class PortPairExtender implements PortExtender {
 	}
 
 	private void updatePorts() {
-		if (!isChanging) {
-			isChanging = true;
-			boolean first = true;
-			PortPair foundDisconnected = null;
-			Iterator<PortPair> i = managedPairs.iterator();
-			while (i.hasNext()) {
-				PortPair pair = i.next();
-				if (!pair.inputPort.isConnected() && !pair.inputPort.isLocked() && !pair.outputPort.isConnected()
-						&& !pair.outputPort.isLocked()) {
-					// we don't remove the first disconnected port.
-					if (first) {
-						first = false;
-						foundDisconnected = pair;
-					} else {
-						if (minNumber == 0) {
-							deletePorts(pair);
-							i.remove();
-						}
+		if (isChanging) {
+			return;
+		}
+		isChanging = true;
+		boolean first = true;
+		PortPair foundDisconnected = null;
+		Iterator<PortPair> i = managedPairs.iterator();
+		while (i.hasNext()) {
+			PortPair pair = i.next();
+			if (!pair.inputPort.isConnected() && !pair.inputPort.isLocked() && !pair.outputPort.isConnected()
+					&& !pair.outputPort.isLocked()) {
+				// we don't remove the first disconnected port.
+				if (first) {
+					first = false;
+					foundDisconnected = pair;
+				} else {
+					if (minNumber == 0) {
+						deletePorts(pair);
+						i.remove();
 					}
 				}
 			}
-			if (foundDisconnected == null || managedPairs.size() < minNumber) {
-				do {
-					managedPairs.add(createPort());
-				} while (managedPairs.size() < minNumber);
-			} else {
-				if (minNumber == 0) {
-					managedPairs.remove(foundDisconnected);
-					managedPairs.add(foundDisconnected);
-					inPorts.pushDown(foundDisconnected.getInputPort());
-					outPorts.pushDown(foundDisconnected.getOutputPort());
-				}
-			}
-			fixNames();
-			isChanging = false;
 		}
+		if (foundDisconnected == null || managedPairs.size() < minNumber) {
+			do {
+				managedPairs.add(createPort());
+			} while (managedPairs.size() < minNumber);
+		} else {
+			if (minNumber == 0) {
+				managedPairs.remove(foundDisconnected);
+				managedPairs.add(foundDisconnected);
+				inPorts.pushDown(foundDisconnected.getInputPort());
+				outPorts.pushDown(foundDisconnected.getOutputPort());
+			}
+		}
+		fixNames();
+		isChanging = false;
 	}
 
 	/** Creates an initial port and starts to listen. */
@@ -274,19 +268,15 @@ public class PortPairExtender implements PortExtender {
 	 * output ports.
 	 */
 	public MDTransformationRule makePassThroughRule() {
-		return new MDTransformationRule() {
-
-			@Override
-			public void transformMD() {
-				for (PortPair pair : managedPairs) {
-					MetaData inData = pair.inputPort.getMetaData();
-					if (inData != null) {
-						inData = transformMetaData(inData.clone());
-						inData.addToHistory(pair.getOutputPort());
-						pair.outputPort.deliverMD(inData);
-					} else {
-						pair.outputPort.deliverMD(null);
-					}
+		return () -> {
+			for (PortPair pair : managedPairs) {
+				MetaData inData = pair.inputPort.getMetaData();
+				if (inData != null) {
+					inData = transformMetaData(inData.clone());
+					inData.addToHistory(pair.getOutputPort());
+					pair.outputPort.deliverMD(inData);
+				} else {
+					pair.outputPort.deliverMD(null);
 				}
 			}
 		};
@@ -449,7 +439,6 @@ public class PortPairExtender implements PortExtender {
 	 *            The unfolding is done recursively.
 	 * @throws UserError
 	 */
-	@SuppressWarnings("unchecked")
 	public <T extends IOObject> List<T> getData(Class<T> desiredClass, boolean unfold) throws UserError {
 		List<T> results = new ArrayList<>();
 		for (PortPair port : managedPairs) {
@@ -473,7 +462,6 @@ public class PortPairExtender implements PortExtender {
 	 * @param port
 	 * 		Used for error message only
 	 */
-	@SuppressWarnings("unchecked")
 	private <T extends IOObject> void unfold(IOObjectCollection<?> collection, List<T> results, Class<T> desiredClass,
 											 PortPair port) throws UserError {
 		for (IOObject obj : collection.getObjects()) {
@@ -498,7 +486,7 @@ public class PortPairExtender implements PortExtender {
 				results.add(desiredClass.cast(AtPortConverter.convert(data, port.getInputPort())));
 			} catch (BeltConverter.ConversionException e) {
 				throw new UserError(inPorts.getOwner().getOperator(), "table_not_convertible.custom_column",
-						e.getColumnName(), e.getType().customTypeID());
+						e.getColumnName(), e.getType());
 			}
 		} else {
 			throw new UserError(inPorts.getOwner().getOperator(), 156,

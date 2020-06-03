@@ -40,6 +40,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.stream.Stream;
 import javax.swing.JScrollPane;
@@ -52,7 +53,6 @@ import com.mxgraph.model.mxGraphModel;
 import com.mxgraph.util.mxRectangle;
 import com.mxgraph.view.mxGraph;
 import com.rapidminer.gui.RapidMinerGUI;
-import com.rapidminer.gui.dnd.RepositoryLocationList;
 import com.rapidminer.gui.dnd.TransferableOperator;
 import com.rapidminer.gui.flow.processrendering.annotations.model.WorkflowAnnotation;
 import com.rapidminer.gui.flow.processrendering.annotations.model.WorkflowAnnotations;
@@ -71,9 +71,9 @@ import com.rapidminer.operator.ports.PortOwner;
 import com.rapidminer.operator.ports.Ports;
 import com.rapidminer.operator.ports.metadata.CompatibilityLevel;
 import com.rapidminer.operator.ports.metadata.MetaData;
-import com.rapidminer.repository.Folder;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryLocation;
+import com.rapidminer.repository.RepositoryLocationType;
 import com.rapidminer.tools.I18N;
 
 
@@ -472,9 +472,7 @@ public class ProcessRendererController {
 		if (t.isDataFlavorSupported(TransferableOperator.LOCAL_TRANSFERRED_REPOSITORY_LOCATION_LIST_FLAVOR)) {
 			try {
 				Object transferData = t.getTransferData(TransferableOperator.LOCAL_TRANSFERRED_REPOSITORY_LOCATION_LIST_FLAVOR);
-				if (transferData instanceof RepositoryLocationList) {
-					repositoryLocations = ((RepositoryLocationList) transferData).getAll().stream();
-				} else if (transferData instanceof RepositoryLocation[]) {
+				if (transferData instanceof RepositoryLocation[]) {
 					repositoryLocations = Arrays.stream((RepositoryLocation[]) transferData);
 				}
 			} catch (UnsupportedFlavorException | IOException ignored) {
@@ -489,33 +487,37 @@ public class ProcessRendererController {
 			}
 		}
 		// if not representing any repo locations or at least one none-folder present, return true
-		return repositoryLocations == null || !repositoryLocations.map(l -> {
+		return repositoryLocations == null || repositoryLocations.map(l -> {
 			try {
-				return l.locateEntry();
+				return l.getLocationType() != RepositoryLocationType.DATA_ENTRY ? l.locateFolder() : null;
 			} catch (RepositoryException e) {
 				return null;
 			}
-		}).allMatch(e -> e instanceof Folder);
+		}).noneMatch(Objects::nonNull);
 	}
 
 	/**
-	 * Connects the operators specified by the output and input port and enables them.
+	 * Connects the operators specified by the two ports (if they can be connected) and enables them.
 	 *
-	 * @param out
-	 * 		the output port
-	 * @param in
-	 * 		the input port
+	 * @param from
+	 * 		the port to connect from
+	 * @param to
+	 * 		the port to connect to
 	 */
-	void connect(final OutputPort out, final InputPort in) {
-		Operator inOp = in.getPorts().getOwner().getOperator();
+	@SuppressWarnings("unchecked")
+	void connect(final Port from, final Port to) {
+		if (!from.canConnectTo(to)) {
+			return;
+		}
+		Operator inOp = to.getPorts().getOwner().getOperator();
 		if (!inOp.isEnabled()) {
 			inOp.setEnabled(true);
 		}
-		Operator outOp = out.getPorts().getOwner().getOperator();
+		Operator outOp = from.getPorts().getOwner().getOperator();
 		if (!outOp.isEnabled()) {
 			outOp.setEnabled(true);
 		}
-		out.connectTo(in);
+		from.connectTo(to);
 	}
 
 	/**
@@ -619,7 +621,7 @@ public class ProcessRendererController {
 	 * @return {@code true} if a port of the given list lies under the coordinates; {@code false}
 	 * otherwise
 	 */
-	boolean checkPortUnder(final Ports<? extends Port> ports, final int x, final int y) {
+	boolean checkPortUnder(final Ports<?> ports, final int x, final int y) {
 		for (Port port : ports.getAllPorts()) {
 			Point2D location = ProcessDrawUtils.createPortLocation(port, model);
 			if (location == null) {
@@ -642,19 +644,16 @@ public class ProcessRendererController {
 					} else {
 						PortOwner connectingOwner = connectingPort.getPorts().getOwner();
 						// different type of ports, aka input/output or output/input
-						if (connectingPort instanceof InputPort && hoveringPort instanceof OutputPort ||
-								connectingPort instanceof OutputPort && hoveringPort instanceof InputPort) {
+						if (connectingPort.canConnectTo(hoveringPort)) {
 							// only if ports are in the same subprocess, and either we connect (sub)process input and output ports or ports of different operators
-							if ((connectingOwner.getOperator() != hoveringOwner.getOperator() || model.getDisplayedChain() == connectingOwner.getOperator())
-									&& connectingOwner.getConnectionContext() == hoveringOwner.getConnectionContext()) {
-								showStatus(I18N.getGUILabel("processRenderer.operator.port.hover_connect"));
-							} else if (hoveringOwner.getOperator() == connectingOwner.getOperator() &&
-									model.getDisplayedChain() != connectingOwner.getOperator()) {
+							boolean sameOpButNotDisplayedChain = hoveringOwner.getOperator() == connectingOwner.getOperator() && model.getDisplayedChain() != connectingOwner.getOperator();
+							if (sameOpButNotDisplayedChain) {
 								// if input/output ports of same operator should be connected which is NOT currently displayed chain
 								showStatus(I18N.getGUILabel("processRenderer.operator.port.hover_switch_source"));
+							} else if (connectingOwner.getConnectionContext() == hoveringOwner.getConnectionContext()) {
+								showStatus(I18N.getGUILabel("processRenderer.operator.port.hover_connect"));
 							}
-						} else if (connectingPort != hoveringPort && (connectingPort instanceof InputPort && hoveringPort instanceof InputPort ||
-								connectingPort instanceof OutputPort && hoveringPort instanceof OutputPort)) {
+						} else if (connectingPort != hoveringPort) {
 							// if port is different but both are either input/output, display "switch source of connection"
 							showStatus(I18N.getGUILabel("processRenderer.operator.port.hover_switch_source"));
 						}
@@ -876,7 +875,7 @@ public class ProcessRendererController {
 	 */
 	double shiftPortSpacing(final Port port, final double delta) {
 		// remember old spacing
-		final Ports<? extends Port> ports = port.getPorts();
+		final Ports<?> ports = port.getPorts();
 		final int myIndex = ports.getAllPorts().indexOf(port);
 		final Double old = (double) model.getPortSpacing(port);
 

@@ -52,11 +52,13 @@ import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.parameter.conditions.AboveOperatorVersionCondition;
 import com.rapidminer.parameter.conditions.EqualTypeCondition;
 import com.rapidminer.parameter.conditions.NonEqualTypeCondition;
+import com.rapidminer.repository.BinaryEntry;
 import com.rapidminer.repository.BlobEntry;
-import com.rapidminer.repository.Entry;
+import com.rapidminer.repository.DataEntry;
 import com.rapidminer.repository.IOObjectEntry;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryLocation;
+import com.rapidminer.repository.RepositoryLocationType;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.ListenerTools;
 import com.rapidminer.tools.LogService;
@@ -153,20 +155,20 @@ public final class ProcessRootOperator extends OperatorChain implements Connecti
 							OutputPort port = getSubprocess(0).getInnerSources().getPortByIndex(i);
 							RepositoryLocation loc;
 							try {
-								loc = getProcess().resolveRepositoryLocation(location);
+								loc = getProcess().resolveRepositoryLocation(location, RepositoryLocationType.DATA_ENTRY);
 							} catch (Exception e1) {
 								addError(new SimpleProcessSetupError(Severity.WARNING, getPortOwner(),
 										"repository_access_error", location, e1.toString()));
 								return;
 							}
 							try {
-								Entry entry = loc.locateEntry();
+								DataEntry entry = loc.locateData();
 								if (entry == null) {
 									addError(new SimpleProcessSetupError(Severity.WARNING, getPortOwner(),
 											"repository_location_does_not_exist", location));
 								} else if (entry instanceof IOObjectEntry) {
 									port.deliverMD(((IOObjectEntry) entry).retrieveMetaData());
-								} else if (entry instanceof BlobEntry) {
+								} else if (entry instanceof BinaryEntry || entry instanceof BlobEntry) {
 									port.deliverMD(new MetaData(FileObject.class));
 								} else {
 									addError(new SimpleProcessSetupError(Severity.WARNING, getPortOwner(),

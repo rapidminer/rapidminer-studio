@@ -36,6 +36,7 @@ import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeFile;
 import com.rapidminer.parameter.PortProvider;
 import com.rapidminer.parameter.conditions.PortConnectedCondition;
+import com.rapidminer.tools.TempFileTools;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.WebServiceTools;
 
@@ -97,8 +98,7 @@ public class FileInputPortHandler {
 					return cachedFile;
 				} else {
 					try {
-						cachedFile = File.createTempFile("rm_file_", ".dump");
-						cachedFile.deleteOnExit();
+						cachedFile = TempFileTools.createTempFile("rm_file_", ".dump").toFile();
 						try (InputStream urlStream = WebServiceTools.openStreamFromURL(url);
 								FileOutputStream fos = new FileOutputStream(cachedFile)) {
 							Tools.copyStreamSynchronously(urlStream, fos, true);

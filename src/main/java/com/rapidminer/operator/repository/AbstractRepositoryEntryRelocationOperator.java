@@ -18,24 +18,31 @@
 */
 package com.rapidminer.operator.repository;
 
+import java.util.List;
+
 import com.rapidminer.operator.OperatorDescription;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.parameter.ParameterType;
 import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeRepositoryLocation;
+import com.rapidminer.repository.DataEntry;
 import com.rapidminer.repository.Entry;
 import com.rapidminer.repository.Folder;
 import com.rapidminer.repository.MalformedRepositoryLocationException;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryLocation;
-
-import java.util.List;
+import com.rapidminer.repository.RepositoryLocationBuilder;
+import com.rapidminer.repository.RepositoryLocationType;
 
 
 /**
+ * <p>
+ * Since version 9.7: To cover situations where both a folder and a file exist with the same name, they will prefer the
+ * file. They will only work on folder level if no file with that name exists.
+ * </p>
+ *
  * @author Nils Woehler
- * 
  */
 public class AbstractRepositoryEntryRelocationOperator extends AbstractRepositoryManagerOperator {
 
@@ -46,6 +53,7 @@ public class AbstractRepositoryEntryRelocationOperator extends AbstractRepositor
 	private String destinationName;
 	private boolean overwrite;
 	private RepositoryLocation sourceRepoLoc;
+	protected boolean sourceIsData;
 
 	public AbstractRepositoryEntryRelocationOperator(OperatorDescription description) {
 		super(description);
@@ -65,48 +73,60 @@ public class AbstractRepositoryEntryRelocationOperator extends AbstractRepositor
 
 	@Override
 	public void doWork() throws OperatorException {
-
 		super.doWork();
 
-		sourceRepoLoc = getParameterAsRepositoryLocation(SOURCE);
-		RepositoryLocation destRepoLoc = getParameterAsRepositoryLocation(DESTINATION);
+		sourceRepoLoc = getParameterAsRepositoryLocationData(SOURCE, DataEntry.class);
+		// could also be a folder, so change location type to UNKNOWN
+		sourceRepoLoc.setLocationType(RepositoryLocationType.UNKNOWN);
+
+		RepositoryLocation destRepoLoc = getParameterAsRepositoryLocationData(DESTINATION, DataEntry.class);
+		// could also be a folder, so change location type to UNKNOWN
+		destRepoLoc.setLocationType(RepositoryLocationType.UNKNOWN);
 		overwrite = getParameterAsBoolean(OVERWRITE);
 
 		checkIfSourceEntryExists();
+		destinationName = destRepoLoc.getName();
 
-		// fetch destination entry
-		Entry destEntry;
+		// fetch destination data entry
 		try {
-			destEntry = destRepoLoc.locateEntry();
+			// we need to match the source
+			if (sourceIsData) {
+				DataEntry destEntry = destRepoLoc.locateData();
+				if (destEntry == null) {
+					// if destination does not exists..
+					destinationDataIsNull(destRepoLoc);
+				} else {
+					// if destination data already exists..
+					destinationDataAlreadyExists(destRepoLoc, destEntry);
+				}
+			} else {
+				Folder destFolder = destRepoLoc.locateFolder();
+				if (destFolder == null) {
+					// if destination does not exists..
+					destinationFolderIsNull(destRepoLoc);
+				} else {
+					// if destination folder already exists..
+					destinationFolderAlreadyExists(destRepoLoc, destFolder);
+				}
+			}
 		} catch (RepositoryException e1) {
 			throw new UserError(this, e1, "302", destRepoLoc, e1.getMessage());
 		}
-
-		destinationName = destRepoLoc.getName();
-
-		if (destEntry == null) {
-			// if destination does not exists..
-			destinationEntryIsNull(destRepoLoc);
-		} else {
-			// if destination entry already exists..
-			destinationEntryAlreadyExists(destRepoLoc, destEntry);
-		}
-
 	}
 
-	private void destinationEntryIsNull(RepositoryLocation destRepoLoc) throws UserError {
+	private void destinationFolderIsNull(RepositoryLocation destRepoLoc) throws UserError {
 
 		// check if parent for destination location exists
 		RepositoryLocation parentLoc = destRepoLoc.parent();
 
-		Entry parentEntry;
+		Folder parentFolder;
 		try {
-			parentEntry = parentLoc.locateEntry();
+			parentFolder = parentLoc.locateFolder();
 		} catch (RepositoryException e1) {
 			throw new UserError(this, e1, "302", parentLoc, e1.getMessage());
 		}
 
-		if (parentEntry == null) {
+		if (parentFolder == null) {
 
 			// if parentEntry does not exists, create folders recursively as new parent
 			try {
@@ -116,100 +136,102 @@ public class AbstractRepositoryEntryRelocationOperator extends AbstractRepositor
 			}
 
 			try {
-				destinationFolder = (Folder) parentLoc.locateEntry();
+				destinationFolder = parentLoc.locateFolder();
 			} catch (RepositoryException e1) {
 				throw new UserError(this, e1, "302", parentLoc, e1.getMessage());
 			}
 
 		} else {
-
-			// if parentEntry exists, check if it is a folder
-			if (parentEntry instanceof Folder) {
-				destinationFolder = (Folder) parentEntry;
-			} else {
-				throw new UserError(this, "repository_management.dest_not_in_folder", destinationName, parentEntry);
-			}
+			destinationFolder = parentFolder;
 		}
 
 	}
 
-	private void destinationEntryAlreadyExists(RepositoryLocation destRepoLoc, Entry destEntry) throws UserError {
-		// if destination entry already exists
+	private void destinationDataIsNull(RepositoryLocation destRepoLoc) throws UserError {
+		// no matter if data or folder, we need to create the parent structure here
+		destinationFolderIsNull(destRepoLoc);
+	}
 
-		// check if it is a folder
-		if (destEntry instanceof Folder) {
-			destinationFolder = (Folder) destEntry;
-			destinationName = sourceRepoLoc.getName();
+	private void destinationFolderAlreadyExists(RepositoryLocation destRepoLoc, Folder destinationFolder) throws UserError {
+		// if destination folder already exists
 
-			boolean containsEntry = false;
-			try {
-				containsEntry = destinationFolder.containsEntry(sourceRepoLoc.getName());
-			} catch (RepositoryException e) {
-				throw new UserError(this, e, "302", destinationFolder, e.getMessage());
-			}
+		destinationName = sourceRepoLoc.getName();
 
-			if (containsEntry) {
-				if (overwrite) {
-					RepositoryLocation existingDestRepoLoc;
-					try {
-						existingDestRepoLoc = new RepositoryLocation(destinationFolder.getLocation(),
-								sourceRepoLoc.getName());
-					} catch (MalformedRepositoryLocationException e) {
-						throw new UserError(this, e, "313", destinationFolder.getLocation());
-					}
+		boolean containsEntry = false;
+		try {
+			containsEntry = destinationFolder.containsFolder(sourceRepoLoc.getName());
+		} catch (RepositoryException e) {
+			throw new UserError(this, e, "302", destinationFolder, e.getMessage());
+		}
 
-					Entry exsistingSourceEntry;
-					try {
-						exsistingSourceEntry = existingDestRepoLoc.locateEntry();
-					} catch (RepositoryException e) {
-						throw new UserError(this, e, "302", destinationFolder, e.getMessage());
-					}
-
-					try {
-						exsistingSourceEntry.delete();
-					} catch (RepositoryException e) {
-						throw new UserError(this, e, "io.delete_file", destEntry);
-					}
-				} else {
-					throw new UserError(this, "repository_management.relocate_repository_entry", destRepoLoc,
-							"Entry already exsists but overwriting is disabled.");
-				}
-			}
-
-		} else {
-			// else check if it should be overwritten
+		if (containsEntry) {
 			if (overwrite) {
-				// delete old entry
+				RepositoryLocation existingDestRepoLoc;
 				try {
-					destEntry.delete();
-				} catch (RepositoryException e) {
-					throw new UserError(this, e, "io.delete_file", destEntry);
+					existingDestRepoLoc = new RepositoryLocationBuilder().withLocationType(RepositoryLocationType.UNKNOWN).buildFromParentLocation(destinationFolder.getLocation(),
+							sourceRepoLoc.getName());
+				} catch (MalformedRepositoryLocationException e) {
+					throw new UserError(this, e, "313", destinationFolder.getLocation());
 				}
-				RepositoryLocation parentLoc = destRepoLoc.parent();
+
+				Entry existingTargetEntry;
 				try {
-					destinationFolder = (Folder) parentLoc.locateEntry();
-				} catch (RepositoryException e1) {
-					throw new UserError(this, e1, "302", parentLoc, e1.getMessage());
+					existingTargetEntry = existingDestRepoLoc.locateData();
+					if (existingTargetEntry == null) {
+						existingTargetEntry = existingDestRepoLoc.locateFolder();
+					}
+				} catch (RepositoryException e) {
+					throw new UserError(this, e, "302", destinationFolder, e.getMessage());
+				}
+
+				try {
+					existingTargetEntry.delete();
+				} catch (RepositoryException e) {
+					throw new UserError(this, e, "io.delete_file", destinationFolder);
 				}
 			} else {
 				throw new UserError(this, "repository_management.relocate_repository_entry", destRepoLoc,
 						"Entry already exsists but overwriting is disabled.");
 			}
 		}
-
 	}
 
-	/**
-	 * @throws UserError
-	 */
+	private void destinationDataAlreadyExists(RepositoryLocation destRepoLoc, DataEntry destEntry) throws UserError {
+		// if destination data already exists
+
+		// else check if it should be overwritten
+		if (overwrite) {
+			// delete old entry
+			try {
+				destEntry.delete();
+			} catch (RepositoryException e) {
+				throw new UserError(this, e, "io.delete_file", destEntry);
+			}
+			RepositoryLocation parentLoc = destRepoLoc.parent();
+			try {
+				destinationFolder = parentLoc.locateFolder();
+			} catch (RepositoryException e1) {
+				throw new UserError(this, e1, "302", parentLoc, e1.getMessage());
+			}
+		} else {
+			throw new UserError(this, "repository_management.relocate_repository_entry", destRepoLoc,
+					"Entry already exsists but overwriting is disabled.");
+		}
+	}
+
 	private void checkIfSourceEntryExists() throws UserError {
 		// check if "from" entry exists
 		Entry sourceEntry;
 		try {
-			sourceEntry = sourceRepoLoc.locateEntry();
+			sourceEntry = sourceRepoLoc.locateData();
+			if (sourceEntry == null) {
+				sourceEntry = sourceRepoLoc.locateFolder();
+			}
 			if (sourceEntry == null) {
 				throw new UserError(this, "301", sourceRepoLoc);
 			}
+			sourceIsData = sourceEntry instanceof DataEntry;
+			sourceRepoLoc.setLocationType(sourceEntry.getLocation().getLocationType());
 		} catch (RepositoryException e1) {
 			throw new UserError(this, e1, "302", sourceRepoLoc, e1.getMessage());
 		}

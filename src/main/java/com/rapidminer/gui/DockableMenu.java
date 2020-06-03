@@ -34,6 +34,7 @@ import com.rapidminer.gui.flow.ProcessPanel;
 import com.rapidminer.gui.processeditor.ProcessLogTab;
 import com.rapidminer.gui.processeditor.results.ResultDisplay;
 import com.rapidminer.gui.processeditor.results.ResultTab;
+import com.rapidminer.gui.tools.DockingTools;
 import com.rapidminer.gui.tools.ResourceDockKey;
 import com.rapidminer.gui.tools.ResourceMenu;
 import com.rapidminer.gui.tools.ScrollableJPopupMenu;
@@ -231,7 +232,7 @@ public class DockableMenu extends ResourceMenu {
 		}
 		final DockingDesktop dockingDesktop = dockingContext.getDesktopList().get(0);
 		if (state.isClosed()) {
-			dockingDesktop.addDockable(state.getDockable());
+			DockingTools.openDockable(state.getDockable().getDockKey().getKey());
 		} else {
 			dockingDesktop.close(state.getDockable());
 		}

@@ -50,6 +50,7 @@ import com.rapidminer.RapidMiner;
 import com.rapidminer.tools.FileSystemService;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.PlatformUtilities;
+import com.rapidminer.tools.TempFileTools;
 
 
 /**
@@ -119,8 +120,7 @@ public enum UserProvidedTLSCertificateLoader {
 			// Create new keystore, containing all certificates
 			KeyStore keystore = createKeyStore(userCertificates);
 			String password = UUID.randomUUID().toString();
-			Path keystoreFile = Files.createTempFile(TMP_PREFIX, TMP_SUFFIX);
-			keystoreFile.toFile().deleteOnExit();
+			Path keystoreFile = TempFileTools.createTempFile(TMP_PREFIX, TMP_SUFFIX, false);
 			try (OutputStream out = Files.newOutputStream(keystoreFile)) {
 				keystore.store(out, password.toCharArray());
 			}

@@ -133,6 +133,8 @@ public class ExampleSetMetaDataTableModel implements TableModel {
 	public static Component makeTableForToolTip(ExampleSetMetaData emd) {
 		ExtendedJTable table = new ExtendedJTable(new ExampleSetMetaDataTableModel(emd), true, true, true, false, false);
 		table.getColumnModel().getColumn(TYPE_COLUMN).setCellRenderer(new DefaultTableCellRenderer() {
+
+			@Override
 			public Component getTableCellRendererComponent(JTable table, Object value,
 														   boolean isSelected, boolean hasFocus,
 														   int row, int column) {

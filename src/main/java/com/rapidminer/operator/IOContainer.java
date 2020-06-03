@@ -27,10 +27,10 @@ import java.util.LinkedList;
 import java.util.List;
 
 import com.rapidminer.adaption.belt.IOTable;
-import com.rapidminer.belt.column.Column;
-import com.rapidminer.belt.table.BeltConverter;
+import com.rapidminer.belt.table.TableViewCreator;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.tools.Tools;
+import com.rapidminer.tools.belt.BeltTools;
 
 
 /**
@@ -176,7 +176,7 @@ public class IOContainer implements Serializable {
 					if (cls.isInstance(object)) {
 						return cls.cast(object);
 					} else {
-						return cls.cast(BeltConverter.convertSequentially((IOTable) object));
+						return cls.cast(TableViewCreator.INSTANCE.convertOnWriteView((IOTable) object, true));
 					}
 				} else {
 					n++;
@@ -191,8 +191,8 @@ public class IOContainer implements Serializable {
 	 */
 	private <T extends IOObject> boolean isToExampleSetConvertible(Class<T> cls, IOObject object) {
 		return object instanceof IOTable && cls.equals(ExampleSet.class)
-				//cannot convert custom columns
-				&& ((IOTable)object).getTable().select().ofTypeId(Column.TypeId.CUSTOM).labels().isEmpty();
+				//cannot convert advanced columns
+				&& !BeltTools.hasAdvanced(((IOTable) object).getTable());
 	}
 
 	/**

@@ -71,8 +71,8 @@ public class ParameterTypeOperatorParameterTupel extends ParameterTypeTupel {
 	}
 
 	@Override
-	public String transformNewValue(String value) {
-		String transformedValue = super.transformNewValue(value);
+	public String transformNewValue(String value, String encryptionContext) {
+		String transformedValue = super.transformNewValue(value, encryptionContext);
 		String[] tupel = transformString2Tupel(transformedValue);
 		if (tupel.length != 2 || StringUtils.isEmpty(tupel[0]) || StringUtils.isEmpty(tupel[1])) {
 			return null;

@@ -216,6 +216,15 @@ public abstract class ColorSlider extends JComponent {
 		updateUI();
 	}
 
+	@Override
+	public void updateUI() {
+		ColorSliderUI ui = (ColorSliderUI) UIManager.getUI(this);
+		setUI(ui);
+	}
+
+	@Override
+	public abstract String getUIClassID();
+	
 	/**
 	 * Sets the color points. Same effect as if they were set via the constructor. Will overwrite any existing
 	 * color points.
@@ -242,14 +251,6 @@ public abstract class ColorSlider extends JComponent {
 	public List<ColorPoint> getColorPoints() {
 		return colorPoints;
 	}
-
-	@Override
-	public void updateUI() {
-		ColorSliderUI ui = (ColorSliderUI) UIManager.getUI(this);
-		setUI(ui);
-	}
-
-	public abstract String getUIClassID();
 
 	/**
 	 * Adds a ChangeListener to the slider.

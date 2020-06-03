@@ -35,17 +35,19 @@ import com.rapidminer.tools.LogService;
 
 
 /**
- * This class can be used to generate a new key and store it in the user directory. Please note that
- * by default existing keys will be overwritten by objects of this class. That means that passwords
- * stored with &quot;old&quot; keys can no longer be decrypted.
- *
- * Note that the class provides methods to override the default key storage location. Furthermore,
- * it is possible to suppress the storage of keys completely. These methods are implemented thread
- * safe to allow for scenarios in which the encryption key has to be exchanged (in separate
- * threads).
+ * This class can be used to generate a new key and store it in the user directory. Please note that by default existing
+ * keys will be overwritten by objects of this class. That means that passwords stored with &quot;old&quot; keys can no
+ * longer be decrypted.
+ * <p>
+ * Note that the class provides methods to override the default key storage location. Furthermore, it is possible to
+ * suppress the storage of keys completely. These methods are implemented thread safe to allow for scenarios in which
+ * the encryption key has to be exchanged (in separate threads).
  *
  * @author Ingo Mierswa, Michael Knopf, Nils Woehler
+ * @deprecated since 9.7, use {@link com.rapidminer.tools.encryption.EncryptionProvider} instead for new features
+ * needing encryption!
  */
+@Deprecated
 public class KeyGeneratorTool {
 
 	/** Length of the triple DES key. */

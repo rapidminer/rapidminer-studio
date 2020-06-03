@@ -18,8 +18,6 @@
  */
 package com.rapidminer.operator.ports.metadata;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -35,6 +33,7 @@ import com.rapidminer.connection.configuration.ConnectionConfiguration;
 import com.rapidminer.connection.configuration.ConnectionConfigurationImpl;
 import com.rapidminer.connection.util.ConnectionI18N;
 import com.rapidminer.tools.I18N;
+import com.rapidminer.tools.encryption.EncryptionProvider;
 
 
 /**
@@ -145,7 +144,8 @@ public class ConnectionInformationMetaData extends MetaData {
 	 * 		could not write
 	 */
 	private void writeObject(ObjectOutputStream out) throws IOException {
-		ConnectionInformationSerializer.LOCAL.writeJson(out, configuration);
+		// we encrypt values in MD, even though they are not meant to be decrypted again. This is for security reasons to not expose values in the MD in plain text on AI Hub disk
+		ConnectionInformationSerializer.INSTANCE.writeJson(out, configuration, EncryptionProvider.DEFAULT_CONTEXT);
 	}
 
 	/**
@@ -157,7 +157,8 @@ public class ConnectionInformationMetaData extends MetaData {
 	 * 		could not read
 	 */
 	private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-		configuration = ConnectionInformationSerializer.LOCAL.loadConfiguration(in);
+		// we don't care about encrypted values in the meta data. They should not be accessible via MD at all, so we don't try to decrypt them
+		configuration = ConnectionInformationSerializer.INSTANCE.loadConfiguration(in, null);
 	}
 
 	@Override
@@ -168,9 +169,7 @@ public class ConnectionInformationMetaData extends MetaData {
 		}
 		try {
 			// keep only a copy of the configuration
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			ConnectionInformationSerializer.LOCAL.writeJson(baos, configuration);
-			cimdClone.configuration = ConnectionInformationSerializer.LOCAL.loadConfiguration(new ByteArrayInputStream(baos.toByteArray()));
+			cimdClone.configuration = ConnectionInformationSerializer.INSTANCE.createDeepCopy(configuration);
 		} catch (IOException e) {
 			throw new RuntimeException("Cloning the connection configuration failed", e);
 		}
@@ -180,7 +179,7 @@ public class ConnectionInformationMetaData extends MetaData {
 	/**
 	 * Gets the connection configuration
 	 *
-	 * @return the configuration object
+	 * @return the configuration object or {@code null} if not yet loaded
 	 */
 	public ConnectionConfiguration getConfiguration() {
 		return configuration;

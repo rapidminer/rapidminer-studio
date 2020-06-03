@@ -326,7 +326,7 @@ public class Plugin {
 		PLUGIN_BLACKLIST.put("rmx_r_scripting", upToRm711);
 		PLUGIN_BLACKLIST.put("rmx_python_scripting", upToRm711);
 
-		// Radoop must be at least version 8.1.0 due to certain features being broken in older Radoop versions due to Server 8.x architectural changes
+		// Radoop must be at least version 8.1.0 due to certain features being broken in older Radoop versions due to AI Hub 8.x architectural changes
 		PLUGIN_BLACKLIST.put("rmx_radoop", new Pair<>(null, new VersionNumber(8, 0, 99)));
 
 		// RapidLabs / 3rd party extensions causing problems since Studio 7.2
@@ -1776,9 +1776,9 @@ public class Plugin {
 		File readmeFile = new File(cacheDir, "README.txt");
 		try {
 			Tools.writeTextFile(readmeFile,
-					"This directory contains plugins downloaded from RapidMiner Server instance \n" + "  " + homeUrl + ".\n"
+					"This directory contains plugins downloaded from RapidMiner AI Hub instance \n" + "  " + homeUrl + ".\n"
 							+ "These plugins are only used if RapidMiner is started via WebStart from this \n"
-							+ "server. You can delete the directory if you no longer need the cached plugins.");
+							+ "AI Hub. You can delete the directory if you no longer need the cached plugins.");
 		} catch (IOException e1) {
 			LogService.getRoot().log(Level.WARNING, I18N.getMessage(LogService.getRoot().getResourceBundle(),
 					"com.rapidminer.tools.plugin.Plugin.creating_file_error", readmeFile, e1), e1);

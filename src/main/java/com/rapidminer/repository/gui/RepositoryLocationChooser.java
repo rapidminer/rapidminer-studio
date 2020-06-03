@@ -66,6 +66,8 @@ import com.rapidminer.repository.MalformedRepositoryLocationException;
 import com.rapidminer.repository.ProcessEntry;
 import com.rapidminer.repository.Repository;
 import com.rapidminer.repository.RepositoryLocation;
+import com.rapidminer.repository.RepositoryLocationBuilder;
+import com.rapidminer.repository.RepositoryLocationType;
 import com.rapidminer.repository.RepositoryManager;
 import com.rapidminer.repository.local.LocalRepository;
 import com.rapidminer.tools.I18N;
@@ -115,7 +117,6 @@ public class RepositoryLocationChooser extends JPanel implements Observer<Boolea
 		return ExampleSet.class.isAssignableFrom(clazz) || IOTable.class.isAssignableFrom(clazz);
 	};
 
-
 	private static final long serialVersionUID = 1L;
 
 	private final RepositoryTree tree;
@@ -164,26 +165,38 @@ public class RepositoryLocationChooser extends JPanel implements Observer<Boolea
 		/**
 		 * Create a Dialog to choose a {@link RepositoryLocation} with the following configuration settings.
 		 *
-		 * @param owner
-		 * 		Parent dialog to be blocked by this modal dialog
-		 * @param resolveRelativeTo
-		 * 		if a relative path is requested, this is the base path to be relative to
-		 * @param initialValue
-		 * 		preselected value
-		 * @param allowEntries
-		 * 		if true entries are shown, else only folders will be shown
-		 * @param allowFolders
-		 * 		if true folders are shown, else no folders will be shown
-		 * @param onlyWriteableRepositories
-		 * 		if true show only those repositories that are writable by the current user
-		 * @param entryPredicate
-		 * 		if set it will filter the shown entries based on its logic
+		 * @param owner                     Parent dialog to be blocked by this modal dialog
+		 * @param resolveRelativeTo         if a relative path is requested, this is the base path to be relative to
+		 * @param initialValue              preselected value
+		 * @param allowEntries              if true entries are shown, else only folders will be shown
+		 * @param allowFolders              if true folders are shown, else no folders will be shown
+		 * @param onlyWriteableRepositories if true show only those repositories that are writable by the current user
+		 * @param entryPredicate            if set it will filter the shown entries based on its logic
 		 * @since 9.4
 		 */
 		public RepositoryLocationChooserDialog(Window owner, RepositoryLocation resolveRelativeTo, String initialValue,
 											   final boolean allowEntries, final boolean allowFolders, final boolean onlyWriteableRepositories,
 											   Predicate<Entry> entryPredicate) {
-			super(owner, "repository_chooser", ModalityType.APPLICATION_MODAL);
+			this(owner, resolveRelativeTo, initialValue, allowEntries, allowFolders, onlyWriteableRepositories, entryPredicate, "repository_chooser");
+		}
+
+		/**
+		 * Create a Dialog to choose a {@link RepositoryLocation} with the following configuration settings.
+		 *
+		 * @param owner                     Parent dialog to be blocked by this modal dialog
+		 * @param resolveRelativeTo         if a relative path is requested, this is the base path to be relative to
+		 * @param initialValue              preselected value
+		 * @param allowEntries              if true entries are shown, else only folders will be shown
+		 * @param allowFolders              if true folders are shown, else no folders will be shown
+		 * @param onlyWriteableRepositories if true show only those repositories that are writable by the current user
+		 * @param entryPredicate            if set it will filter the shown entries based on its logic
+		 * @param key						used to set texts for labels and the icon
+		 * @since 9.7
+		 */
+		public RepositoryLocationChooserDialog(Window owner, RepositoryLocation resolveRelativeTo, String initialValue,
+											   final boolean allowEntries, final boolean allowFolders, final boolean onlyWriteableRepositories,
+											   Predicate<Entry> entryPredicate, String key) {
+			super(owner, key, ModalityType.APPLICATION_MODAL);
 			okButton = makeOkButton();
 			chooser = new RepositoryLocationChooser(this, resolveRelativeTo, initialValue, allowEntries, allowFolders, false,
 					onlyWriteableRepositories, Colors.WHITE, entryPredicate);
@@ -275,9 +288,9 @@ public class RepositoryLocationChooser extends JPanel implements Observer<Boolea
 			try {
 				RepositoryLocation repositoryLocation;
 				if (resolveRelativeTo != null) {
-					repositoryLocation = new RepositoryLocation(resolveRelativeTo, initialValue);
+					repositoryLocation = new RepositoryLocationBuilder().withLocationType(RepositoryLocationType.UNKNOWN).buildFromParentLocation(resolveRelativeTo, initialValue);
 				} else {
-					repositoryLocation = new RepositoryLocation(initialValue);
+					repositoryLocation = new RepositoryLocationBuilder().withLocationType(RepositoryLocationType.UNKNOWN).buildFromAbsoluteLocation(initialValue);
 				}
 				locationField.setText(repositoryLocation.getName());
 				locationFieldRepositoryEntry.setText(repositoryLocation.getName());
@@ -291,8 +304,8 @@ public class RepositoryLocationChooser extends JPanel implements Observer<Boolea
 
 		if (initialValue != null) {
 			// called twice to fix bug that it only selects parent on first time
-			tree.expandIfExists(resolveRelativeTo, initialValue);
-			if (tree.expandIfExists(resolveRelativeTo, initialValue)) {
+			tree.expandIfExists(resolveRelativeTo, initialValue, RepositoryLocationType.UNKNOWN, null);
+			if (tree.expandIfExists(resolveRelativeTo, initialValue, RepositoryLocationType.UNKNOWN, null)) {
 				locationField.setText("");
 				locationFieldRepositoryEntry.setText("");
 			}
@@ -302,8 +315,8 @@ public class RepositoryLocationChooser extends JPanel implements Observer<Boolea
 			for (Repository r : repositories) {
 				if (!r.isReadOnly() && r instanceof LocalRepository) {
 					// called twice to fix bug that it only selects parent on first time
-					tree.expandIfExists(null, r.getLocation().getAbsoluteLocation());
-					if (tree.expandIfExists(null, r.getLocation().getAbsoluteLocation())) {
+					tree.expandIfExists(null, r.getLocation().getAbsoluteLocation(), RepositoryLocationType.UNKNOWN, null);
+					if (tree.expandIfExists(null, r.getLocation().getAbsoluteLocation(), RepositoryLocationType.UNKNOWN, null)) {
 						locationField.setText("");
 						locationFieldRepositoryEntry.setText("");
 						break;
@@ -439,15 +452,51 @@ public class RepositoryLocationChooser extends JPanel implements Observer<Boolea
 		Entry selectedEntry = (Entry) path.getLastPathComponent();
 		RepositoryLocation selectedLocation = selectedEntry.getLocation();
 		if (selectedEntry instanceof Folder) {
-			selectedLocation = new RepositoryLocation(selectedLocation, getLocationNameFieldText());
+			selectedLocation = new RepositoryLocationBuilder().withLocationType(RepositoryLocationType.FOLDER).buildFromParentLocation(selectedLocation, getLocationNameFieldText());
 		} else if (selectedLocation.parent() != null) {
-			selectedLocation = new RepositoryLocation(selectedLocation.parent(), getLocationNameFieldText());
+			selectedLocation = new RepositoryLocationBuilder().withExpectedDataEntryType(((DataEntry) selectedEntry).getClass()).buildFromParentLocation(selectedLocation.parent(), getLocationNameFieldText());
 		}
 		if (resolveRelativeTo != null && resolveBox.isSelected()) {
 			return selectedLocation.makeRelative(resolveRelativeTo);
 		} else {
 			return selectedLocation.getAbsoluteLocation();
 		}
+	}
+
+	/**
+	 * Creates a repository location out of the user choice. Either uses the selected entry, or creates a location
+	 * relative to the selected plus the location field text, or if nothing is selected creates an absolute path based
+	 * on the location field text.
+	 *
+	 * @return the location, never {@code null}
+	 * @throws MalformedRepositoryLocationException if the entered location does not represent a proper repository
+	 *                                              location
+	 * @since 9.7
+	 */
+	public RepositoryLocation getAsRepositoryLocation() throws MalformedRepositoryLocationException {
+		final TreePath path = tree.getSelectionPath();
+		if (path == null || !(path.getLastPathComponent() instanceof Entry)) {
+			// nothing selected in tree, only some value entered in name field. Take it, but who knows what it is
+			return new RepositoryLocationBuilder().withLocationType(RepositoryLocationType.UNKNOWN).buildFromAbsoluteLocation(getLocationNameFieldText());
+		}
+
+		Entry selectedEntry = (Entry) path.getLastPathComponent();
+		RepositoryLocation selectedLocation = selectedEntry.getLocation();
+		if (selectedEntry instanceof Folder) {
+			// folder selected, but the name field may contain more
+			if (getLocationNameFieldText().isEmpty()) {
+				// no custom name entered, it's a folder
+				selectedLocation = new RepositoryLocationBuilder().withLocationType(RepositoryLocationType.FOLDER).buildFromAbsoluteLocation(selectedLocation.getAbsoluteLocation());
+			} else {
+				// custom name entered, who knows what it is, may have more than a single hit there
+				selectedLocation = new RepositoryLocationBuilder().withLocationType(RepositoryLocationType.UNKNOWN).
+						buildFromParentLocation(selectedLocation, getLocationNameFieldText());
+			}
+		} else {
+			// data entry selected, take it
+			selectedLocation = new RepositoryLocationBuilder().withExpectedDataEntryType(((DataEntry) selectedEntry).getClass()).buildFromAbsoluteLocation(selectedLocation.getAbsoluteLocation());
+		}
+		return selectedLocation;
 	}
 
 	public boolean isEntryValid() {
@@ -554,40 +603,43 @@ public class RepositoryLocationChooser extends JPanel implements Observer<Boolea
 				enforceValidRepositoryEntryName, onlyWriteableRepositories, null);
 	}
 
+	public static String selectLocation(RepositoryLocation resolveRelativeTo, String initialValue, Component c,
+										final boolean selectEntries, final boolean selectFolder, final boolean forceDisableRelativeResolve,
+										final boolean enforceValidRepositoryEntryName, final boolean onlyWriteableRepositories,
+										Predicate<Entry> entryPredicate) {
+		return selectLocation(resolveRelativeTo, initialValue, c, selectEntries, selectFolder, forceDisableRelativeResolve,
+				enforceValidRepositoryEntryName, onlyWriteableRepositories, entryPredicate, "repository_chooser");
+	}
+
 	/**
 	 * Show a dialog to select a {@link RepositoryLocation} to be used. Can be configured via the following parameters.
 	 *
-	 * @param resolveRelativeTo
-	 * 		if a relative path is requested, this is the base path to be relative to
-	 * @param initialValue
-	 * 		preselected value
-	 * @param c
-	 * 		base component to find the ancestor window
-	 * @param selectEntries
-	 * 		if true entries are shown, else only folders will be shown
-	 * @param selectFolder
-	 * 		if true folders are shown, else no folders will be shown
-	 * @param forceDisableRelativeResolve
-	 * 		if true relative resolving cannot be activated by the user and returned {@link RepositoryLocation} are absolute
-	 * @param enforceValidRepositoryEntryName
-	 * 		if true the result can only be a repository entry, not a repository or a folder
-	 * @param onlyWriteableRepositories
-	 * 		if true show only those repositories that are writable by the current user
-	 * @param entryPredicate
-	 * 		if set it will filter the shown entries based on its logic
+	 * @param resolveRelativeTo               if a relative path is requested, this is the base path to be relative to
+	 * @param initialValue                    preselected value
+	 * @param c                               base component to find the ancestor window
+	 * @param selectEntries                   if true entries are shown, else only folders will be shown
+	 * @param selectFolder                    if true folders are shown, else no folders will be shown
+	 * @param forceDisableRelativeResolve     if true relative resolving cannot be activated by the user and returned
+	 *                                        {@link RepositoryLocation} are absolute
+	 * @param enforceValidRepositoryEntryName if true the result can only be a repository entry, not a repository or a
+	 *                                        folder
+	 * @param onlyWriteableRepositories       if true show only those repositories that are writable by the current
+	 *                                        user
+	 * @param entryPredicate                  if set it will filter the shown entries based on its logic
+	 * @param key                             i18n key
 	 * @return the chosen path
 	 * @since 9.4
 	 */
 	public static String selectLocation(RepositoryLocation resolveRelativeTo, String initialValue, Component c,
 										final boolean selectEntries, final boolean selectFolder, final boolean forceDisableRelativeResolve,
 										final boolean enforceValidRepositoryEntryName, final boolean onlyWriteableRepositories,
-										Predicate<Entry> entryPredicate) {
-		Window owner = c != null ? SwingUtilities.getWindowAncestor(c) : null;
+										Predicate<Entry> entryPredicate, String key) {
+		Window owner = c == null || c instanceof Window ? (Window) c : SwingUtilities.getWindowAncestor(c);
 		AtomicReference<RepositoryLocationChooserDialog> dialogReference = new AtomicReference<>();
 		SwingTools.invokeAndWait(() -> {
 			dialogReference.set(new RepositoryLocationChooserDialog(
 					owner, resolveRelativeTo, initialValue, selectEntries,
-					selectFolder, onlyWriteableRepositories, entryPredicate));
+					selectFolder, onlyWriteableRepositories, entryPredicate, key));
 			RepositoryLocationChooserDialog dialog = dialogReference.get();
 			if (forceDisableRelativeResolve) {
 				dialog.chooser.setResolveRelative(false);

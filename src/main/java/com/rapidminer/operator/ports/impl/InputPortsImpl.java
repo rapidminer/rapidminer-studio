@@ -19,15 +19,11 @@
 package com.rapidminer.operator.ports.impl;
 
 import com.rapidminer.operator.IOObject;
-import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.InputPorts;
-import com.rapidminer.operator.ports.OutputPort;
 import com.rapidminer.operator.ports.PortOwner;
 import com.rapidminer.operator.ports.metadata.MetaData;
 import com.rapidminer.operator.ports.metadata.SimplePrecondition;
-
-import java.util.List;
 
 
 /**
@@ -36,7 +32,7 @@ import java.util.List;
 public class InputPortsImpl extends AbstractPorts<InputPort> implements InputPorts {
 
 	public InputPortsImpl(PortOwner owner) {
-		super(owner);
+		super(owner, InputPortImpl::new);
 	}
 
 	@Override
@@ -48,23 +44,17 @@ public class InputPortsImpl extends AbstractPorts<InputPort> implements InputPor
 
 	@Override
 	public InputPort createPort(String name) {
-		return createPort(name, true);
+		return super.createPort(name);
 	}
 
 	@Override
 	public InputPort createPort(String name, boolean add) {
-		InputPort in = new InputPortImpl(this, name, true);
-		if (add) {
-			addPort(in);
-		}
-		return in;
+		return super.createPort(name, add);
 	}
 
 	@Override
 	public InputPort createPassThroughPort(String name) {
-		InputPort in = new InputPortImpl(this, name, false);
-		addPort(in);
-		return in;
+		return super.createPassThroughPort(name);
 	}
 
 	@Override
@@ -77,35 +67,5 @@ public class InputPortsImpl extends AbstractPorts<InputPort> implements InputPor
 		InputPort in = createPort(name);
 		in.addPrecondition(new SimplePrecondition(in, metaData));
 		return in;
-	}
-
-	@Override
-	public void disconnectAll() {
-		disconnectAllBut(null);
-	}
-
-	@Override
-	public void disconnectAllBut(List<Operator> exceptions) {
-		boolean success;
-		disconnect: do {
-			success = false;
-			for (InputPort port : getAllPorts()) {
-				if (port.isConnected()) {
-					OutputPort source = port.getSource();
-					boolean isException = false;
-					if (exceptions != null) {
-						Operator sourceOp = source.getPorts().getOwner().getOperator();
-						if (exceptions.contains(sourceOp)) {
-							isException = true;
-						}
-					}
-					if (!isException) {
-						source.disconnect();
-						success = true;
-						continue disconnect;
-					}
-				}
-			}
-		} while (success);
 	}
 }

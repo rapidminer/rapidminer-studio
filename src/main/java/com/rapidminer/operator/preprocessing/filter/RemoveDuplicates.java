@@ -21,6 +21,7 @@ package com.rapidminer.operator.preprocessing.filter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -109,9 +110,10 @@ public class RemoveDuplicates extends AbstractDataProcessing {
 		// in the bucket
 		HashMap<Integer, List<Integer>> buckets = new HashMap<>();
 		boolean missingsAsDuplicates = getParameterAsBoolean(PARAMETER_TREAT_MISSING_VALUES_AS_DUPLICATES);
+		Iterator<Example> iterator = exampleSet.iterator();
 		for (int i = 0; i < exampleSet.size(); i++) {
 			this.checkForStop();
-			Example example = exampleSet.getExample(i);
+			Example example = iterator.next();
 			int hash = 0;
 			for (Attribute attribute : compareAttributes) {
 				long bits = Double.doubleToLongBits(example.getValue(attribute));

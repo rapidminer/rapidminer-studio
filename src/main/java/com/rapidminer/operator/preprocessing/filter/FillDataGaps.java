@@ -268,6 +268,9 @@ public class FillDataGaps extends AbstractExampleSetProcessing {
 		// sort final result
 		resultSet = sorting.apply(resultSet);
 
+		resultSet.getAnnotations().addAll(inputSet.getAnnotations());
+		resultSet.setAllUserData(inputSet.getAllUserData());
+
 		return resultSet;
 	}
 

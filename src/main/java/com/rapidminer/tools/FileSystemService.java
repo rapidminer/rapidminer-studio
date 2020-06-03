@@ -34,6 +34,8 @@ import java.util.logging.Level;
  * @author Sebastian Land
  */
 public class FileSystemService {
+	/** named like the jxVersion gradle variable to make it easier to find whenever JxBrowser version is bumped */
+	private static final String jxVersion = "7.7";
 	/** folder in which extensions have their workspace */
 	private static final String RAPIDMINER_EXTENSIONS_FOLDER = "extensions";
 	/** folder in which extensions get their own folder to work with files */
@@ -49,7 +51,7 @@ public class FileSystemService {
 	/** {@link #RAPIDMINER_INTERNAL_CACHE} subfolder which is used for the connection file cache */
 	private static final String RAPIDMINER_INTERNAL_CACHE_CONNECTION = "connectionFiles";
 	/** {@link #RAPIDMINER_INTERNAL_CACHE} subfolder which is used by BrowserContext for cache data storage. Browser cache depends on platform, if you mix DLLs for Win32 and Win64, you get an endless loop */
-	private static final String RAPIDMINER_INTERNAL_CACHE_BROWSER = "browser7.4" + (PlatformUtilities.getReleasePlatform() != null ? "-" + PlatformUtilities.getReleasePlatform().name() : "");
+	private static final String RAPIDMINER_INTERNAL_CACHE_BROWSER = "browser" + jxVersion + (PlatformUtilities.getReleasePlatform() != null ? "-" + PlatformUtilities.getReleasePlatform().name() : "");
 
 	/** {@link #RAPIDMINER_INTERNAL_CACHE} subfolder which can be used for internal caching of the content mapper store */
 	private static final String RAPIDMINER_INTERNAL_CACHE_CONTENT_MAPPER_STORE = "content mapper";
@@ -63,6 +65,8 @@ public class FileSystemService {
 	public static final String RAPIDMINER_INTERNAL_CACHE_CONTENT_MAPPER_STORE_FULL = RAPIDMINER_INTERNAL_CACHE + "/" + RAPIDMINER_INTERNAL_CACHE_CONTENT_MAPPER_STORE;
 	public static final String RAPIDMINER_INTERNAL_CACHE_BROWSER_FULL = RAPIDMINER_INTERNAL_CACHE + "/" + RAPIDMINER_INTERNAL_CACHE_BROWSER;
 	public static final String RAPIDMINER_INTERNAL_CACHE_TEMP_FULL = RAPIDMINER_INTERNAL_CACHE + "/" + RAPIDMINER_INTERNAL_CACHE_TEMP;
+	/** the folder where the {@link com.rapidminer.tools.encryption.EncryptionProviderRegistry} stores the encryption keys */
+	public static final String RAPIDMINER_ENCRYPTION_FOLDER = "encryption";
 
 	/** folder which can be used to load additional building blocks */
 	public static final String RAPIDMINER_BUILDINGBLOCKS = "buildingblocks";
@@ -110,6 +114,7 @@ public class FileSystemService {
 		File internalCacheSearchFolder = new File(internalCacheFolder, RAPIDMINER_INTERNAL_CACHE_SEARCH);
 		File internalCacheRepositoryMapperStoreFolder = new File(internalCacheFolder, RAPIDMINER_INTERNAL_CACHE_CONTENT_MAPPER_STORE);
 		File internalCacheBrowserFolder = new File(internalCacheFolder, RAPIDMINER_INTERNAL_CACHE_BROWSER);
+		File internalTempFolder = new File(internalCacheFolder, RAPIDMINER_INTERNAL_CACHE_TEMP);
 
 		checkAndCreateFolder(rapidMinerDir);
 		checkAndCreateFolder(extensionsWorkspaceRootFolder);
@@ -117,6 +122,7 @@ public class FileSystemService {
 		checkAndCreateFolder(internalCacheSearchFolder);
 		checkAndCreateFolder(internalCacheRepositoryMapperStoreFolder);
 		checkAndCreateFolder(internalCacheBrowserFolder);
+		checkAndCreateFolder(internalTempFolder);
 
 		checkAndCreateFolder(extensionsWorkspaceFolder);
 		checkAndCreateFolder(sharedDataDir);

@@ -42,7 +42,7 @@ import com.rapidminer.tools.XMLException;
 
 /**
  * This {@link RepositoryProvider} will use the {@value #FILE_NAME} to {@link #load()} and
- * {@link #save()} the repository configuration.
+ * {@link #save(List)} ()} the repository configuration.
  *
  * @author Marcel Michel
  *
@@ -142,7 +142,7 @@ public class FileRepositoryProvider implements RepositoryProvider {
 		Element root = doc.createElement(TAG_REPOSITORIES);
 		doc.appendChild(root);
 		for (Repository repository : repositories) {
-			if (repository.shouldSave()) {
+			if (repository.shouldSave() && !repository.isTransient()) {
 				Element repositoryElement = repository.createXML(doc);
 				if (repositoryElement != null) {
 					root.appendChild(repositoryElement);

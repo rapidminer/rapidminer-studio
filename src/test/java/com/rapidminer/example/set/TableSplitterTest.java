@@ -18,7 +18,6 @@
  */
 package com.rapidminer.example.set;
 
-import static com.rapidminer.belt.column.ColumnTypes.NOMINAL;
 import static org.junit.Assert.assertEquals;
 
 import java.time.Instant;
@@ -149,7 +148,7 @@ public class TableSplitterTest {
 
 			Table table = Builders.newTableBuilder(6)
 					.addReal("real", i -> Math.random())
-					.addInt("int", i -> i)
+					.addInt53Bit("int", i -> i)
 					.build(ContextAdapter.adapt(studioContext));
 			ExampleSet exampleSet = BeltConverter.convert(new IOTable(table), studioContext);
 
@@ -158,7 +157,7 @@ public class TableSplitterTest {
 
 			table = Builders.newTableBuilder(20)
 					.addReal("real", i -> Math.random())
-					.addInt("int", i -> i)
+					.addInt53Bit("int", i -> i)
 					.build(ContextAdapter.adapt(studioContext));
 			exampleSet = BeltConverter.convert(new IOTable(table), studioContext);
 			parameters.add(new Object[]{"splitByReal", TableSplitter.splitByAttribute(table, "real", 0.5),
@@ -166,7 +165,7 @@ public class TableSplitterTest {
 
 			table = Builders.newTableBuilder(25)
 					.addNominal("nominal", i -> Math.random() > 0.3 ? (Math.random() > 0.5 ? "blue" : "green") : "red")
-					.addInt("int", i -> i)
+					.addInt53Bit("int", i -> i)
 					.addMetaData("nominal", ColumnRole.LABEL)
 					.build(ContextAdapter.adapt(studioContext));
 			exampleSet = BeltConverter.convert(new IOTable(table), studioContext);
@@ -191,7 +190,7 @@ public class TableSplitterTest {
 
 			table = Builders.newTableBuilder(25)
 					.addReal("real", i -> Math.random())
-					.addInt("int", i -> i)
+					.addInt53Bit("int", i -> i)
 					.addMetaData("real", ColumnRole.LABEL)
 					.build(ContextAdapter.adapt(studioContext));
 			exampleSet = BeltConverter.convert(new IOTable(table), studioContext);
@@ -249,7 +248,7 @@ public class TableSplitterTest {
 		public void stratifiedNoLabel() throws UserError {
 			Table table = Builders.newTableBuilder(6)
 					.addReal("real", i -> Math.random())
-					.addInt("int", i -> i)
+					.addInt53Bit("int", i -> i)
 					.build(ContextAdapter.adapt(studioContext));
 			new TableSplitter(table, 2, SplittedExampleSet.STRATIFIED_SAMPLING, true, 42);
 		}
@@ -258,7 +257,7 @@ public class TableSplitterTest {
 		public void stratifiedNotNominal() throws UserError {
 			Table table = Builders.newTableBuilder(6)
 					.addReal("real", i -> Math.random())
-					.addInt("int", i -> i)
+					.addInt53Bit("int", i -> i)
 					.addMetaData("real", ColumnRole.LABEL)
 					.build(ContextAdapter.adapt(studioContext));
 			new TableSplitter(table, 2, SplittedExampleSet.STRATIFIED_SAMPLING, true, 42);
@@ -268,7 +267,7 @@ public class TableSplitterTest {
 		public void splitByRealNotReadable() {
 			Table table = Builders.newTableBuilder(6)
 					.addDateTime("date", i -> Instant.EPOCH)
-					.addInt("int", i -> i)
+					.addInt53Bit("int", i -> i)
 					.build(ContextAdapter.adapt(studioContext));
 			TableSplitter.splitByAttribute(table, "date", 0.5);
 		}
@@ -277,7 +276,7 @@ public class TableSplitterTest {
 		public void splitByCategoryNotReadable() {
 			Table table = Builders.newTableBuilder(6)
 					.addDateTime("date", i -> Instant.EPOCH)
-					.addInt("int", i -> i)
+					.addInt53Bit("int", i -> i)
 					.build(ContextAdapter.adapt(studioContext));
 			TableSplitter.splitByAttribute(table, "date");
 		}
@@ -289,7 +288,7 @@ public class TableSplitterTest {
 
 		@Test(expected = IllegalArgumentException.class)
 		public void stratifiedBuilderNotSize() {
-			new ColumnStratifiedPartitionBuilder(Buffers.<String>categoricalBuffer(5).toColumn(NOMINAL),
+			new ColumnStratifiedPartitionBuilder(Buffers.<String>nominalBuffer(5).toColumn(),
 					true, 42).createPartition(new double[]{0.5, 0.5}, 1000);
 		}
 	}

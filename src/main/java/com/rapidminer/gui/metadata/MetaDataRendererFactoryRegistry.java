@@ -199,8 +199,12 @@ public class MetaDataRendererFactoryRegistry {
 			// if an appropriate renderer is exist, then register it for this metadata
 			if (rendererCandidateMetaDataClass != null) {
 				MetaDataRendererFactory factory = factories.get(rendererCandidateMetaDataClass);
-				factories.put(metaData.getClass(), factory);
-				return factory.createRenderer(metaData);
+				if (factory != null) {
+					factories.put(metaData.getClass(), factory);
+					return factory.createRenderer(metaData);
+				} else {
+					return null;
+				}
 			} else { // else add null to this metadata (to avoid further lookups)
 				factories.put(metaData.getClass(), null);
 				return null;

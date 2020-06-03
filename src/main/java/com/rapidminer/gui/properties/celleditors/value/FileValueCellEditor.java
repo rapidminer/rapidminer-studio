@@ -145,7 +145,7 @@ public abstract class FileValueCellEditor extends AbstractCellEditor implements 
 		if (file == null) {
 			textField.setText("");
 		} else {
-			textField.setText(file.getPath());
+			textField.setText(file.getPath().replace('\\', '/'));
 		}
 	}
 

@@ -18,6 +18,8 @@
 */
 package com.rapidminer.repository.gui.actions;
 
+import java.nio.file.InvalidPathException;
+
 import com.rapidminer.gui.tools.ProgressThread;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.repository.Entry;
@@ -62,6 +64,9 @@ public class RenameRepositoryEntryAction extends AbstractRepositoryAction<Entry>
 					boolean success;
 					try {
 						success = entry.rename(name);
+					} catch (InvalidPathException e) {
+						SwingTools.showVerySimpleErrorMessage("cannot_rename_entry_invalid_name_for_os", entry.getName(), name);
+						return;
 					} catch (Exception e) {
 						SwingTools.showSimpleErrorMessage("cannot_rename_entry", e, entry.getName(), name, e.getMessage());
 						return;

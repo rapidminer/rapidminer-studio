@@ -30,7 +30,7 @@ import com.rapidminer.operator.Annotations;
  * @author Peter Csaszar, Marcel Michel
  *
  */
-class TestIOObject extends AbstractIOObject implements Serializable {
+public class TestIOObject extends AbstractIOObject implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 

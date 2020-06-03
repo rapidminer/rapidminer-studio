@@ -40,7 +40,7 @@ import com.rapidminer.repository.IOObjectEntry;
 import com.rapidminer.repository.MalformedRepositoryLocationException;
 import com.rapidminer.repository.ProcessEntry;
 import com.rapidminer.repository.RepositoryException;
-import com.rapidminer.repository.RepositoryLocation;
+import com.rapidminer.repository.RepositoryLocationBuilder;
 import com.rapidminer.repository.resource.ZipStreamResource;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.NonClosingZipInputStream;
@@ -245,8 +245,8 @@ public class Tutorial implements ZipStreamResource {
 	 */
 	public Process makeProcess() throws IOException, XMLException, MalformedRepositoryLocationException {
 		String processLocation = TUTORIALS_PATH + getGroup().getName() + "/" + folder + processName;
-		RepositoryProcessLocation repoLocation = new RepositoryProcessLocation(new RepositoryLocation(processLocation));
-		Process newProcess = new Process(repoLocation.getRawXML());
+		RepositoryProcessLocation repoLocation = new RepositoryProcessLocation(new RepositoryLocationBuilder().withExpectedDataEntryType(ProcessEntry.class).buildFromAbsoluteLocation(processLocation));
+		Process newProcess = new Process(repoLocation.getRawXML(), Process.NO_ENCRYPTION);
 		newProcess.getRootOperator().setUserData(KEY_USER_DATA_FLAG, new FlagUserData());
 		ProcessOriginProcessXMLFilter.setProcessOriginState(newProcess, ProcessOriginState.GENERATED_TUTORIAL);
 		return newProcess;

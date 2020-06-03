@@ -21,18 +21,11 @@ package com.rapidminer.gui.security;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import javax.xml.bind.JAXBException;
-import javax.xml.transform.TransformerException;
 
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -41,9 +34,11 @@ import org.junit.Test;
 
 import com.rapidminer.RapidMiner;
 import com.rapidminer.tools.FileSystemService;
+import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.cipher.CipherTools;
 import com.rapidminer.tools.cipher.KeyGenerationException;
 import com.rapidminer.tools.cipher.KeyGeneratorTool;
+import com.rapidminer.tools.encryption.EncryptionProvider;
 
 
 /**
@@ -52,7 +47,9 @@ import com.rapidminer.tools.cipher.KeyGeneratorTool;
  */
 public class WalletTest {
 
-	private static File tmpRMuserDir;
+	private static final String SECRETS_XML = "secrets.xml";
+	private static final String CREDENTIALS_XML = "credentials.xml";
+	private static File tmpRMUserDir;
 	private static String originalUserHome;
 	private static String secretsXmlContentBefore;
 
@@ -63,23 +60,25 @@ public class WalletTest {
 		File tmpDir = File.createTempFile("wallet", "test");
 		tmpDir.delete();
 		tmpDir.mkdir();
-		tmpRMuserDir = new File(tmpDir, FileSystemService.RAPIDMINER_USER_FOLDER);
-		tmpRMuserDir.mkdir();
+		tmpRMUserDir = new File(tmpDir, FileSystemService.RAPIDMINER_USER_FOLDER);
+		tmpRMUserDir.mkdir();
 		System.setProperty("user.home", tmpDir.getAbsolutePath());
 
 		RapidMiner.setExecutionMode(RapidMiner.ExecutionMode.TEST);
 
+		// init old encryption framework
 		if (!CipherTools.isKeyAvailable()) {
-			KeyGeneratorTool.storeKey(KeyGeneratorTool.createSecretKey().getEncoded(), new File(tmpRMuserDir, "cipher.key").toPath());
+			KeyGeneratorTool.storeKey(KeyGeneratorTool.createSecretKey().getEncoded(), new File(tmpRMUserDir, "cipher.key").toPath());
 		}
+		// init new (9.7+) encryption framework
+		EncryptionProvider.initialize();
 
-		URL resource = WalletTest.class.getResource("secrets.xml");
-		File newSecretsxml = new File(tmpRMuserDir, "secrets.xml");
-		OutputStream fos = new FileOutputStream(newSecretsxml);
-		copy(resource.openStream(), fos);
-		fos.close();
+		URL resource = WalletTest.class.getResource(SECRETS_XML);
+		File newSecretsXml = new File(tmpRMUserDir, SECRETS_XML);
+		OutputStream fos = new FileOutputStream(newSecretsXml);
+		Tools.copyStreamSynchronously(resource.openStream(), fos, true);
 
-		secretsXmlContentBefore = readFile(new File(tmpRMuserDir, "secrets.xml").getAbsolutePath(), Charset.defaultCharset());
+		secretsXmlContentBefore = readFile(new File(tmpRMUserDir, SECRETS_XML).getAbsolutePath());
 	}
 
 	@AfterClass
@@ -88,9 +87,9 @@ public class WalletTest {
 	}
 
 	@Test
-	public void testReadSecureStorage() throws IOException, JAXBException, TransformerException {
+	public void testReadSecureStorage() throws IOException {
 		//expecting migration while loading so the content should have changed
-		String secretsXmlContentAfter = readFile(new File(tmpRMuserDir, "secrets.xml").getAbsolutePath(), Charset.defaultCharset());
+		String secretsXmlContentAfter = readFile(new File(tmpRMUserDir, CREDENTIALS_XML).getAbsolutePath());
 		Assert.assertNotEquals(secretsXmlContentBefore, secretsXmlContentAfter);
 		Wallet.getInstance().readCache();
 		Assert.assertEquals(5,  Wallet.getInstance().getKeys().size());
@@ -127,21 +126,8 @@ public class WalletTest {
 		Assert.assertEquals(w2.size(), w1.size() + 2);
 	}
 
-	static String readFile(String path, Charset encoding)
-			throws IOException {
-		byte[] encoded = Files.readAllBytes(Paths.get(path));
-		return new String(encoded, encoding);
+	private static String readFile(String path) throws IOException {
+		return Tools.readTextFile(Files.newInputStream(Paths.get(path)));
 	}
 
-	private static long copy(InputStream source, OutputStream sink)
-			throws IOException {
-		long nread = 0L;
-		byte[] buf = new byte[1024];
-		int n;
-		while ((n = source.read(buf)) > 0) {
-			sink.write(buf, 0, n);
-			nread += n;
-		}
-		return nread;
-	}
 }

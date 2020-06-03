@@ -30,7 +30,7 @@ import java.util.function.Supplier;
 
 
 /**
- * General container for the response of a request to RM Server. Can only be used for responses <= 2 Gibibyte.
+ * General container for the response of a request to RapidMiner AI Hub. Can only be used for responses <= 2 Gibibyte.
  *
  * <strong>
  * Avoid using this if possible. Consume responses in the {@link BaseServerClient} implementation and return proper Objects instead.

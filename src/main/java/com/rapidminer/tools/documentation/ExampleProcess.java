@@ -18,16 +18,16 @@
 */
 package com.rapidminer.tools.documentation;
 
+import java.io.IOException;
+import java.util.logging.Level;
+
+import org.w3c.dom.Element;
+
 import com.rapidminer.Process;
 import com.rapidminer.io.process.XMLTools;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.XMLException;
-
-import java.io.IOException;
-import java.util.logging.Level;
-
-import org.w3c.dom.Element;
 
 
 /**
@@ -73,7 +73,7 @@ public class ExampleProcess {
 
 	public Process getProcess() {
 		try {
-			return new Process(getProcessXML());
+			return new Process(getProcessXML(), Process.NO_ENCRYPTION);
 		} catch (IOException e) {
 			// LogService.getRoot().log(Level.WARNING, "Cannot parse example process: "+e, e);
 			LogService.getRoot().log(

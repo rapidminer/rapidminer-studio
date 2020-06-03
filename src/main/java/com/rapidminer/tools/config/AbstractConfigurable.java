@@ -27,10 +27,12 @@ import java.util.Map;
 import java.util.logging.Level;
 
 import com.rapidminer.parameter.ParameterType;
+import com.rapidminer.parameter.ParameterTypePassword;
 import com.rapidminer.repository.internal.remote.RemoteRepository;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.cipher.KeyGeneratorTool;
 import com.rapidminer.tools.config.actions.ConfigurableAction;
+import com.rapidminer.tools.encryption.EncryptionProvider;
 
 
 /**
@@ -62,7 +64,7 @@ public abstract class AbstractConfigurable implements Configurable {
 
 	/**
 	 * Returns the parameter value for the given key. The value has gone through the
-	 * {@link ParameterType#transformNewValue(String)} method.
+	 * {@link ParameterType#transformNewValue(String, String)} method.
 	 *
 	 * @param key
 	 * @return
@@ -79,7 +81,7 @@ public abstract class AbstractConfigurable implements Configurable {
 		List<ParameterType> parameterTypes = configurator.getParameterTypes(configurator.getParameterHandler(this));
 		for (ParameterType type : parameterTypes) {
 			if (type.getKey().equals(key)) {
-				return type.transformNewValue(parameters.get(key));
+				return type.transformNewValue(parameters.get(key), EncryptionProvider.DEFAULT_CONTEXT);
 			}
 		}
 
@@ -134,11 +136,14 @@ public abstract class AbstractConfigurable implements Configurable {
 				// configurables are stored encrypted, so set the decryption key
 				KeyGeneratorTool.setUserKey(decryptKey);
 				// decrypt it with decryption key
-				value = type.transformNewValue(parameters.get(key));
+				value = type.transformNewValue(parameters.get(key), EncryptionProvider.DEFAULT_CONTEXT);
 				// set encryption key
 				KeyGeneratorTool.setUserKey(encryptKey);
 				// encrypt it again with encryption key
 				value = type.toString(value);
+				if (type instanceof ParameterTypePassword) {
+					value = type.toXMLString(value, EncryptionProvider.DEFAULT_CONTEXT);
+				}
 
 				// restore key which was used before this call
 				if (currentKey != null) {

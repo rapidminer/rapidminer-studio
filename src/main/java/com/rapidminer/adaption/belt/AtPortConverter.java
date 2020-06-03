@@ -19,6 +19,7 @@
 package com.rapidminer.adaption.belt;
 
 import com.rapidminer.belt.table.BeltConverter;
+import com.rapidminer.belt.table.TableViewCreator;
 import com.rapidminer.core.concurrency.ConcurrencyContext;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.operator.IOObject;
@@ -64,14 +65,15 @@ public final class AtPortConverter {
 	 * 		the port at which the conversion takes place
 	 * @return the converted object
 	 * @throws BeltConverter.ConversionException
-	 * 		if the table cannot be converted because it contains custom columns
+	 * 		if the table cannot be converted because it contains advanced columns
 	 */
 	public static IOObject convert(IOObject data, Port port) {
-		ConcurrencyContext context = Resources.getConcurrencyContext(port.getPorts().getOwner().getOperator());
 		if (data instanceof ExampleSet) {
+			ConcurrencyContext context = Resources.getConcurrencyContext(port.getPorts().getOwner().getOperator());
 			return BeltConverter.convert((ExampleSet) data, context);
 		} else if (data instanceof IOTable) {
-			return BeltConverter.convert((IOTable) data, context);
+			// convert as a view and throw on advanced columns
+			return TableViewCreator.INSTANCE.convertOnWriteView((IOTable) data, true);
 		} else {
 			throw new UnsupportedOperationException("Conversion not supported");
 		}

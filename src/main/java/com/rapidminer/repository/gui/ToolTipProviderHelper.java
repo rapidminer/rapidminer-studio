@@ -18,6 +18,9 @@
 */
 package com.rapidminer.repository.gui;
 
+import java.awt.Component;
+import java.util.logging.Level;
+
 import com.rapidminer.gui.metadata.MetaDataRendererFactoryRegistry;
 import com.rapidminer.operator.ports.metadata.ExampleSetMetaData;
 import com.rapidminer.operator.ports.metadata.MetaData;
@@ -25,11 +28,10 @@ import com.rapidminer.repository.BlobEntry;
 import com.rapidminer.repository.Entry;
 import com.rapidminer.repository.IOObjectEntry;
 import com.rapidminer.repository.RepositoryException;
+import com.rapidminer.repository.versioned.NewVersionedRepository;
+import com.rapidminer.repository.versioned.VersionedRepositoryStatus;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
-
-import java.awt.Component;
-import java.util.logging.Level;
 
 
 /**
@@ -57,8 +59,6 @@ public class ToolTipProviderHelper {
 						tip.append("</p>");
 					}
 				} catch (RepositoryException e1) {
-					// LogService.getRoot().log(Level.WARNING,
-					// "Cannot fetch meta data for tool tip: " + e, e);
 					LogService.getRoot().log(
 							Level.WARNING,
 							I18N.getMessage(LogService.getRoot().getResourceBundle(),
@@ -69,10 +69,62 @@ public class ToolTipProviderHelper {
 				}
 			} else {
 				tip.append("<p>Meta data for this object not loaded yet.<br/><a href=\"loadMetaData?");
-				tip.append(e.getLocation().toString());
+				tip.append(e.getLocation().toString()).append("|").append(e.getObjectClass().getName());
 				tip.append("\">Click to load.</a></p>");
 			}
 			return tip.toString();
+		} else if (o instanceof NewVersionedRepository) {
+			NewVersionedRepository repo = (NewVersionedRepository) o;
+			VersionedRepositoryStatus versionStatus = repo.getStatus();
+			StringBuilder sb = new StringBuilder();
+			sb.append("<h3>");
+			sb.append(o.getName());
+			sb.append("</h3><p>");
+			sb.append(o.getDescription());
+			sb.append("</p><br>");
+			if (!versionStatus.isEncryptionContextKnown()) {
+				sb.append(I18N.getGUIMessage("gui.repository.versioned_new.state_encryption_unknown.tip"));
+				return sb.toString();
+			}
+			if (!versionStatus.isRemoteOriginExisting()) {
+				sb.append(I18N.getGUIMessage("gui.repository.versioned_new.state_remote_origin_missing.tip"));
+				return sb.toString();
+			}
+			if (!versionStatus.isRemoteTrackingBranchExisting()) {
+				sb.append(I18N.getGUIMessage("gui.repository.versioned_new.state_remote_tracking_branch_missing.tip", versionStatus.getCurrentBranch()));
+				return sb.toString();
+			}
+			if (!versionStatus.isConnected()) {
+				sb.append(I18N.getGUIMessage("gui.repository.versioned_new.state_not_connected.tip"));
+				return sb.toString();
+			}
+
+			// all good, no problems
+			if (!versionStatus.getCurrentBranch().isEmpty()) {
+				sb.append("<p>");
+				sb.append(I18N.getGUIMessage("gui.repository.versioned_new.state_branch.label", versionStatus.getCurrentBranch()));
+				sb.append("</p><br>");
+			}
+			if (repo.isReadOnly()) {
+				sb.append("<p>");
+				sb.append(I18N.getGUIMessage("gui.repository.versioned_new.state_read_only.tip"));
+				sb.append("</p><br>");
+			}
+			if (versionStatus.isUpToDate()) {
+				sb.append(I18N.getGUIMessage("gui.repository.versioned_new.state_up_to_date.tip"));
+				return sb.toString();
+			}
+			boolean ahead = versionStatus.getNumberOfLocalChanges() > 0 || versionStatus.getNumberOfCommitsAhead() > 0;
+			boolean behind = versionStatus.getNumberOfCommitsBehind() > 0;
+			if (behind) {
+				sb.append(I18N.getGUIMessage("gui.repository.versioned_new.state_behind.tip", versionStatus.getNumberOfCommitsBehind()));
+				return sb.toString();
+			}
+			if (ahead && !repo.isReadOnly()) {
+				sb.append(I18N.getGUIMessage("gui.repository.versioned_new.state_ahead.tip", versionStatus.getNumberOfLocalChanges() + versionStatus.getNumberOfCommitsAhead()));
+				return sb.toString();
+			}
+			return sb.toString();
 		} else {
 			StringBuilder tip = new StringBuilder();
 			tip.append("<h3>").append((o).getName()).append("</h3><p>").append((o).getDescription()).append("</p>");
@@ -89,15 +141,8 @@ public class ToolTipProviderHelper {
 			if (!e.willBlock()) {
 				try {
 					MetaData metaData = e.retrieveMetaData();
-					Component renderer = MetaDataRendererFactoryRegistry.getInstance().createRenderer(metaData);
-					return renderer;
-					// if ((metaData != null) && (metaData instanceof ExampleSetMetaData)) {
-					// return ExampleSetMetaDataTableModel.makeTableForToolTip((ExampleSetMetaData)
-					// metaData);
-					// }
+					return MetaDataRendererFactoryRegistry.getInstance().createRenderer(metaData);
 				} catch (Exception ex) {
-					// LogService.getRoot().log(Level.WARNING, "Error retrieving meta data for " +
-					// e.getLocation() + ": " + ex, ex);
 					LogService.getRoot().log(
 							Level.WARNING,
 							I18N.getMessage(LogService.getRoot().getResourceBundle(),

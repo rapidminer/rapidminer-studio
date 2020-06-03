@@ -29,7 +29,6 @@ import static org.junit.Assert.fail;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -38,14 +37,15 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.apache.commons.io.IOUtils;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.exc.InvalidDefinitionException;
 import com.rapidminer.connection.ConnectionInformationSerializer;
 import com.rapidminer.connection.valueprovider.ValueProviderImpl;
 import com.rapidminer.connection.valueprovider.handler.ValueProviderHandler;
 import com.rapidminer.connection.valueprovider.handler.ValueProviderHandlerRegistryTest;
+import com.rapidminer.tools.encryption.EncryptionProvider;
 
 
 /**
@@ -110,6 +110,11 @@ public class ConnectionConfigurationBuilderTest {
 
 		PlaceholderParameter placeholder = new PlaceholderParameterImpl("placeholder param name", "placeholder param group");
 		return new ConnectionConfigurationBuilder("large configuration", CONFIGURATION_TYPE_TEST).withKeys(keys).withKeys(group, groupkeys).withDescription(description).withTags(tags).withTag("afterwards added tag").withPlaceholder(placeholder).withValueProvider(new ValueProviderImpl("value provider test name", vpTestType)).build();
+	}
+
+	@BeforeClass
+	public static void setup() {
+		EncryptionProvider.initialize();
 	}
 
 	@Test
@@ -289,20 +294,12 @@ public class ConnectionConfigurationBuilderTest {
 		dotReplacement.put("key map", "key.map");
 		dotReplacement.put("LG (large group)", "LG (large.group)");
 		dotReplacement.put("placeholder param group", "placeholder param.group");
-		String serialized =
-				new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(getLargeConfiguration());
+		String serialized = ConnectionInformationSerializer.INSTANCE.createJsonFromObject(getLargeConfiguration(), EncryptionProvider.DEFAULT_CONTEXT);
 		for (Map.Entry<String, String> entry : dotReplacement.entrySet()) {
 			String replaced = serialized.replace(entry.getKey(), entry.getValue());
 			//stream version
 			try {
-				ConnectionInformationSerializer.LOCAL.loadConfiguration(new ByteArrayInputStream(replaced.getBytes(StandardCharsets.UTF_8)));
-				fail("Groups with dots should not be allowed");
-			} catch (InvalidDefinitionException e) {
-				assertEquals(IllegalArgumentException.class, e.getCause().getClass());
-			}
-			//reader version
-			try {
-				ConnectionInformationSerializer.LOCAL.loadConfiguration(new StringReader(replaced));
+				ConnectionInformationSerializer.INSTANCE.loadConfiguration(new ByteArrayInputStream(replaced.getBytes(StandardCharsets.UTF_8)), EncryptionProvider.DEFAULT_CONTEXT);
 				fail("Groups with dots should not be allowed");
 			} catch (InvalidDefinitionException e) {
 				assertEquals(IllegalArgumentException.class, e.getCause().getClass());

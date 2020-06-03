@@ -75,7 +75,7 @@ public class ConnectionSourcesPanel extends JPanel {
 	 * The model containing copies of all the necessary information
 	 */
 	private final ConnectionModel connectionModel;
-	private final JDialog parent;
+	private final JDialog parentDialog;
 
 	/**
 	 * Create a new instance for the given connectionModel.
@@ -83,9 +83,9 @@ public class ConnectionSourcesPanel extends JPanel {
 	 * @param connectionModel
 	 * 		The model containing all the {@link ValueProvider ValueProviders} to configure or show
 	 */
-	public ConnectionSourcesPanel(JDialog parent, ConnectionModel connectionModel) {
+	public ConnectionSourcesPanel(JDialog parentDialog, ConnectionModel connectionModel) {
 		this.connectionModel = connectionModel;
-		this.parent = parent;
+		this.parentDialog = parentDialog;
 		setLayout(new BorderLayout());
 		JLabel label;
 		if (!connectionModel.isEditable()) {
@@ -207,12 +207,12 @@ public class ConnectionSourcesPanel extends JPanel {
 			JLabel warningLabel = new JLabel(ConnectionI18N.getConnectionGUIMessage(handler.validate(provider,
 					information).getMessageKey()));
 			JPanel wrapped = AbstractConnectionGUI.addInformationIcon(warningLabel, provider.getType(),
-					"valueprovider", "no_configuration", parent);
+					"valueprovider", "no_configuration", parentDialog);
 			outerPanel.add(wrapped, gbc);
 		} else {
 			final ValueProviderGUIProvider guiProvider = ValueProviderGUIRegistry.INSTANCE.getGUIProvider(valueProviderType);
 			try {
-				outerPanel.add(guiProvider.createConfigurationComponent(parent, provider, ConnectionModelConverter.getConnection(connectionModel), connectionModel.isEditable()), gbc);
+				outerPanel.add(guiProvider.createConfigurationComponent(parentDialog, provider, ConnectionModelConverter.getConnection(connectionModel), connectionModel.isEditable()), gbc);
 			} catch (Exception e) {
 				LogService.getRoot().log(Level.SEVERE, "Creating the component to configure the value provider handler " + valueProviderType + " failed", e);
 			}

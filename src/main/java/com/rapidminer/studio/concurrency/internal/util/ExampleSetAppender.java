@@ -222,6 +222,7 @@ public class ExampleSetAppender {
 		// create result example set
 		ExampleSet resultSet = builder.withRoles(specialAttributesMap).build();
 		resultSet.getAnnotations().addAll(firstSet.getAnnotations());
+		resultSet.setAllUserData(firstSet.getAllUserData());
 		return resultSet;
 	}
 

@@ -42,10 +42,10 @@ import java.util.Observer;
 public interface Ports<T extends Port> extends Observable<Port> {
 
 	/** Returns all input port names registered with these ports. */
-	public String[] getPortNames();
+	String[] getPortNames();
 
 	/** Returns the number of ports. */
-	public int getNumberOfPorts();
+	int getNumberOfPorts();
 
 	/**
 	 * Should be used in apply method to retrieve desired ports. name should be a constant defined
@@ -53,13 +53,13 @@ public interface Ports<T extends Port> extends Observable<Port> {
 	 * with a suitable prefix is registered, ports will be created accordingly. In this case, the
 	 * user must call {@link #unlockPortExtenders()} to guarantee that ports can be removed again.
 	 */
-	public T getPortByName(String name);
+	T getPortByName(String name);
 
 	/** Should only be used by GUI. */
-	public T getPortByIndex(int index);
+	T getPortByIndex(int index);
 
 	/** Returns an immutable view of the ports. */
-	public List<T> getAllPorts();
+	List<T> getAllPorts();
 
 	/**
 	 * Add a port and notify the {@link Observer}s.
@@ -67,7 +67,7 @@ public interface Ports<T extends Port> extends Observable<Port> {
 	 * @throws PortException
 	 *             if the name is already used.
 	 */
-	public void addPort(T port) throws PortException;
+	void addPort(T port) throws PortException;
 
 	/**
 	 * Remove a port and notify the {@link Observer}s.
@@ -75,70 +75,70 @@ public interface Ports<T extends Port> extends Observable<Port> {
 	 * @throws PortException
 	 *             if port is not registered with this Ports instance.
 	 */
-	public void removePort(T port) throws PortException;
+	void removePort(T port) throws PortException;
 
 	/** Removes all ports. */
-	public void removeAll() throws PortException;
+	void removeAll() throws PortException;
 
 	/** Returns true if this port is contained within this Ports object. */
-	public boolean containsPort(T port);
+	boolean containsPort(T port);
 
 	/** Returns a textual description of the meta data currently assigned to these ports. */
-	public String getMetaDataDescription();
+	String getMetaDataDescription();
 
 	/** Returns the operator and process to which these ports are attached. */
-	public PortOwner getOwner();
+	PortOwner getOwner();
 
 	/** Creates a new port and adds it to these Ports. */
-	public T createPort(String name);
+	T createPort(String name);
 
 	/** Creates (and adds) a new port whose {@link Port#simulatesStack()} returns false. */
-	public T createPassThroughPort(String name);
+	T createPassThroughPort(String name);
 
 	/** Creates a new port and adds it to these Ports if add is true.. */
-	public T createPort(String name, boolean add);
+	T createPort(String name, boolean add);
 
 	/** Renames the given port. */
-	public void renamePort(T port, String newName);
+	void renamePort(T port, String newName);
 
 	/**
 	 * Clears the input, meta data, and error messages.
 	 * 
 	 * @see Ports#clear(int)
 	 */
-	public void clear(int clearFlags);
+	void clear(int clearFlags);
 
 	/**
 	 * This is a backport method to generate IOContainers containing all output objects of the given
 	 * ports.
 	 */
-	public IOContainer createIOContainer(boolean onlyConnected);
+	IOContainer createIOContainer(boolean onlyConnected);
 
 	/**
 	 * This is a backport method to generate IOContainers containing all output objects of the given
 	 * ports.
 	 */
-	public IOContainer createIOContainer(boolean onlyConnected, boolean omitNullResults);
+	IOContainer createIOContainer(boolean onlyConnected, boolean omitNullResults);
 
 	/** Re-adds this port as the last port in this collection. */
-	public void pushDown(T port);
+	void pushDown(T port);
 
 	/** Disconnects all ports. */
-	public void disconnectAll();
+	void disconnectAll();
 
 	/**
 	 * Disconnects all ports with exception to those connections to operators in the given list.
 	 */
-	public void disconnectAllBut(List<Operator> exception);
+	void disconnectAllBut(List<Operator> exception);
 
 	/** Registers a port extender with this ports. */
-	public void registerPortExtender(PortExtender extender);
+	void registerPortExtender(PortExtender extender);
 
 	/** While parsing the process XML file, we may have called loading */
-	public void unlockPortExtenders();
+	void unlockPortExtenders();
 
 	/** Frees memory occupied by references to ioobjects. */
-	public void freeMemory();
+	void freeMemory();
 
 	/** Returns the number of ports in these Ports that are actually connected. */
 	int getNumberOfConnectedPorts();

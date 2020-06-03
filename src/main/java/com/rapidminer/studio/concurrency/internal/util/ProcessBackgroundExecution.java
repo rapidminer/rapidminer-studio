@@ -24,6 +24,7 @@ import java.text.DateFormat;
 import java.util.logging.Level;
 
 import com.rapidminer.Process;
+import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryLocation;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.XMLException;
@@ -107,8 +108,9 @@ public class ProcessBackgroundExecution implements BackgroundExecution {
 	 */
 	public Process getProcessWithoutLocation() {
 		try {
-			return new Process(originalProcess.getRootOperator().getXML(false));
-		} catch (IOException | XMLException e) {
+			String encryptionContext = getLocation().getRepository().getEncryptionContext();
+			return new Process(originalProcess.getRootOperator().getXML(false, encryptionContext), Process.NO_ENCRYPTION);
+		} catch (IOException | XMLException | RepositoryException e) {
 			LogService.getRoot().log(Level.WARNING, "Failed to read process XML, fall back to provided process.", e);
 			return originalProcess;
 		}

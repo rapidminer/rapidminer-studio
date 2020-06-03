@@ -72,11 +72,13 @@ import com.rapidminer.parameter.SimpleListBasedParameterHandler;
 import com.rapidminer.parameter.conditions.EqualStringCondition;
 import com.rapidminer.parameter.conditions.NonEqualStringCondition;
 import com.rapidminer.parameter.conditions.PortConnectedCondition;
+import com.rapidminer.repository.ConnectionEntry;
 import com.rapidminer.repository.Folder;
 import com.rapidminer.repository.MalformedRepositoryLocationException;
 import com.rapidminer.repository.Repository;
 import com.rapidminer.repository.RepositoryAccessor;
 import com.rapidminer.repository.RepositoryLocation;
+import com.rapidminer.repository.RepositoryLocationBuilder;
 import com.rapidminer.tools.ConsumerWithThrowable;
 import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LogService;
@@ -90,6 +92,7 @@ import com.rapidminer.tools.config.ConfigurationManager;
 import com.rapidminer.tools.config.ParameterTypeConfigurable;
 import com.rapidminer.tools.config.TestConfigurableAction;
 import com.rapidminer.tools.config.actions.ActionResult;
+import com.rapidminer.tools.encryption.EncryptionProvider;
 import com.rapidminer.tools.usagestats.ActionStatisticsCollector;
 
 
@@ -395,7 +398,7 @@ public abstract class ConnectionAdapterHandler<T extends ConnectionAdapter>
 				boolean isEncrypted = encryptedKeys.containsKey(p);
 				String value = parameters.get(p);
 				if (isEncrypted) {
-					value = encryptedKeys.get(p).transformNewValue(value);
+					value = encryptedKeys.get(p).transformNewValue(value, EncryptionProvider.DEFAULT_CONTEXT);
 				}
 				cps.add(ParameterUtility.getCPBuilder(p, isEncrypted).withValue(value).build());
 			}
@@ -444,7 +447,7 @@ public abstract class ConnectionAdapterHandler<T extends ConnectionAdapter>
 		try {
 			Repository repo = connection.getRepository();
 			if (repo != null) {
-				hash.location = new RepositoryLocation(repo.getName(),
+				hash.location = new RepositoryLocationBuilder().withExpectedDataEntryType(ConnectionEntry.class).buildFromPathComponents(repo.getName(),
 						new String[]{Folder.CONNECTION_FOLDER_NAME, connection.getConfiguration().getName()}).getAbsoluteLocation();
 			} else {
 				hash.location = connection.getConfiguration().getName();

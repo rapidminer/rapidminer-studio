@@ -32,6 +32,7 @@ import com.rapidminer.connection.valueprovider.handler.ValueProviderHandlerRegis
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryLocation;
 import com.rapidminer.repository.internal.remote.RemoteRepository;
+import com.rapidminer.repository.versioned.NewVersionedRepository;
 
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -387,7 +388,7 @@ public class ConnectionModel {
 	private void setupOtherValueProviders() {
 		String filter;
 		try {
-			filter = location.getRepository() instanceof RemoteRepository ? ValueProviderHandlerRegistry.REMOTE : null;
+			filter = (location.getRepository() instanceof RemoteRepository || location.getRepository() instanceof NewVersionedRepository) ? ValueProviderHandlerRegistry.REMOTE : null;
 		} catch (RepositoryException e) {
 			filter = ValueProviderHandlerRegistry.REMOTE;
 		}

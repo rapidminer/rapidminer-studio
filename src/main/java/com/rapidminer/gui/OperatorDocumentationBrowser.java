@@ -78,6 +78,7 @@ import com.rapidminer.tools.XMLException;
 import com.rapidminer.tools.plugin.Plugin;
 import com.vlsolutions.swing.docking.DockKey;
 import com.vlsolutions.swing.docking.Dockable;
+import com.vlsolutions.swing.docking.RelativeDockablePosition;
 
 
 /**
@@ -105,7 +106,7 @@ public class OperatorDocumentationBrowser extends JPanel implements Dockable, Pr
 
 	private boolean ignoreSelections = false;
 
-	private final DockKey DOCK_KEY = new ResourceDockKey(OPERATOR_HELP_DOCK_KEY);
+	private final DockKey dockKey = new ResourceDockKey(OPERATOR_HELP_DOCK_KEY);
 
 	private UpdateQueue documentationUpdateQueue = new UpdateQueue("documentation_update_queue");
 
@@ -118,8 +119,9 @@ public class OperatorDocumentationBrowser extends JPanel implements Dockable, Pr
 	 * Prepares the dockable and its elements.
 	 */
 	public OperatorDocumentationBrowser() {
-		setLayout(new BorderLayout());
+		dockKey.putProperty(ResourceDockKey.PROPERTY_KEY_DEFAULT_FALLBACK_LOCATION, RelativeDockablePosition.BOTTOM_RIGHT);
 
+		setLayout(new BorderLayout());
 		contentGbc = new GridBagConstraints();
 
 		contentPanel = new JPanel(new GridBagLayout()) {
@@ -219,7 +221,7 @@ public class OperatorDocumentationBrowser extends JPanel implements Dockable, Pr
 
 	@Override
 	public DockKey getDockKey() {
-		return DOCK_KEY;
+		return dockKey;
 	}
 
 	/**
@@ -391,7 +393,7 @@ public class OperatorDocumentationBrowser extends JPanel implements Dockable, Pr
 
 		Process exampleProcess;
 		try {
-			exampleProcess = new Process(tutorialProcesses[tutorialIndex]);
+			exampleProcess = new Process(tutorialProcesses[tutorialIndex], Process.NO_ENCRYPTION);
 		} catch (IOException | XMLException e) {
 			LogService.getRoot().log(Level.WARNING, "com.rapidminer.tools.documentation.ExampleProcess.reading_file_error", e);
 			return;

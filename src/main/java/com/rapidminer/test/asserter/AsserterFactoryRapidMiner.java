@@ -34,6 +34,9 @@ import org.junit.ComparisonFailure;
 import com.rapidminer.adaption.belt.IOTable;
 import com.rapidminer.adaption.belt.TableViewingTools;
 import com.rapidminer.belt.table.BeltConverter;
+import com.rapidminer.belt.table.Table;
+import com.rapidminer.belt.util.ColumnRole;
+import com.rapidminer.example.Attribute;
 import com.rapidminer.example.Example;
 import com.rapidminer.example.ExampleSet;
 import com.rapidminer.example.table.SparseDataRow;
@@ -242,7 +245,7 @@ public class AsserterFactoryRapidMiner implements AsserterFactory {
 					actual = actualObj instanceof IOTable ? TableViewingTools.getView((IOTable) actualObj) :
 							(ExampleSet) actualObj;
 				} catch (BeltConverter.ConversionException e) {
-					fail("Custom column " + e.getColumnName() + " of type " + e.getType().customTypeID() + " not " +
+					fail("Advanced column " + e.getColumnName() + " of type " + e.getType() + " not " +
 							"comparable");
 				}
 
@@ -280,6 +283,72 @@ public class AsserterFactoryRapidMiner implements AsserterFactory {
 			@Override
 			public Class<?> getAssertable() {
 				return ExampleSet.class;
+			}
+		});
+
+		// Asserter for IOTable
+		asserters.add(new Asserter() {
+
+			/**
+			 * Tests two tables by iterating over all rows. Ignores the order of special columns analogously to
+			 * {@link RapidAssert#assertEquals(String, Attribute, Attribute, boolean)}.
+			 *
+			 * @param message
+			 * 		message to display if an error occurs
+			 * @param expectedObj
+			 * 		expected value
+			 * @param actualObj
+			 * 		actual value
+			 */
+			@Override
+			public void assertEquals(String message, Object expectedObj, Object actualObj) {
+
+				IOTable expected = (IOTable) expectedObj;
+				IOTable actual = (IOTable) actualObj;
+
+				Table expectedTable = expected.getTable();
+				Table actualTable = actual.getTable();
+
+				message = message + " - Tables are not equal";
+
+				// compare number of rows
+				Assert.assertEquals(message + " (number of rows)", expectedTable.height(), actualTable.height());
+
+				// compare columns
+				Assert.assertEquals(message + " (number of columns)", expectedTable.width(), actualTable.width());
+
+				List<String> regularExpected = expectedTable.select().withoutMetaData(ColumnRole.class).labels();
+				List<String> regularActual = actualTable.select().withoutMetaData(ColumnRole.class).labels();
+
+				Assert.assertEquals(message + " (number of special columns)",
+						(expectedTable.width() - regularExpected.size()),
+						(actualTable.width() - regularActual.size()));
+
+				//regular columns must be in the same order
+				for (int i = 0; i < regularExpected.size(); i++) {
+					String expectedLabel = regularExpected.get(i);
+					String actualLabel = regularActual.get(i);
+					Assert.assertEquals(message + " (column name)", expectedLabel, actualLabel);
+					RapidAssert.assertEquals(message, expectedLabel, expectedTable.column(expectedLabel),
+							actualTable.column(actualLabel));
+				}
+
+				List<String> specialExpected = expectedTable.select().withMetaData(ColumnRole.class).labels();
+				for (String expectedLabel : specialExpected) {
+					if (!actualTable.contains(expectedLabel)) {
+						Assert.assertEquals(message + " (column name)", expectedLabel, null);
+					}
+					Assert.assertEquals(message + " (column role)", expectedTable.getFirstMetaData(expectedLabel,
+							ColumnRole.class).toString(), actualTable.getFirstMetaData(expectedLabel, ColumnRole.class).toString());
+
+					RapidAssert.assertEquals(message, expectedLabel, expectedTable.column(expectedLabel),
+							actualTable.column(expectedLabel));
+				}
+			}
+
+			@Override
+			public Class<?> getAssertable() {
+				return IOTable.class;
 			}
 		});
 

@@ -23,7 +23,6 @@ import com.rapidminer.operator.DebugMode;
 import com.rapidminer.operator.IOObject;
 import com.rapidminer.operator.ports.InputPort;
 import com.rapidminer.operator.ports.InputPorts;
-import com.rapidminer.operator.ports.Port;
 import com.rapidminer.operator.ports.Ports;
 import com.rapidminer.operator.ports.metadata.MetaData;
 
@@ -36,8 +35,8 @@ import com.rapidminer.operator.ports.metadata.MetaData;
  */
 public class InputPortImpl extends AbstractInputPort {
 
-	/** Use the factory method {@link InputPorts#createPort()} to create InputPorts. */
-	protected InputPortImpl(Ports<? extends Port> owner, String name, boolean simulatesStack) {
+	/** Use the factory method {@link InputPorts#createPort(String)} to create InputPorts. */
+	protected InputPortImpl(Ports<InputPort> owner, String name, boolean simulatesStack) {
 		super(owner, name, simulatesStack);
 	}
 

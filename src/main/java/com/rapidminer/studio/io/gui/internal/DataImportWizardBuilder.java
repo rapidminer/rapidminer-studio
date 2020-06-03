@@ -26,6 +26,7 @@ import com.rapidminer.core.io.data.source.DataSource;
 import com.rapidminer.core.io.data.source.DataSourceFactory;
 import com.rapidminer.core.io.data.source.FileDataSourceFactory;
 import com.rapidminer.core.io.gui.ImportWizard;
+import com.rapidminer.gui.ApplicationFrame;
 import com.rapidminer.gui.tools.dialogs.ButtonDialog;
 import com.rapidminer.operator.nio.model.AbstractDataResultSetReader;
 import com.rapidminer.studio.io.data.internal.file.LocalFileDataSourceFactory;
@@ -60,6 +61,9 @@ public final class DataImportWizardBuilder {
 	 * @return the new {@link ImportWizard} instance
 	 */
 	public ImportWizard build(Window owner) {
+		if (owner == null) {
+			owner = ApplicationFrame.getApplicationFrame();
+		}
 		DataImportWizard wizard = new DataImportWizard(owner, ModalityType.DOCUMENT_MODAL, null);
 
 		// add common steps

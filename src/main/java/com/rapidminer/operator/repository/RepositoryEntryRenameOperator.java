@@ -32,15 +32,19 @@ import com.rapidminer.repository.Entry;
 import com.rapidminer.repository.Folder;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryLocation;
+import com.rapidminer.repository.RepositoryLocationType;
 
 
 /**
- * An Operator to rename repository entries. The user can select the entry to rename, a new name and
- * if an already existing entry should be overwritten or not. If overwriting is not allowed (default
- * case) a user error is thrown if there already exists another element with the new name.
- * 
+ * An Operator to rename repository entries. The user can select the entry to rename, a new name and if an already
+ * existing entry should be overwritten or not. If overwriting is not allowed (default case) a user error is thrown if
+ * there already exists another element with the new name.
+ * <p>
+ * Since version 9.7: To cover situations where both a folder and a file exist with the same name, they will prefer the
+ * file. They will only work on folder level if no file with that name exists.
+ * </p>
+ *
  * @author Nils Woehler
- * 
  */
 public class RepositoryEntryRenameOperator extends AbstractRepositoryManagerOperator {
 
@@ -54,11 +58,13 @@ public class RepositoryEntryRenameOperator extends AbstractRepositoryManagerOper
 
 	@Override
 	public void doWork() throws OperatorException {
-
 		super.doWork();
 
 		// fetch parameters
-		RepositoryLocation repoLoc = getParameterAsRepositoryLocation(ELEMENT_TO_RENAME);
+		RepositoryLocation repoLoc = getParameterAsRepositoryLocationData(ELEMENT_TO_RENAME, DataEntry.class);
+		// could also be a folder, so change location type to UNKNOWN
+		repoLoc.setLocationType(RepositoryLocationType.UNKNOWN);
+
 		String newName = getParameterAsString(NEW_ELEMENT_NAME);
 		boolean overwrite = getParameterAsBoolean(OVERWRITE);
 
@@ -68,53 +74,72 @@ public class RepositoryEntryRenameOperator extends AbstractRepositoryManagerOper
 		}
 
 		// locate the entry that should be renamed
+		boolean isDataEntry;
 		Entry entry;
 		try {
-			entry = repoLoc.locateEntry();
+			entry = repoLoc.locateData();
+			if (entry == null) {
+				entry = repoLoc.locateFolder();
+			}
 			if (entry == null) {
 				throw new UserError(this, "301", repoLoc);
 			}
+			isDataEntry = entry instanceof DataEntry;
 		} catch (RepositoryException e1) {
 			throw new UserError(this, e1, "302", repoLoc, e1.getMessage());
 		}
+		repoLoc.setLocationType(entry.getLocation().getLocationType());
 
 		try {
-			// fetch the containing folder and check if another entry with the same name already
-			// exists.
+			// fetch the containing folder and check if another entry with the same name already exists.
 			Folder containingFolder = entry.getContainingFolder();
-			if (containingFolder != null && containingFolder.containsEntry(newName)) {
-
-				// if overwriting is allowed, try to delete the equally named entry
-				if (overwrite) {
-					List<DataEntry> dataEntries = containingFolder.getDataEntries();
-					boolean deleted = false;
-					for (DataEntry dataEntry : dataEntries) {
-						if (dataEntry.getName().equals(newName)) {
-							dataEntry.delete();
-							deleted = true;
-							break;
-						}
-					}
-
-					if (!deleted) {
-						List<Folder> subfolders = containingFolder.getSubfolders();
-						for (Folder subfolder : subfolders) {
-							if (subfolder.getName().equals(newName)) {
-								subfolder.delete();
-								deleted = true;
-								break;
+			if (containingFolder != null) {
+				if (isDataEntry) {
+					// data
+					if (containingFolder.containsData(newName, ((DataEntry) entry).getClass())) {
+						if (overwrite) {
+							List<DataEntry> dataEntries = containingFolder.getDataEntries();
+							boolean deleted = false;
+							for (DataEntry dataEntry : dataEntries) {
+								if (dataEntry.getName().equals(newName)) {
+									dataEntry.delete();
+									deleted = true;
+									break;
+								}
 							}
+							// if deleting was not successful, show an user error
+							if (!deleted) {
+								throw new RepositoryException("Could not delete already existing data " + newName
+										+ " at rename destination " + containingFolder);
+							}
+						} else {
+							throw new RepositoryException("Could not rename entry: Data with name " + newName
+									+ " already exists.");
 						}
-					}
-
-					// if deleting was not successful, show an user error
-					if (!deleted) {
-						throw new RepositoryException("Could not delete already existing element " + newName
-								+ " at move destination " + containingFolder);
 					}
 				} else {
-					throw new RepositoryException("Could not rename entry: Element with name " + newName
-							+ " already exists.");
+					// folder
+					if (containingFolder.containsFolder(newName)) {
+						if (overwrite) {
+							boolean deleted = false;
+							List<Folder> subfolders = containingFolder.getSubfolders();
+							for (Folder subfolder : subfolders) {
+								if (subfolder.getName().equals(newName)) {
+									subfolder.delete();
+									deleted = true;
+									break;
+								}
+							}
+							// if deleting was not successful, show an user error
+							if (!deleted) {
+								throw new RepositoryException("Could not delete already existing folder " + newName
+										+ " at rename destination " + containingFolder);
+							}
+						} else {
+							throw new RepositoryException("Could not rename entry: Folder with name " + newName
+									+ " already exists.");
+						}
+					}
 				}
 			}
 		} catch (RepositoryException e) {

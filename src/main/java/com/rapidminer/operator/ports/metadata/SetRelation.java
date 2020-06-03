@@ -18,6 +18,9 @@
 */
 package com.rapidminer.operator.ports.metadata;
 
+import java.util.Arrays;
+
+
 /**
  * Can be used to indicate whether we know the attribute set exactly, or only know that it is a
  * subset/superset of a given set.
@@ -64,5 +67,15 @@ public enum SetRelation {
 	@Override
 	public String toString() {
 		return description;
+	}
+
+	/**
+	 * Returns the {@link SetRelation} with the given description, or {@link SetRelation#UNKNOWN} if the description
+	 * does not match any value.
+	 *
+	 * @since 9.7.0
+	 */
+	public static SetRelation fromDescription(String description) {
+		return Arrays.stream(SetRelation.values()).filter(r -> r.toString().equals(description)).findFirst().orElse(UNKNOWN);
 	}
 }

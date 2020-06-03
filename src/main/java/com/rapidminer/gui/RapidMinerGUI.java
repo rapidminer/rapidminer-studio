@@ -37,8 +37,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.URL;
+import java.nio.file.Path;
 import java.security.Policy;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -64,6 +66,8 @@ import com.rapidminer.gui.actions.search.ActionsGlobalSearch;
 import com.rapidminer.gui.actions.search.ActionsGlobalSearchGUIProvider;
 import com.rapidminer.gui.autosave.AutoSave;
 import com.rapidminer.gui.dialog.EULADialog;
+import com.rapidminer.gui.dnd.DropFileIntoProcessActionRegistry;
+import com.rapidminer.gui.dnd.DropFileIntoProcessCallback;
 import com.rapidminer.gui.docking.RapidDockableContainerFactory;
 import com.rapidminer.gui.internal.GUIStartupListener;
 import com.rapidminer.gui.license.LicenseTools;
@@ -88,14 +92,23 @@ import com.rapidminer.gui.tools.logging.LogModelRegistry;
 import com.rapidminer.gui.tools.logging.LogViewer;
 import com.rapidminer.gui.viewer.MetaDataViewerTableModel;
 import com.rapidminer.license.LicenseManagerRegistry;
+import com.rapidminer.operator.Operator;
+import com.rapidminer.operator.OperatorCreationException;
+import com.rapidminer.operator.internal.ProcessEmbeddingOperator;
+import com.rapidminer.operator.ports.metadata.MetaData;
 import com.rapidminer.parameter.ParameterTypeBoolean;
 import com.rapidminer.parameter.ParameterTypeCategory;
 import com.rapidminer.parameter.ParameterTypeColor;
 import com.rapidminer.parameter.ParameterTypeDouble;
 import com.rapidminer.parameter.ParameterTypeInt;
 import com.rapidminer.repository.MalformedRepositoryLocationException;
+import com.rapidminer.repository.ProcessEntry;
+import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryLocation;
+import com.rapidminer.repository.RepositoryLocationBuilder;
 import com.rapidminer.repository.RepositoryManager;
+import com.rapidminer.repository.RepositoryTools;
+import com.rapidminer.repository.gui.BinaryEntryResultRendererRegistry;
 import com.rapidminer.repository.gui.search.RepositoryGlobalSearchGUIProvider;
 import com.rapidminer.repository.search.RepositoryGlobalSearch;
 import com.rapidminer.search.GlobalSearchIndexer;
@@ -112,6 +125,7 @@ import com.rapidminer.tools.I18N;
 import com.rapidminer.tools.LaunchListener;
 import com.rapidminer.tools.LaunchListener.RemoteControlHandler;
 import com.rapidminer.tools.LogService;
+import com.rapidminer.tools.OperatorService;
 import com.rapidminer.tools.ParameterService;
 import com.rapidminer.tools.PlatformUtilities;
 import com.rapidminer.tools.RMUrlHandler;
@@ -125,6 +139,8 @@ import com.rapidminer.tools.usagestats.UsageStatsScheduler;
 import com.rapidminer.tools.usagestats.UsageStatsTransmissionDialog;
 import com.vlsolutions.swing.docking.DockableContainerFactory;
 import com.vlsolutions.swing.docking.ui.DockingUISettings;
+
+import sun.misc.ObjectInputFilter;
 
 
 /**
@@ -367,6 +383,27 @@ public class RapidMinerGUI extends RapidMiner {
 
 		RapidMiner.showSplash();
 
+		// register what happens when you drag a process from disk into the canvas
+		DropFileIntoProcessActionRegistry.getInstance().registerCallback(ProcessEntry.RMP_SUFFIX, new DropFileIntoProcessCallback() {
+			@Override
+			public List<Operator> createAndConfigureOperatorsForDroppedFile(Path filePath) throws OperatorCreationException {
+				// This is a process file
+				Operator processEmbedder = OperatorService.createOperator(ProcessEmbeddingOperator.OPERATOR_KEY);
+				processEmbedder.setParameter(ProcessEmbeddingOperator.PARAMETER_PROCESS_FILE, filePath.toAbsolutePath().toString());
+				return Collections.singletonList(processEmbedder);
+			}
+
+			@Override
+			public void triggerAction(Path filePath) {
+				// do nothing
+			}
+
+			@Override
+			public boolean willReturnOperator(Path filePath) {
+				return true;
+			}
+		});
+
 		RapidMiner.splashMessage("plaf");
 		setupToolTipManager();
 		setupGUI();
@@ -415,6 +452,8 @@ public class RapidMinerGUI extends RapidMiner {
 		loadRecentFileList();
 
 		RepositoryManager.getInstance(null).createRepositoryIfNoneIsDefined();
+		RepositoryTools.initFileBrowser();
+		RepositoryTools.initOpenFileInOperatorSystem();
 
 		RapidMiner.splashMessage("create_frame");
 
@@ -424,6 +463,9 @@ public class RapidMinerGUI extends RapidMiner {
 		
 		// initialize Global Search for actions
 		mainFrame.initActionsGlobalSearch();
+
+		// init custom renderers
+		BinaryEntryResultRendererRegistry.initialize();
 
 		RapidMiner.splashMessage("plugin_gui");
 		Plugin.initPluginGuis(mainFrame);
@@ -484,7 +526,7 @@ public class RapidMinerGUI extends RapidMiner {
 			GlobalSearchGUIRegistry.INSTANCE.registerSearchVisualizationProvider(GlobalSearchRegistry.INSTANCE.getSearchCategoryById(
 					ActionsGlobalSearch.CATEGORY_ID), new ActionsGlobalSearchGUIProvider());
 		}
-		
+
 		RapidMiner.hideSplash();
 
 		// inform listeners that the Splash screen was hidden
@@ -632,6 +674,17 @@ public class RapidMinerGUI extends RapidMiner {
 	}
 
 	public static void addToRecentFiles(final ProcessLocation location) {
+		// skip transient repositories, do not add to recent files
+		if (location instanceof RepositoryProcessLocation) {
+			try {
+				if (((RepositoryProcessLocation) location).getRepositoryLocation().getRepository().isTransient()) {
+					return;
+				}
+			} catch (RepositoryException e) {
+				// ignore
+			}
+		}
+
 		if (location != null) {
 			while (recentFiles.contains(location)) {
 				recentFiles.remove(location);
@@ -679,7 +732,7 @@ public class RapidMinerGUI extends RapidMiner {
 					recentFiles.add(new FileProcessLocation(new File(line.substring(5))));
 				} else if (line.startsWith("repository ")) {
 					try {
-						recentFiles.add(new RepositoryProcessLocation(new RepositoryLocation(line.substring(11))));
+						recentFiles.add(new RepositoryProcessLocation(new RepositoryLocationBuilder().withExpectedDataEntryType(ProcessEntry.class).buildFromAbsoluteLocation(line.substring(11))));
 					} catch (MalformedRepositoryLocationException e) {
 						LogService.getRoot().log(Level.WARNING, "com.rapidminer.gui.RapidMinerGUI.unparseable_line", line);
 					}
@@ -828,6 +881,22 @@ public class RapidMinerGUI extends RapidMiner {
 	}
 
 	public static void main(String[] args) throws Exception {
+		// prevent MetaData objects from being deserialized
+		// this is to enforce that meta data in the future needs a different serialization
+		// in legacy repositories, this restriction is removed
+		ObjectInputFilter.Config.setSerialFilter(filterInfo -> {
+			Class<?> serialClass = filterInfo.serialClass();
+			if (serialClass == null) {
+				return ObjectInputFilter.Status.UNDECIDED;
+			}
+			while (serialClass.isArray()) {
+				serialClass = serialClass.getComponentType();
+			}
+			if (MetaData.class.isAssignableFrom(serialClass)) {
+				return ObjectInputFilter.Status.REJECTED;
+			}
+			return ObjectInputFilter.Status.UNDECIDED;
+		});
 		Policy.setPolicy(new PluginSandboxPolicy());
 		System.setSecurityManager(new PluginSecurityManager());
 
@@ -862,7 +931,13 @@ public class RapidMinerGUI extends RapidMiner {
 		if (shouldLaunch) {
 			safeMode = new SafeMode();
 			safeMode.launchStarts();
-			launch(args);
+			try {
+				launch(args);
+			} catch (Throwable t) {
+				// log the throwable and actually shutdown the whole process
+				LogService.getRoot().log(Level.SEVERE, "Error while starting up RapidMiner Studio. Controlled shutdown.", t);
+				System.exit(1);
+			}
 			safeMode.launchComplete();
 		} else {
 			LogService.getRoot().log(Level.CONFIG, "com.rapidminer.gui.RapidMinerGUI.other_instance_up");

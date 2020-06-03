@@ -26,8 +26,6 @@ import java.awt.Graphics;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.util.List;
-
 import javax.swing.BorderFactory;
 import javax.swing.Icon;
 import javax.swing.JComponent;
@@ -44,8 +42,8 @@ import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.operator.ExecutionUnit;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.OperatorDescription;
-import com.rapidminer.operator.ProcessSetupError;
 import com.rapidminer.tools.OperatorService;
+import com.rapidminer.tools.Tools;
 
 
 /**
@@ -165,52 +163,35 @@ public class OperatorTreeCellRenderer extends DefaultTreeCellRenderer {
 			}
 
 			OperatorDescription descr = operator.getOperatorDescription();
-			Icon icon = descr.getSmallIcon();
-			if (icon != null) {
-				iconLabel.setIcon(icon);
-			} else {
-				iconLabel.setIcon(null);
-			}
+			iconLabel.setIcon(descr.getSmallIcon());
 			iconLabel.setEnabled(operator.isEnabled());
-
-			nameLabel.setText(operator.getName());
+			nameLabel.setText("<html>" + Tools.escapeHTML(operator.getName()) + "</html>");
 			nameLabel.setEnabled(operator.isEnabled());
 			classLabel.setText(descr.getName());
 			classLabel.setEnabled(operator.isEnabled());
 
 			// ICONS
 			// breakpoints
-			if (operator.hasBreakpoint(BreakpointListener.BREAKPOINT_BEFORE)) {
+			if (operator.hasBreakpoint(BreakpointListener.BREAKPOINT_BEFORE)
+					&& operator.hasBreakpoint(BreakpointListener.BREAKPOINT_AFTER)) {
+				breakpoint.setIcon(breakpointsIcon);
+			} else if (operator.hasBreakpoint(BreakpointListener.BREAKPOINT_BEFORE)) {
 				breakpoint.setIcon(breakpointBeforeIcon);
 			} else if (operator.hasBreakpoint(BreakpointListener.BREAKPOINT_AFTER)) {
 				breakpoint.setIcon(breakpointAfterIcon);
 			} else {
 				breakpoint.setIcon(null);
 			}
-
-			if (operator.hasBreakpoint(BreakpointListener.BREAKPOINT_BEFORE)
-					&& operator.hasBreakpoint(BreakpointListener.BREAKPOINT_AFTER)) {
-				breakpoint.setIcon(breakpointsIcon);
-			}
 			breakpoint.setEnabled(operator.isEnabled());
 
 			// errors
-			List<ProcessSetupError> errors = operator.getErrorList();
-			if (errors.size() > 0) {
+			if (OperatorService.isOperatorBlacklisted(descr.getKey())) {
+				error.setIcon(blacklistedIcon);
+			} else if (!operator.getErrorList().isEmpty()) {
 				error.setIcon(warningsIcon);
 			} else {
 				error.setIcon(null);
-
-				String descriptionText = descr.getLongDescriptionHTML();
-				if (descriptionText == null) {
-					descriptionText = descr.getShortDescription();
-				}
 			}
-
-			if (OperatorService.isOperatorBlacklisted(descr.getKey())) {
-				error.setIcon(blacklistedIcon);
-			}
-
 			error.setEnabled(operator.isEnabled());
 
 			setEnabled(operator.isEnabled());

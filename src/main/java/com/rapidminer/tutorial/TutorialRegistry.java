@@ -55,7 +55,7 @@ public enum TutorialRegistry {
 		register("Basics");
 		register("Data Handling");
 		register("Modeling, Scoring, and Validation");
-		register("RapidMiner Server");
+		register("RapidMiner AI Hub");
 		register("RapidMiner Radoop");
 
 		// Load tutorials from .RapidMiner folder to allow sharing

@@ -44,28 +44,24 @@ public class DeleteUnnecessaryOperatorChainRule extends AbstractGenericParseRule
 	public String apply(final Operator operator, VersionNumber processVersion, final XMLImporter importer) {
 		if (operator.getClass() == SimpleOperatorChain.class
 				&& (processVersion == null || processVersion.compareTo(APPLIES_UNTIL) <= 0)) {
-			importer.doAfterTreeConstruction(new Runnable() {
-
-				@Override
-				public void run() {
-					OperatorChain parent = operator.getParent();
-					if (parent != null) {
-						// then its not root: search for subprocess containing operator
-						for (ExecutionUnit unit : parent.getSubprocesses()) {
-							Collection<Operator> innerOperators = unit.getChildOperators();
-							if (innerOperators.size() == 1) {
-								// and if only contains this operator
-								if (innerOperators.iterator().next() == operator) {
-									// then place children directly
-									importer.addMessage("<code>OperatorChain</code>s are unneccessary if they are the only operator inside a subprocess. Removed unnecessary OperatorChain <var>"
-											+ operator.getName() + "</var> in <var>" + parent.getName() + "</var>.");
-									OperatorChain self = (OperatorChain) operator;
-									for (Operator child : new LinkedList<Operator>(self.getSubprocess(0).getOperators())) {
-										child.remove();
-										unit.addOperator(child);
-									}
-									self.remove();
+			importer.doAfterTreeConstruction(() -> {
+				OperatorChain parent = operator.getParent();
+				if (parent != null) {
+					// then its not root: search for subprocess containing operator
+					for (ExecutionUnit unit : parent.getSubprocesses()) {
+						Collection<Operator> innerOperators = unit.getChildOperators();
+						if (innerOperators.size() == 1) {
+							// and if only contains this operator
+							if (innerOperators.iterator().next() == operator) {
+								// then place children directly
+								importer.addMessage("<code>OperatorChain</code>s are unneccessary if they are the only operator inside a subprocess. Removed unnecessary OperatorChain <var>"
+										+ operator.getName() + "</var> in <var>" + parent.getName() + "</var>.");
+								OperatorChain self = (OperatorChain) operator;
+								for (Operator child : new LinkedList<>(self.getSubprocess(0).getOperators())) {
+									child.remove();
+									unit.addOperator(child);
 								}
+								self.remove();
 							}
 						}
 					}

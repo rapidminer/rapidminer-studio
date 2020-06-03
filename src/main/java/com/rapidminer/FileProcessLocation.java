@@ -20,24 +20,22 @@ package com.rapidminer;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.OutputStream;
+import java.nio.file.Files;
 import java.util.logging.Level;
 
-import org.w3c.dom.Document;
-
-import com.rapidminer.io.process.XMLImporter;
-import com.rapidminer.io.process.XMLTools;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.ProgressListener;
 import com.rapidminer.tools.Tools;
 import com.rapidminer.tools.XMLException;
+import com.rapidminer.tools.encryption.EncryptionProvider;
 
 
 /**
- * 
+ * A file process location. Note that a file process is always using the {@link EncryptionProvider#DEFAULT_CONTEXT} for
+ * encryption/decryption.
+ *
  * @author Simon Fischer
  */
 public class FileProcessLocation implements ProcessLocation {
@@ -58,7 +56,7 @@ public class FileProcessLocation implements ProcessLocation {
 		if (!file.canRead()) {
 			throw new IOException("Process file '" + file + "' is not readable.");
 		}
-		return new Process(file, l);
+		return new Process(file, EncryptionProvider.DEFAULT_CONTEXT, l);
 	}
 
 	@Override
@@ -73,28 +71,21 @@ public class FileProcessLocation implements ProcessLocation {
 
 	@Override
 	public void store(Process process, ProgressListener listener) throws IOException {
-		OutputStream out = null;
 		try {
 			if (listener != null) {
 				listener.setCompleted(33);
 			}
-			Document document = process.getRootOperator().getDOMRepresentation();
-			out = new FileOutputStream(file);
-			XMLTools.stream(document, out, XMLImporter.PROCESS_FILE_CHARSET);
+			process.getRootOperator().writeXML(Files.newBufferedWriter(file.toPath()), false, EncryptionProvider.DEFAULT_CONTEXT);
 			if (listener != null) {
 				listener.setCompleted(100);
 			}
-			// LogService.getRoot().info("Saved process definition file at '" + file + "'.");
 			LogService.getRoot().log(Level.INFO, "com.rapidminer.FileProcessLocation.saved_process_definition_file", file);
-		} catch (XMLException e) {
+		} catch (IOException e) {
 			throw new IOException("Cannot save process: " + e, e);
 		} finally {
 			if (listener != null) {
 				listener.setCompleted(100);
 				listener.complete();
-			}
-			if (out != null) {
-				out.close();
 			}
 		}
 	}

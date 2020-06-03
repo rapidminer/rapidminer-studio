@@ -21,8 +21,9 @@ package com.rapidminer.repository.local;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.util.logging.Level;
 
 import com.rapidminer.connection.ConnectionInformation;
@@ -118,7 +119,7 @@ public class SimpleConnectionEntry extends SimpleIOObjectEntry implements Connec
 	protected void writeDataToFile(IOObject data, FileOutputStream fos) throws IOException, RepositoryException {
 		if (data instanceof ConnectionInformationContainerIOObject) {
 			ConnectionInformation connectionInformation = ((ConnectionInformationContainerIOObject) data).getConnectionInformation();
-			ConnectionInformationSerializer.LOCAL.serialize(connectionInformation, fos);
+			ConnectionInformationSerializer.INSTANCE.serialize(connectionInformation, fos, getRepository().getEncryptionContext());
 		} else {
 			throw new IOException("Mismatched IOObject, expected connection but was " + data.getClass());
 		}
@@ -128,21 +129,23 @@ public class SimpleConnectionEntry extends SimpleIOObjectEntry implements Connec
 	protected void writeMetaDataToFile(MetaData md, FileOutputStream fos) throws IOException {
 		if (md instanceof ConnectionInformationMetaData) {
 			ConnectionConfiguration configuration = ((ConnectionInformationMetaData) md).getConfiguration();
-			ConnectionInformationSerializer.LOCAL.writeJson(fos, configuration);
+			// we encrypt values in MD, even though they are not meant to be decrypted again. This is for security reasons to not expose values in the MD in plain text disk
+			ConnectionInformationSerializer.INSTANCE.writeJson(fos, configuration, getRepository().getEncryptionContext());
 		}
 	}
 
 	@Override
-	protected MetaData readMetaDataObject(File metaDataFile) throws IOException, ClassNotFoundException {
-		try (FileReader fr = new FileReader(getMetaDataFile())) {
-			return new ConnectionInformationMetaData(ConnectionInformationSerializer.LOCAL.loadConfiguration(fr));
+	MetaData readMetaDataObject(File metaDataFile) throws IOException, ClassNotFoundException {
+		try (InputStream in = Files.newInputStream(getMetaDataFile().toPath())) {
+			// we don't care about encrypted values in the meta data. They should not be accessible via MD at all, so we don't try to decrypt them
+			return new ConnectionInformationMetaData(ConnectionInformationSerializer.INSTANCE.loadConfiguration(in, null));
 		}
 	}
 
 	@Override
 	protected IOObject readDataFromFile(FileInputStream fis) throws IOException {
 		return new ConnectionInformationContainerIOObject(
-				ConnectionInformationSerializer.LOCAL.loadConnection(fis, getLocation()));
+				ConnectionInformationSerializer.INSTANCE.loadConnection(fis, getLocation(), getRepository().getEncryptionContext()));
 	}
 
 	@Override

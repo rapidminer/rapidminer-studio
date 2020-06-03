@@ -102,4 +102,16 @@ public class ResourceCard implements Card {
 	public boolean isBeta() {
 		return isBeta;
 	}
+
+	/**
+	 * Sets a new icon.
+	 *
+	 * @param icon the icon, must not be {@code null}
+	 * @since 9.7
+	 */
+	public void setIcon(ImageIcon icon) {
+		if (icon != null) {
+			this.icon = icon;
+		}
+	}
 }

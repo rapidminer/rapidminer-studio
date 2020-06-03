@@ -37,10 +37,10 @@ import com.rapidminer.parameter.UndefinedParameterError;
  * This operator can be used to retrieve the IOObject which was previously stored in the cache under
  * the specified name. In order to store an object to make it again accessible, you can use the
  * operator {@link IOPublishToAppOperator}. The combination of those two operators can be used
- * to cache {@link IOObject}s during a RapidMiner Server App session and use those cached
+ * to cache {@link IOObject}s during a RapidMiner AI Hub App session and use those cached
  * {@link IOObject}s multiple times in the app without executing the same process several times.
  *
- * This operator is used to manipulate a RapidMiner Server App. If the operator is executed in
+ * This operator is used to manipulate a RapidMiner AI Hub App. If the operator is executed in
  * RapidMiner Studio, the {@link IOObject} is retrieved from the cache in
  * {@link RapidMiner#getGlobalIOObjectCache()}.
  *

@@ -37,6 +37,7 @@ import java.util.zip.ZipOutputStream;
 import com.rapidminer.Process;
 import com.rapidminer.RapidMiner;
 import com.rapidminer.gui.RapidMinerGUI;
+import com.rapidminer.tools.encryption.EncryptionProvider;
 import com.rapidminer.tools.plugin.Plugin;
 
 
@@ -46,6 +47,7 @@ import com.rapidminer.tools.plugin.Plugin;
  * 
  * @author Simon Fischer, Ingo Mierswa, Marco Boeck
  */
+@Deprecated
 public class BugReport {
 
 	private static final int BUFFER_SIZE = 1024;
@@ -159,7 +161,8 @@ public class BugReport {
 		ZipOutputStream zipOut = new ZipOutputStream(new FileOutputStream(reportFile));
 		zipOut.setComment("RapidMiner bug report - generated " + new Date());
 		write("message.txt", "User message", userMessage, zipOut);
-		write("_process.xml", "Process as in memory.", process.getRootOperator().getXML(false), zipOut);
+		// XML gets encrypted if it contains passwords, they are of no use to us anyway
+		write("_process.xml", "Process as in memory.", process.getRootOperator().getXML(false, EncryptionProvider.DEFAULT_CONTEXT), zipOut);
 		if (process.getProcessLocation() != null) {
 			try {
 				String contents = process.getProcessLocation().getRawXML();
@@ -233,7 +236,8 @@ public class BugReport {
 			String xmlProcess;
 			if (RapidMinerGUI.getMainFrame().getProcess() != null) {
 				try {
-					xmlProcess = RapidMinerGUI.getMainFrame().getProcess().getRootOperator().getXML(false);
+					// XML gets encrypted if it contains passwords, they are of no use to us anyway
+					xmlProcess = RapidMinerGUI.getMainFrame().getProcess().getRootOperator().getXML(false, EncryptionProvider.DEFAULT_CONTEXT);
 				} catch (Throwable t) {
 					xmlProcess = "could not read: " + t;
 				}

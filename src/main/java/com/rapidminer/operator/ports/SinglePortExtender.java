@@ -18,13 +18,12 @@
 */
 package com.rapidminer.operator.ports;
 
-import com.rapidminer.tools.Observable;
-import com.rapidminer.tools.Observer;
-
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+
+import com.rapidminer.tools.Observer;
 
 
 /**
@@ -56,13 +55,7 @@ public class SinglePortExtender<T extends Port> implements PortExtender {
 
 	private int runningId = 0;
 
-	private final Observer<Port> observer = new Observer<Port>() {
-
-		@Override
-		public void update(Observable<Port> observable, Port arg) {
-			updatePorts();
-		}
-	};
+	private final Observer<Port> observer = (observable, arg) -> updatePorts();
 
 	/**
 	 * 
@@ -84,55 +77,49 @@ public class SinglePortExtender<T extends Port> implements PortExtender {
 	 * parameters or other properties of the operator.
 	 */
 	protected void updatePorts() {
-		if (!isChanging) {
-			isChanging = true;
-			boolean first = true;
-			T foundDisconnected = null;
-			Iterator<T> i = managedPorts.iterator();
-			while (i.hasNext()) {
-				T port = i.next();
-				if (!port.isConnected() && !port.isLocked()) {
-					// we don't remove the first disconnected port.
-					if (first) {
-						foundDisconnected = port;
-						first = false;
-					} else {
-						if (minNumber == 0) { // we don't remove if guaranteeing ports
-							deletePort(port);
-							i.remove();
-						}
-					}
-				}
-			}
-			if ((foundDisconnected == null) || (managedPorts.size() < minNumber)) {
-				do {
-					managedPorts.add(createPort());
-				} while (managedPorts.size() < minNumber);
-			} else {
-				if (minNumber == 0) {
-					managedPorts.remove(foundDisconnected);
-					managedPorts.add(foundDisconnected);
-					ports.pushDown(foundDisconnected);
-				}
-			}
-			fixNames();
-			isChanging = false;
+		if (isChanging) {
+			return;
 		}
+		isChanging = true;
+		boolean first = true;
+		T foundDisconnected = null;
+		Iterator<T> i = managedPorts.iterator();
+		while (i.hasNext()) {
+			T port = i.next();
+			if (!port.isConnected() && !port.isLocked()) {
+				// we don't remove the first disconnected port.
+				if (first) {
+					foundDisconnected = port;
+					first = false;
+				} else if (minNumber == 0) { // we don't remove if guaranteeing ports
+					deletePort(port);
+					i.remove();
+				}
+			}
+		}
+		if ((foundDisconnected == null) || (managedPorts.size() < minNumber)) {
+			do {
+				managedPorts.add(createPort());
+			} while (managedPorts.size() < minNumber);
+		} else if (minNumber == 0) {
+			managedPorts.remove(foundDisconnected);
+			managedPorts.add(foundDisconnected);
+			ports.pushDown(foundDisconnected);
+		}
+		fixNames();
+		isChanging = false;
 	}
 
 	protected void deletePort(T port) {
-		if (port instanceof OutputPort) {
-			if (port.isConnected()) {
-				((OutputPort) port).disconnect();
-			}
+		if (port.isConnected()) {
+			port.disconnect();
 		}
 		ports.removePort(port);
 	}
 
 	protected T createPort() {
 		runningId++;
-		T port = ports.createPort(name + " " + runningId);
-		return port;
+		return ports.createPort(name + " " + runningId);
 	}
 
 	protected void fixNames() {

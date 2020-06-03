@@ -213,8 +213,8 @@ public class ProcessRendererTransferHandler extends ReceivingOperatorTransferHan
 							model.setOperatorRect(op, newAnchor);
 							opIndex++;
 						}
-						model.fireOperatorMoved(op);
 					}
+					model.fireOperatorsMoved(newOperators);
 				}
 
 				// index at which the first operator is inserted

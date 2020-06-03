@@ -29,18 +29,29 @@ import com.rapidminer.Process;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.operator.UserError;
 import com.rapidminer.repository.local.LocalRepository;
+import com.rapidminer.repository.versioned.FilesystemRepositoryAdapter;
+import com.rapidminer.tools.ValidationUtil;
 
 
 /**
- * A location in a repository. Format:
+ * A location in a repository. It consists of a main part, which is the path to the location, in the form of
+ * "//Repository/path/to/object". Up until version 9.7, this path was guaranteed to be unique, but starting with 9.7, it
+ * no longer is. See {@link RepositoryLocationBuilder}. Therefore, additional properties have been added to the
+ * repository location:
+ * <br>
+ * 1) {@link #getLocationType()} which determines whether this location references a {@link
+ * RepositoryLocationType#FOLDER}, a {@link RepositoryLocationType#DATA_ENTRY}, or that is unknown ({@link
+ * RepositoryLocationType#UNKNOWN}).
  *
- * //Repository/path/to/object
+ * <br>
+ * 2) {@link #getExpectedDataEntryType()} if it references data, the {@link DataEntry} (sub-)type can be specified. For
+ * all intents and purposes, these will be the 4 main types: {@link ProcessEntry}, {@link IOObjectEntry}, {@link
+ * ConnectionEntry}, and finally the new {@link BinaryEntry} (and for legacy repositories the deprecated {@link
+ * BlobEntry}.
+ * <p>
+ * Create an instance via the {@link RepositoryLocationBuilder}.
  *
- * All constructors throw IllegalArugmentExceptions if names are malformed, contain illegal
- * characters etc.
- *
- * @author Simon Fischer, Adrian Wilke
- *
+ * @author Simon Fischer, Adrian Wilke, Marco Boeck
  */
 public class RepositoryLocation {
 
@@ -48,15 +59,54 @@ public class RepositoryLocation {
 	public static final String REPOSITORY_PREFIX = "//";
 	public static final String[] BLACKLISTED_STRINGS = new String[]{"/", "\\", ":", "<", ">", "*", "?", "\"", "|"};
 	private static final String SEPARATOR_CHAR = String.valueOf(SEPARATOR);
+	private static final String GIT_FOLDER = ".git";
 	private final String[] path;
 	private String repositoryName;
 	private RepositoryAccessor accessor;
+	private RepositoryLocationType locationType;
+	// only relevant if locationType != RepositoryLocationType.FOLDER
+	private Class<? extends DataEntry> expectedDataEntryType = DataEntry.class;
+	private boolean failIfDuplicateIOObjectExists = true;
 
 
 	/**
 	 * Constructs a RepositoryLocation from a string of the form //Repository/path/to/object.
+	 *
+	 * @deprecated since 9.7, use {@link RepositoryLocationBuilder#buildFromAbsoluteLocation(String)} instead!
 	 */
+	@Deprecated
 	public RepositoryLocation(String absoluteLocation) throws MalformedRepositoryLocationException {
+		this(absoluteLocation, RepositoryLocationType.UNKNOWN);
+	}
+
+	/**
+	 * Creates a RepositoryLocation for a given repository and a set of path components which will be concatenated by a
+	 * /.
+	 *
+	 * @deprecated since 9.7, use {@link RepositoryLocationBuilder#buildFromPathComponents(String, String[])} instead!
+	 */
+	@Deprecated
+	public RepositoryLocation(String repositoryName, String[] pathComponents) throws MalformedRepositoryLocationException {
+		this(repositoryName, pathComponents, RepositoryLocationType.UNKNOWN);
+	}
+
+	/**
+	 * Appends a child entry to a given parent location. Child can be composed of subcomponents separated by /. Dots
+	 * ("..") will resolve to the parent folder.
+	 *
+	 * @deprecated since 9.7, use {@link RepositoryLocationBuilder#buildFromParentLocation(RepositoryLocation, String)}
+	 * instead!
+	 */
+	@Deprecated
+	public RepositoryLocation(RepositoryLocation parent, String childName) throws MalformedRepositoryLocationException {
+		this(parent, childName, RepositoryLocationType.UNKNOWN);
+	}
+
+	RepositoryLocation(String absoluteLocation, RepositoryLocationType locationType) throws MalformedRepositoryLocationException {
+		if (absoluteLocation == null) {
+			throw new MalformedRepositoryLocationException("absoluteLocation must not be null!");
+		}
+		this.locationType = ValidationUtil.requireNonNull(locationType, "locationType");
 		if (isAbsolute(absoluteLocation)) {
 			this.path = initializeFromAbsoluteLocation(absoluteLocation);
 		} else {
@@ -65,13 +115,8 @@ public class RepositoryLocation {
 		}
 	}
 
-	/**
-	 * Creates a RepositoryLocation for a given repository and a set of path components which will
-	 * be concatenated by a /.
-	 *
-	 * @throws MalformedRepositoryLocationException
-	 */
-	public RepositoryLocation(String repositoryName, String[] pathComponents) throws MalformedRepositoryLocationException {
+	RepositoryLocation(String repositoryName, String[] pathComponents, RepositoryLocationType locationType) throws MalformedRepositoryLocationException {
+		this.locationType = ValidationUtil.requireNonNull(locationType, "locationType");
 		// actually check submitted parameters
 		if (repositoryName == null || repositoryName.isEmpty()) {
 			throw new MalformedRepositoryLocationException("repositoryName must not contain null or empty!");
@@ -89,13 +134,8 @@ public class RepositoryLocation {
 		this.path = pathComponents;
 	}
 
-	/**
-	 * Appends a child entry to a given parent location. Child can be composed of subcomponents
-	 * separated by /. Dots ("..") will resolve to the parent folder.
-	 *
-	 * @throws MalformedRepositoryLocationException
-	 */
-	public RepositoryLocation(RepositoryLocation parent, String childName) throws MalformedRepositoryLocationException {
+	RepositoryLocation(RepositoryLocation parent, String childName, RepositoryLocationType locationType) throws MalformedRepositoryLocationException {
+		this.locationType = ValidationUtil.requireNonNull(locationType, "locationType");
 		this.accessor = parent.accessor;
 		if (isAbsolute(childName)) {
 			this.path = initializeFromAbsoluteLocation(childName);
@@ -187,18 +227,110 @@ public class RepositoryLocation {
 	}
 
 	/**
-	 * Locates the corresponding entry in the repository. It returns null if it doesn't exist yet.
-	 * An exception is thrown if this location is invalid.
+	 * Locates a folder in the repository. Returns {@code null} if it there is no folder under this location. An
+	 * exception is thrown if this location is invalid.
 	 *
-	 * @throws RepositoryException
-	 *             If repository can not be found or entry can not be located.
-	 * */
-	public Entry locateEntry() throws RepositoryException {
-		Repository repos = getRepository();
-		if (repos != null) {
-			return repos.locate(getPath());
+	 * @return the {@link Folder} or {@code null} if it does not exist
+	 * @throws RepositoryException if something goes wrong or if {@link #getLocationType()} is {@link
+	 *                             RepositoryLocationType#DATA_ENTRY}.
+	 * @since 9.7
+	 */
+	public Folder locateFolder() throws RepositoryException {
+		// check to find errors early
+		switch (getLocationType()) {
+			case DATA_ENTRY:
+				throw new RepositoryException("Cannot locate folder for a location with location type DATA_ENTRY");
+			case FOLDER:
+			case UNKNOWN:
+			default:
+				// all good, we only want the data case to fail
+				break;
+		}
+
+		Repository repo = getRepository();
+		if (repo != null) {
+			return repo.locateFolder(getPath());
 		} else {
 			return null;
+		}
+	}
+
+	/**
+	 * Locates data in the repository. Returns {@code null} if it there is no data under this location. An exception is
+	 * thrown if this location is invalid.
+	 * <p>
+	 * Note: If multiple data entries of different types but with the same name (prefix) exist, will return the first
+	 * one to be found if the expected type is not specified! Call {@link #setExpectedDataEntryType(Class)} to specify
+	 * the requested (sub-)data type for this location. Defaults to {@link DataEntry}, meaning the first data entry to
+	 * be found will be returned (that might be a process, an example set, ...)
+	 * </p>
+	 * <br>
+	 * Note: {@link IOObjectEntry IOObjectEntries} can have subtypes, meaning in file-based repositories it could even
+	 * happen that multiple IOObjects sit next to each other, all having the same prefix but with distinct suffixes.
+	 * (test.ioo, test.rmhdf5table, ...) For the purpose of this method, this scenario is not considered hereif {@link
+	 * #isFailIfDuplicateIOObjectExists()} is set to {@code true}. Even if you specify a specific subtype of {@link
+	 * IOObjectEntry} as the expected data type, it will return the first {@link IOObjectEntry} it finds with the given
+	 * name (aka prefix in this example). Because for historical reasons, {@link RepositoryLocation} only consists of a
+	 * string which only includes the prefix of such entries, it would be impossible to later determine which specific
+	 * subtype of an IOObject was requested. Therefore, the creation of such scenarios is prohibited for the user. The
+	 * only scenario in which this case can happen, is if this state is achieved from the outside (think Git pull on
+	 * versioned repositories).
+	 * <br>
+	 * If however {@link #isFailIfDuplicateIOObjectExists()} is {@code false}, you can get more specific IOObjectEntry
+	 * subtypes if the repository supports it.
+	 *
+	 * @return the {@link DataEntry} or {@code null} if it does not exist
+	 * @throws RepositoryIOObjectEntryDuplicateFoundException if the expectedDataType is of type {@link IOObjectEntry}
+	 *                                                        AND more than one exists with the same name (prefix) AND
+	 *                                                        {@link #setFailIfDuplicateIOObjectExists(boolean)} was set
+	 *                                                        to {@code true}
+	 * @throws RepositoryException                            if something goes wrong or if {@link #getLocationType()}
+	 *                                                        is {@link RepositoryLocationType#FOLDER}.
+	 * @since 9.7
+	 */
+	@SuppressWarnings("unchecked")
+	public <T extends DataEntry> T locateData() throws RepositoryException {
+		// check to find errors early
+		switch (getLocationType()) {
+			case FOLDER:
+				throw new RepositoryException("Cannot locate data entry for a location with location type FOLDER");
+			case DATA_ENTRY:
+			case UNKNOWN:
+			default:
+				// all good, we only want the folder case to fail
+				break;
+		}
+
+		Repository repo = getRepository();
+		if (repo != null) {
+			return (T) repo.locateData(getPath(), getExpectedDataEntryType(), isFailIfDuplicateIOObjectExists());
+		} else {
+			return null;
+		}
+	}
+
+	/**
+	 * Locates the corresponding entry in the repository. It returns null if it doesn't exist yet. An exception is
+	 * thrown if this location is invalid.
+	 *
+	 * @throws RepositoryException If repository can not be found or entry can not be located.
+	 * @deprecated since 9.7, because it cannot distinguish between folders and files. Use {@link #locateFolder()} or
+	 * {@link #locateData()} instead!
+	 */
+	@Deprecated
+	public Entry locateEntry() throws RepositoryException {
+		switch (getLocationType()) {
+			case DATA_ENTRY:
+				return locateData();
+			case FOLDER:
+				return locateFolder();
+			case UNKNOWN:
+			default:
+				Entry entry = locateData();
+				if (entry != null) {
+					return entry;
+				}
+				return locateFolder();
 		}
 	}
 
@@ -220,7 +352,7 @@ public class RepositoryLocation {
 			System.arraycopy(path, 0, pathCopy, 0, path.length - 1);
 			RepositoryLocation parent;
 			try {
-				parent = new RepositoryLocation(this.repositoryName, pathCopy);
+				parent = new RepositoryLocationBuilder().withLocationType(RepositoryLocationType.FOLDER).buildFromPathComponents(this.repositoryName, pathCopy);
 			} catch (MalformedRepositoryLocationException e) {
 				throw new RuntimeException(e);
 			}
@@ -283,37 +415,46 @@ public class RepositoryLocation {
 	 * @throws RepositoryException
 	 */
 	public Folder createFoldersRecursively() throws RepositoryException {
-		Entry entry = locateEntry();
+		Folder entry = locateFolder();
 		if (entry == null) {
 			Folder parentFolder = parent().createFoldersRecursively();
 			try {
 				entry = parentFolder.createFolder(getName());
 			} catch (RepositoryException re) {
 				//Recover from concurrent createFolder calls
-				entry = locateEntry();
+				entry = locateFolder();
 				//Rethrow the RepositoryException if recovery failed
-				if (!(entry instanceof Folder)) {
+				if (entry == null) {
 					throw re;
 				}
 			}
 		}
 
-		if (entry instanceof Folder) {
-			return (Folder) entry;
-		} else {
-			throw new RepositoryException(toString() + " is not a folder.");
-		}
-
+		return entry;
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		return obj != null && this.toString().equals(obj.toString());
+	public boolean equals(Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+		RepositoryLocation location = (RepositoryLocation) o;
+		// we don't care about failIfDuplicateIOObjectExists here because it's an external behavior feature flag, not a location-defining item
+		return Arrays.equals(path, location.path) &&
+				repositoryName.equals(location.repositoryName) &&
+				locationType == location.locationType &&
+				expectedDataEntryType.equals(location.expectedDataEntryType);
 	}
 
 	@Override
 	public int hashCode() {
-		return toString().hashCode();
+		// we don't care about failIfDuplicateIOObjectExists here because it's an external behavior feature flag, not a location-defining item
+		int result = Objects.hash(repositoryName, locationType, expectedDataEntryType);
+		result = 31 * result + Arrays.hashCode(path);
+		return result;
 	}
 
 	public void setAccessor(RepositoryAccessor accessor) {
@@ -329,7 +470,7 @@ public class RepositoryLocation {
 	 * {@link Folder#isConnectionsFolderName(String, boolean) connection folder} of the repository.
 	 * <p>
 	 * <strong>Note:</strong> This method might depend on the repository implementation. Currently the only allowed
-	 * repository w.r.t. case insensitivity is the {@link LocalRepository}
+	 * repository w.r.t. case insensitivity is the {@link LocalRepository} or the {@link FilesystemRepositoryAdapter}
 	 *
 	 * @return if this location represents a connection path entry or not
 	 * @see com.rapidminer.repository.local.SimpleFolder#isConnectionsFolderName(String, boolean) SimpleFolder.isConnectionsFolderName(String, boolean)
@@ -338,10 +479,103 @@ public class RepositoryLocation {
 	public boolean isConnectionPath() {
 		try {
 			return path.length == 2 && Folder.isConnectionsFolderName(path[0],
-					repositoryName == null || !(getRepository() instanceof LocalRepository));
+					repositoryName == null || !(getRepository() instanceof LocalRepository || getRepository() instanceof FilesystemRepositoryAdapter));
 		} catch (RepositoryException e) {
 			return false;
 		}
+	}
+
+	/**
+	 * Returns the location type referenced by this location.
+	 *
+	 * @return the location type, never {@code null}
+	 * @since 9.7
+	 */
+	public RepositoryLocationType getLocationType() {
+		return locationType;
+	}
+
+	/**
+	 * Sets the {@link RepositoryLocationType} for this location.
+	 *
+	 * @param locationType the location type, must not be {@code null}
+	 * @since 9.7
+	 */
+	public void setLocationType(RepositoryLocationType locationType) {
+		this.locationType = ValidationUtil.requireNonNull(locationType, "locationType");
+	}
+
+	/**
+	 * Returns the expected {@link DataEntry} (sub-)type referenced by this location. Only relevant if {@link
+	 * #getLocationType()} is NOT {@link RepositoryLocationType#FOLDER}! If not specified, will default to {@link
+	 * DataEntry}.
+	 *
+	 * @return the expected data type, never {@code null}
+	 * @since 9.7
+	 */
+	public Class<? extends DataEntry> getExpectedDataEntryType() {
+		return expectedDataEntryType;
+	}
+
+	/**
+	 * Sets the expected {@link DataEntry} (sub-)type for this location. Only relevant if {@link #getLocationType()} is
+	 * NOT {@link RepositoryLocationType#FOLDER}!
+	 *
+	 * @param expectedDataType the expected specific {@link DataEntry} (sub-)type. Can be one of {@link ProcessEntry},
+	 *                         {@link IOObjectEntry}, {@link ConnectionEntry}, and either {@link BinaryEntry} (if {@link
+	 *                         Repository#isSupportingBinaryEntries()} is {@code true}) or {@link BlobEntry} (for legacy
+	 *                         repositories that do not support the new binary entry concept).
+	 *                         <br>
+	 *                         Note: {@link IOObjectEntry IOObjectEntries} can have subtypes, meaning in file-based
+	 *                         repositories it could even happen that multiple IOObjects sit next to each other, all
+	 *                         having the same prefix but with distinct suffixes. (test.ioo, test.rmhdf5table, ...) For
+	 *                         the purpose of this method, this scenario is not considered if {@link
+	 *                         #isFailIfDuplicateIOObjectExists()} is set to {@code true}. Even if you specify a
+	 *                         specific subtype of {@link IOObjectEntry} as the expected data type, it will return the
+	 *                         first {@link IOObjectEntry} it finds with the given name (aka prefix in this example).
+	 *                         Because for historical reasons, {@link RepositoryLocation} only consists of a string
+	 *                         which only includes the prefix of such entries, it would be impossible to later determine
+	 *                         which specific subtype of an IOObject was requested. Therefore, the creation of such
+	 *                         scenarios is prohibited for the user. The only scenario in which this case can happen, is
+	 *                         if this state is achieved from the outside (think Git pull on versioned repositories).
+	 *                         <br>
+	 *                         If however {@link #isFailIfDuplicateIOObjectExists()} is {@code false}, you can get
+	 *                         more specific IOObjectEntry subtypes if the repository supports it.
+	 * @since 9.7
+	 */
+	public void setExpectedDataEntryType(Class<? extends DataEntry> expectedDataType) {
+		this.expectedDataEntryType = ValidationUtil.requireNonNull(expectedDataType, "expectedDataType");
+
+		// make sure that anything more specific than IOObjectEntry is reverted to IOObjectEntry itself. See JD above.
+		if (isFailIfDuplicateIOObjectExists() && IOObjectEntry.class.isAssignableFrom(expectedDataType)) {
+			this.expectedDataEntryType = IOObjectEntry.class;
+		}
+	}
+
+	/**
+	 * Whether the {@link #locateData()} call should fail if the expected data type is of {@link IOObjectEntry} and more
+	 * than one IOObject entry exists or not. Defaults to {@code true}.
+	 *
+	 * @return {@code true} if the call should fail; {@code false} otherwise.
+	 * @since 9.7
+	 */
+	public boolean isFailIfDuplicateIOObjectExists() {
+		return failIfDuplicateIOObjectExists;
+	}
+
+	/**
+	 * Sets whether the {@link #locateData()} call should fail if the expected data type is of {@link IOObjectEntry} and
+	 * more than one IOObject entry exists.
+	 *
+	 * @param failIfDuplicateIOObjectExists if {@code true} and the expected data type is of {@link IOObjectEntry}, it
+	 *                                      will check that the repository folder contains only a single {@link
+	 *                                      IOObjectEntry} with the requested name (prefix). Otherwise it will throw a
+	 *                                      {@link RepositoryIOObjectEntryDuplicateFoundException}. See {@link
+	 *                                      RepositoryLocation#locateData()} for more information.
+	 * @since 9.7
+	 */
+	public void setFailIfDuplicateIOObjectExists(boolean failIfDuplicateIOObjectExists) {
+		this.failIfDuplicateIOObjectExists = failIfDuplicateIOObjectExists;
 	}
 
 	/**
@@ -349,7 +583,7 @@ public class RepositoryLocation {
 	 * {@link Folder#isConnectionsFolderName(String, boolean) connection folder} of the repository.
 	 * <p>
 	 * <strong>Note:</strong> This method might depend on the repository implementation. Currently the only allowed
-	 * repository w.r.t. case insensitivity is the {@link LocalRepository}
+	 * repository w.r.t. case insensitivity is the {@link LocalRepository} or the {@link FilesystemRepositoryAdapter}.
 	 *
 	 * @return if the given location represents a connection path entry or not
 	 * @see com.rapidminer.repository.local.SimpleFolder#isConnectionsFolderName(String, boolean) SimpleFolder.isConnectionsFolderName(String, boolean)
@@ -357,7 +591,7 @@ public class RepositoryLocation {
 	 */
 	public static boolean isConnectionPath(String loc) {
 		try {
-			return new RepositoryLocation(loc).isConnectionPath();
+			return new RepositoryLocationBuilder().withExpectedDataEntryType(ConnectionEntry.class).buildFromAbsoluteLocation(loc).isConnectionPath();
 		} catch (MalformedRepositoryLocationException e) {
 			return false;
 		}
@@ -381,6 +615,10 @@ public class RepositoryLocation {
 		if (name.trim().isEmpty()) {
 			return false;
 		}
+		// since 9.x we forbid .git as it is the name of the git folder
+		if (GIT_FOLDER.equals(name.trim())) {
+			return false;
+		}
 
 		for (String forbiddenString : BLACKLISTED_STRINGS) {
 			if (name.contains(forbiddenString)) {
@@ -400,6 +638,10 @@ public class RepositoryLocation {
 		if (name == null || name.trim().isEmpty()) {
 			return null;
 		}
+		// since 9.x we forbid .git as it is the name of the git folder
+		if (GIT_FOLDER.equals(name.trim())) {
+			return GIT_FOLDER;
+		}
 
 		for (String forbiddenString : BLACKLISTED_STRINGS) {
 			if (name.contains(forbiddenString)) {
@@ -410,7 +652,7 @@ public class RepositoryLocation {
 	}
 
 	/**
-	 * Removes locations from list, which are already included in others.
+	 * Removes locations from list, which are already included in others (where others must be {@link RepositoryLocationType#FOLDER}).
 	 *
 	 * Example: [/1/2/3, /1, /1/2] becomes [/1]
 	 */
@@ -419,7 +661,7 @@ public class RepositoryLocation {
 	}
 
 	/**
-	 * Removes locations from list, which are already included in others.
+	 * Removes locations from list, which are already included in others (where others must be {@link RepositoryLocationType#FOLDER}).
 	 *
 	 * Example: [/1/2/3, /1, /1/2] becomes [/1]
 	 *
@@ -434,7 +676,38 @@ public class RepositoryLocation {
 		while (iterator.hasNext()) {
 			RepositoryLocation locationA = iterator.next();
 			for (RepositoryLocation locationB : locations) {
-				if (locationA.path.length > locationB.path.length
+				boolean checkIntersection;
+				switch (locationB.getLocationType()) {
+					case DATA_ENTRY:
+						// cannot possibly intersect, skip
+						checkIntersection = false;
+						break;
+					case FOLDER:
+						checkIntersection = true;
+						break;
+					case UNKNOWN:
+					default:
+						// unknown may be a folder, but we cannot know for sure
+						// we can try to check, but if it would block (aka not loaded yet), no chance. Then it is NOT counted as intersected
+						try {
+							RepositoryLocation parentLocation = locationB.parent();
+							Folder parentFolder = RepositoryManager.getInstance(null).locateFolder(parentLocation.getRepository(), parentLocation.getPath(), true);
+							// there is no folder with the final path element of locationB in the parent of it, so NOT counted as intersected
+							// there is a folder, so let's go to the actual intersection check below
+							if (parentFolder == null) {
+								// cannot even resolve anything, can't detect intersection
+								checkIntersection = false;
+							} else {
+								// if there is a folder, let's go to the actual intersection check below
+								checkIntersection = parentFolder.containsFolder(locationB.getName());
+							}
+						} catch (RepositoryException e) {
+							// no matter, ignore
+							checkIntersection = false;
+						}
+						break;
+				}
+				if (checkIntersection && locationA.path.length > locationB.path.length
 						&& Objects.equals(locationA.getRepositoryName(), locationB.getRepositoryName())
 						&& Arrays.equals(Arrays.copyOfRange(locationA.path, 0, locationB.path.length), locationB.path)) {
 					iterator.remove();
@@ -446,24 +719,39 @@ public class RepositoryLocation {
 	}
 
 	/**
-	 * Returns the repository location for the provided path and operator. In case it is relative
-	 * the operators process is used base path.
+	 * Returns the repository location for the provided path and operator. In case it is relative the operators process
+	 * is used base path.
 	 *
-	 * @param loc
-	 *            the relative or absolute repository location path as String
-	 * @param op
-	 *            the operator for which should be used as base path in case the location is
-	 *            relative
+	 * @param loc the relative or absolute repository location path as String
+	 * @param op  the operator for which should be used as base path in case the location is relative
 	 * @return the repository location for the specified path
-	 * @throws UserError
-	 *             in case the location is malformed
+	 * @throws UserError in case the location is malformed
+	 * @deprecated since 9.7, use {@link #getRepositoryLocationFolder(String, Operator)} or {@link
+	 * #getRepositoryLocationData(String, Operator, Class)} instead
 	 */
+	@Deprecated
 	public static RepositoryLocation getRepositoryLocation(String loc, Operator op) throws UserError {
+		RepositoryLocation location = getRepositoryLocationData(loc, op, DataEntry.class);
+		location.setLocationType(RepositoryLocationType.UNKNOWN);
+		return location;
+	}
+
+	/**
+	 * Returns the repository location for a folder for the provided path and operator. In case it is relative the operators process
+	 * is used base path.
+	 *
+	 * @param loc              the relative or absolute repository location path as String
+	 * @param op               the operator for which should be used as base path in case the location is relative
+	 * @return the repository location for the specified path
+	 * @throws UserError in case the location is malformed
+	 * @since 9.7
+	 */
+	public static RepositoryLocation getRepositoryLocationFolder(String loc, Operator op) throws UserError {
 		Process process = op == null ? null : op.getProcess();
 		if (process != null) {
 			RepositoryLocation result;
 			try {
-				result = process.resolveRepositoryLocation(loc);
+				result = process.resolveRepositoryLocation(loc, RepositoryLocationType.FOLDER);
 			} catch (MalformedRepositoryLocationException e) {
 				throw new UserError(op, e, 319, e.getMessage());
 			}
@@ -473,7 +761,7 @@ public class RepositoryLocation {
 			if (RepositoryLocation.isAbsolute(loc)) {
 				RepositoryLocation result;
 				try {
-					result = new RepositoryLocation(loc);
+					result = new RepositoryLocationBuilder().withLocationType(RepositoryLocationType.FOLDER).buildFromAbsoluteLocation(loc);
 				} catch (MalformedRepositoryLocationException e) {
 					throw new UserError(op, e, 319, e.getMessage());
 				}
@@ -483,4 +771,45 @@ public class RepositoryLocation {
 			}
 		}
 	}
+
+	/**
+	 * Returns the repository location for a data entry for the provided path and operator. In case it is relative the
+	 * operators process is used base path.
+	 *
+	 * @param loc              the relative or absolute repository location path as String
+	 * @param op               the operator for which should be used as base path in case the location is relative
+	 * @param expectedDataType the expected specific {@link DataEntry} (sub-)type. At the same repository location, for
+	 *                         example a "test.rmhdf5table" (example set) and "test.rmp" (process) might live, and if
+	 *                         the expected data entry subtype is not specified, this method will return the first one
+	 *                         it finds. If {@code null}, will use {@link DataEntry}. Also see {@link
+	 *                         #locateData()}.
+	 * @return the repository location for the specified path
+	 * @throws UserError in case the location is malformed
+	 * @since 9.7
+	 */
+	public static RepositoryLocation getRepositoryLocationData(String loc, Operator op, Class<? extends DataEntry> expectedDataType) throws UserError {
+		Process process = op == null ? null : op.getProcess();
+		if (process != null) {
+			RepositoryLocation result;
+			try {
+				result = process.resolveRepositoryLocation(loc, RepositoryLocationType.DATA_ENTRY);
+			} catch (MalformedRepositoryLocationException e) {
+				throw new UserError(op, e, 319, e.getMessage());
+			}
+			result.setAccessor(process.getRepositoryAccessor());
+			result.setExpectedDataEntryType(expectedDataType);
+			return result;
+		} else if (RepositoryLocation.isAbsolute(loc)) {
+			RepositoryLocation result;
+			try {
+				result = new RepositoryLocationBuilder().withExpectedDataEntryType(expectedDataType).buildFromAbsoluteLocation(loc);
+			} catch (MalformedRepositoryLocationException e) {
+				throw new UserError(op, e, 319, e.getMessage());
+			}
+			return result;
+		} else {
+			throw new UserError(op, 320, loc);
+		}
+	}
+
 }

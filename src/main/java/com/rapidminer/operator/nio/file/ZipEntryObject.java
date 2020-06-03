@@ -26,6 +26,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import com.rapidminer.operator.OperatorException;
+import com.rapidminer.tools.TempFileTools;
 import com.rapidminer.tools.Tools;
 
 
@@ -64,8 +65,7 @@ public class ZipEntryObject extends FileObject {
 	public File getFile() throws OperatorException {
 		if (file == null) {
 			try {
-				file = File.createTempFile(TEMP_FILE_PREFIX, TEMP_FILE_SUFFIX);
-				file.deleteOnExit();
+				file = TempFileTools.createTempFile(TEMP_FILE_PREFIX, TEMP_FILE_SUFFIX).toFile();
 			} catch (IOException e) {
 				throw new OperatorException("303", e, "File in " + System.getProperty("java.io.tmpdir"), e.getMessage());
 			}

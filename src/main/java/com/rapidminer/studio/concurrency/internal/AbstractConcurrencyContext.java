@@ -327,12 +327,13 @@ abstract class AbstractConcurrencyContext implements ConcurrencyContext {
 			try {
 				result = callable.call();
 				return true;
-			} catch (Error | RuntimeException err) {
-				throw err;
-			} catch (Exception ex) {
-				// the following line is the only difference to ForkJoinTask#AdaptedCallable
-				throw new RecursiveWrapper.WrapperRuntimeException(ex);
+			} catch (Throwable t) {
+				// the ForkJoinPool rewraps all Exception with a public constructor in an Exception of the thrown type
+				// which hides the stacktrace of the root cause. When wrapping all throwables we can ensure to find
+				// the real root cause and present it.
+				throw new RecursiveWrapper.WrapperRuntimeException(t);
 			}
+
 		}
 
 		@Override

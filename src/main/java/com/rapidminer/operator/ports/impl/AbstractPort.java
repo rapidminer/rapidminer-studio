@@ -55,7 +55,8 @@ import com.rapidminer.tools.ReferenceCache;
  * @author Simon Fischer
  *
  */
-public abstract class AbstractPort extends AbstractObservable<Port> implements Port {
+public abstract class AbstractPort<S extends Port<S, O>, O extends Port<O, S>>
+		extends AbstractObservable<Port<S, O>> implements Port<S, O> {
 
 	private static final ReferenceCache<IOObject> IOO_REFERENCE_CACHE = new ReferenceCache<>(20);
 
@@ -63,7 +64,7 @@ public abstract class AbstractPort extends AbstractObservable<Port> implements P
 	private static final Predicate<? super QuickFix> BLACKLISTED_OPERATOR_FILTER = new BlacklistedOperatorQuickFixFilter();
 
 	private final List<MetaDataError> errorList = new LinkedList<>();
-	private final Ports<? extends Port> ports;
+	private final Ports<S> ports;
 
 	private String name;
 
@@ -74,7 +75,7 @@ public abstract class AbstractPort extends AbstractObservable<Port> implements P
 	private final boolean simulatesStack;
 	private boolean locked = false;
 
-	protected AbstractPort(Ports<? extends Port> owner, String name, boolean simulatesStack) {
+	protected AbstractPort(Ports<S> owner, String name, boolean simulatesStack) {
 		this.name = name;
 		this.ports = owner;
 		this.simulatesStack = simulatesStack;
@@ -178,7 +179,7 @@ public abstract class AbstractPort extends AbstractObservable<Port> implements P
 				if (nullForOther) {
 					return null;
 				} else {
-					throw new PortUserError(this, "table_not_convertible.custom_column", e.getColumnName(), e.getType().customTypeID());
+					throw new PortUserError(this, "table_not_convertible.custom_column", e.getColumnName(), e.getType());
 				}
 			}
 		} else if (!nullForOther) {
@@ -211,7 +212,7 @@ public abstract class AbstractPort extends AbstractObservable<Port> implements P
 	}
 
 	@Override
-	public Ports<? extends Port> getPorts() {
+	public Ports<S> getPorts() {
 		return ports;
 	}
 

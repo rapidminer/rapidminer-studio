@@ -43,8 +43,8 @@ public class RemoteCreateVaultInformation {
 	 * 		the value to be injected
 	 */
 	public RemoteCreateVaultInformation(String group, String name, String value) {
-		this.group = ValidationUtil.requireNonNull(group);
-		this.name = ValidationUtil.requireNonNull(name);
+		this.group = ValidationUtil.requireNonNull(group, "group");
+		this.name = ValidationUtil.requireNonNull(name, "name");
 		this.value = value;
 	}
 
@@ -58,7 +58,7 @@ public class RemoteCreateVaultInformation {
 	}
 
 	private void setGroup(String group) {
-		this.group = ValidationUtil.requireNonNull(group);
+		this.group = ValidationUtil.requireNonNull(group, "group");
 	}
 
 	/**
@@ -71,7 +71,7 @@ public class RemoteCreateVaultInformation {
 	}
 
 	private void setName(String name) {
-		this.name = ValidationUtil.requireNonNull(name);
+		this.name = ValidationUtil.requireNonNull(name, "name");
 	}
 
 	/**

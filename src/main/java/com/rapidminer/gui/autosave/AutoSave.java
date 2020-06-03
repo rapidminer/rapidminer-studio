@@ -32,7 +32,6 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Properties;
 import java.util.logging.Level;
-
 import javax.swing.SwingUtilities;
 
 import com.rapidminer.FileProcessLocation;
@@ -45,10 +44,12 @@ import com.rapidminer.gui.processeditor.ExtendedProcessEditor;
 import com.rapidminer.gui.tools.UpdateQueue;
 import com.rapidminer.operator.Operator;
 import com.rapidminer.repository.MalformedRepositoryLocationException;
-import com.rapidminer.repository.RepositoryLocation;
+import com.rapidminer.repository.ProcessEntry;
+import com.rapidminer.repository.RepositoryLocationBuilder;
 import com.rapidminer.tools.FileSystemService;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.XMLException;
+import com.rapidminer.tools.encryption.EncryptionProvider;
 
 
 /**
@@ -200,7 +201,7 @@ public class AutoSave {
 		ProcessLocation actualProcessLocation = null;
 		if (processType.equals(LOCATION_TYPE_REPOSITORY)) {
 			try {
-				actualProcessLocation = new RepositoryProcessLocation(new RepositoryLocation(processPath));
+				actualProcessLocation = new RepositoryProcessLocation(new RepositoryLocationBuilder().withExpectedDataEntryType(ProcessEntry.class).buildFromAbsoluteLocation(processPath));
 			} catch (MalformedRepositoryLocationException e) {
 				// in that case location just stays null
 			}
@@ -271,7 +272,7 @@ public class AutoSave {
 					autoSaveProperties.put(PROPERTY_PROCESS_PATH, LOCATION_TYPE_NONE);
 					autoSaveProperties.put(PROPERTY_PROCESS_TYPE, LOCATION_TYPE_NONE);
 				}
-				String processXML = process.getRootOperator().getXML(false);
+				String processXML = process.getRootOperator().getXML(false, EncryptionProvider.DEFAULT_CONTEXT);
 
 				try (OutputStreamWriter infoWriter = new OutputStreamWriter(
 						new FileOutputStream(autoSavedProcessPropertiesPath.toFile()), StandardCharsets.UTF_8);

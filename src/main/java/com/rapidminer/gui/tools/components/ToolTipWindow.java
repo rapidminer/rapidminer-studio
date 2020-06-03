@@ -44,7 +44,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowFocusListener;
 import java.util.concurrent.atomic.AtomicBoolean;
-
+import java.util.logging.Level;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.BorderFactory;
@@ -66,12 +66,16 @@ import com.rapidminer.gui.tools.ExtendedHTMLJEditorPane;
 import com.rapidminer.gui.tools.ProgressThread;
 import com.rapidminer.gui.tools.ResourceLabel;
 import com.rapidminer.gui.tools.SwingTools;
-import com.rapidminer.repository.Entry;
+import com.rapidminer.operator.IOObject;
 import com.rapidminer.repository.IOObjectEntry;
 import com.rapidminer.repository.RepositoryLocation;
+import com.rapidminer.repository.RepositoryLocationBuilder;
+import com.rapidminer.repository.RepositoryLocationType;
 import com.rapidminer.tools.FontTools;
+import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.RMUrlHandler;
 import com.rapidminer.tools.Tools;
+import com.rapidminer.tools.plugin.Plugin;
 
 
 /**
@@ -300,6 +304,7 @@ public class ToolTipWindow {
 		tipPane.addHyperlinkListener(new HyperlinkListener() {
 
 			@Override
+			@SuppressWarnings("unchecked")
 			public void hyperlinkUpdate(HyperlinkEvent e) {
 				if (e.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
 					if (e.getDescription().startsWith("loadMetaData?")) {
@@ -320,13 +325,26 @@ public class ToolTipWindow {
 							public void run() {
 								getProgressListener().setTotal(100);
 								getProgressListener().setCompleted(10);
+								String[] split = loc.split("\\|");
+								Class<? extends IOObjectEntry> expectedDataEntryClass = IOObjectEntry.class;
+								String locationString = split[0];
 								try {
-									Entry entry = new RepositoryLocation(loc).locateEntry();
-									if (entry instanceof IOObjectEntry) {
-										((IOObjectEntry) entry).retrieveMetaData();
+									if (split.length == 2) {
+										// this is needed when a repo contains more than one IOObjectEntry in the same folder; see Repository#getIOObjectEntrySubtype()
+										try {
+											Class<? extends IOObject> ioObjectClass = (Class<? extends IOObject>) Class.forName(split[1], false, Plugin.getMajorClassLoader());
+											RepositoryLocation fakeLoc = new RepositoryLocationBuilder().withLocationType(RepositoryLocationType.DATA_ENTRY).buildFromAbsoluteLocation(locationString);
+											expectedDataEntryClass = fakeLoc.getRepository().getIOObjectEntrySubtype(ioObjectClass);
+										} catch (Throwable e) {
+											LogService.getRoot().log(Level.WARNING, "com.rapidminer.gui.tools.components.ToolTipWindow.md_download_error", e);
+										}
+									}
+									IOObjectEntry entry = new RepositoryLocationBuilder().withExpectedDataEntryType(expectedDataEntryClass).buildFromAbsoluteLocation(locationString).locateData();
+									if (entry != null) {
+										entry.retrieveMetaData();
 									}
 								} catch (Exception e) {
-									SwingTools.showSimpleErrorMessage("error_downloading_metadata", e, loc, e.getMessage());
+									SwingTools.showSimpleErrorMessage("error_downloading_metadata", e, locationString, e.getMessage());
 								} finally {
 									getProgressListener().complete();
 								}

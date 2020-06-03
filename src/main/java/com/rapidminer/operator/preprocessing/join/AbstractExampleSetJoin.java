@@ -278,6 +278,7 @@ public abstract class AbstractExampleSetJoin extends Operator {
 		// create new example set
 		ExampleSet result = unionBuilder.withRoles(unionSpecialAttributes).build();
 		result.getAnnotations().addAll(es1.getAnnotations());
+		result.setAllUserData(es1.getAllUserData());
 		joinOutput.deliver(result);
 	}
 

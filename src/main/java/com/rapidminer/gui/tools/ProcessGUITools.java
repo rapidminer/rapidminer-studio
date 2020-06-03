@@ -481,8 +481,7 @@ public class ProcessGUITools {
 		}
 		String opName = "";
 		if (port instanceof InputPort) {
-			InputPort inPort = (InputPort) port;
-			OutputPort source = inPort.getSource();
+			Port source = port.getOpposite();
 			if (source != null) {
 				// not the user entered name because that could be god knows how long
 				opName = source.getPorts().getOwner().getOperator().getOperatorDescription().getName();

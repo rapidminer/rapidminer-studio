@@ -26,11 +26,11 @@ import com.rapidminer.gui.tools.dialogs.ConfirmDialog;
 import com.rapidminer.gui.tools.dialogs.wizards.AbstractWizard;
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.io.AbstractExampleSource;
-import com.rapidminer.repository.Entry;
+import com.rapidminer.repository.IOObjectEntry;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryLocation;
+import com.rapidminer.repository.RepositoryLocationBuilder;
 import com.rapidminer.repository.RepositoryManager;
-import com.rapidminer.repository.local.SimpleIOObjectEntry;
 import com.rapidminer.tools.ProgressListener;
 
 
@@ -53,19 +53,12 @@ public class DataImportWizard extends AbstractWizard {
 		}
 		final RepositoryLocation location;
 		try {
-			location = new RepositoryLocation(repositoryLocationPath);
-			Entry entry = location.locateEntry();
+			location = new RepositoryLocationBuilder().withExpectedDataEntryType(IOObjectEntry.class).buildFromAbsoluteLocation(repositoryLocationPath);
+			IOObjectEntry entry = location.locateData();
 			if (entry != null) {
-				if (entry instanceof SimpleIOObjectEntry) {
-					// could overwrite, ask for permission
-					if (SwingTools.showConfirmDialog(DataImportWizard.this, "overwrite", ConfirmDialog.YES_NO_OPTION,
-							entry.getLocation()) == ConfirmDialog.NO_OPTION) {
-						return false;
-					}
-				} else {
-					// cannot overwrite, inform user
-					SwingTools.showSimpleErrorMessage(DataImportWizard.this, "cannot_save_data_no_dataentry", "",
-							entry.getName());
+				// could overwrite, ask for permission
+				if (SwingTools.showConfirmDialog(DataImportWizard.this, "overwrite", ConfirmDialog.YES_NO_OPTION,
+						entry.getLocation()) == ConfirmDialog.NO_OPTION) {
 					return false;
 				}
 			}

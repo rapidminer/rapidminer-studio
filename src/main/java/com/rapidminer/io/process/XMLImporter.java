@@ -85,6 +85,7 @@ import com.rapidminer.tools.OperatorService;
 import com.rapidminer.tools.ProgressListener;
 import com.rapidminer.tools.XMLException;
 import com.rapidminer.tools.container.Pair;
+import com.rapidminer.tools.encryption.EncryptionProvider;
 import com.rapidminer.tools.plugin.Plugin;
 
 
@@ -96,176 +97,62 @@ import com.rapidminer.tools.plugin.Plugin;
  */
 public class XMLImporter {
 
+	private static final Set<String> IRRELEVANT_PARAMETERS = new HashSet<>();
 	public static final VersionNumber VERSION_RM_5 = new VersionNumber(5, 0);
 	public static final VersionNumber VERSION_RM_6 = new VersionNumber(6, 0);
 	public static final VersionNumber CURRENT_VERSION = VERSION_RM_6;
-
-	private static final Set<String> IRRELEVANT_PARAMETERS = new HashSet<String>();
-
-	static {
-		IRRELEVANT_PARAMETERS.add("read_database.data_set_meta_data_information");
-	}
-
 	/**
 	 * Encoding in which process files are written. UTF-8 is guaranteed to exist on any JVM, see
 	 * javadoc of {@link Charset}.
 	 */
 	public static final Charset PROCESS_FILE_CHARSET = StandardCharsets.UTF_8;
 
-	private static List<ParseRule> PARSE_RULES = new LinkedList<ParseRule>();
-	private static HashMap<String, List<ParseRule>> OPERATOR_KEY_RULES_MAP = new HashMap<String, List<ParseRule>>();
-
-	/** Reads the parse rules from parserules.xml */
-	public static void init() {
-		URL rulesResource = XMLImporter.class.getResource("/com/rapidminer/resources/parserules.xml");
-		if (rulesResource != null) {
-			// registering the core rules without name prefix
-			importParseRules(rulesResource, null);
-		} else {
-			LogService.getRoot().log(Level.WARNING, "com.rapidminer.io.process.XMLImporter.cannot_find_default_parse_rules");
-		}
+	static {
+		IRRELEVANT_PARAMETERS.add("read_database.data_set_meta_data_information");
 	}
 
-	/**
-	 * This method adds the parse rules from the given resource to the import rule set. The operator
-	 * name prefix describes the operators coming from plugins. The core operators do not have any
-	 * name prefix, while the plugin operators are registered using <plugin>:<operatorname>
-	 */
-	public static void importParseRules(URL rulesResource, Plugin prover) {
-		if (rulesResource == null) {
-			throw new NullPointerException("Parserules resource must not be null.");
-		} else {
 
-			String operatorNamePrefix = "";
-			if (prover != null) {
-				operatorNamePrefix = prover.getPrefix() + ":";
-			}
 
-			LogService.getRoot().log(Level.CONFIG, "com.rapidminer.io.process.XMLImporter.reading_parse_rules",
-					rulesResource);
-			try {
-				Document doc = XMLTools.createDocumentBuilder().parse(rulesResource.openStream());
-				if (!doc.getDocumentElement().getTagName().equals("parserules")) {
-					LogService.getRoot().log(Level.SEVERE, "com.rapidminer.io.process.XMLImporter.xml_document_start_error",
-							rulesResource);
-				} else {
-					NodeList operatorElements = doc.getDocumentElement().getChildNodes();
-					for (int i = 0; i < operatorElements.getLength(); i++) {
-						if (operatorElements.item(i) instanceof Element) {
-							Element operatorElement = (Element) operatorElements.item(i);
-							String operatorTypeName = operatorElement.getNodeName();
+	private static final List<ParseRule> PARSE_RULES = new LinkedList<>();
+	private static final HashMap<String, List<ParseRule>> OPERATOR_KEY_RULES_MAP = new HashMap<>();
 
-							NodeList ruleElements = operatorElement.getChildNodes();
-							for (int j = 0; j < ruleElements.getLength(); j++) {
-								if (ruleElements.item(j) instanceof Element) {
-									PARSE_RULES.add(constructRuleFromElement(operatorNamePrefix + operatorTypeName,
-											(Element) ruleElements.item(j)));
-								}
-							}
-						}
-					}
-					LogService.getRoot().log(Level.FINE, "com.rapidminer.io.process.XMLImporter.found_rules",
-							PARSE_RULES.size());
-				}
-			} catch (Exception e) {
-				LogService.getRoot()
-						.log(Level.SEVERE,
-								I18N.getMessage(LogService.getRoot().getResourceBundle(),
-										"com.rapidminer.io.process.XMLImporter.error_reading_parse_rules", rulesResource, e),
-						e);
-			}
-		}
-	}
-
-	public static ParseRule constructRuleFromElement(String operatorTypeName, Element element) throws XMLException {
-		ParseRule rule = null;
-		AbstractGenericParseRule genericRule = null;
-		if (element.getTagName().equals("replaceParameter")) {
-			rule = new ReplaceParameterRule(operatorTypeName, element);
-		} else if (element.getTagName().equals("deleteAfterAutowire")) {
-			rule = new DeleteAfterAutoWireRule(operatorTypeName, element);
-		} else if (element.getTagName().equals("setParameter")) {
-			rule = new SetParameterRule(operatorTypeName, element);
-		} else if (element.getTagName().equals("replaceParameterValue")) {
-			rule = new ChangeParameterValueRule(operatorTypeName, element);
-		} else if (element.getTagName().equals("replaceOperator")) {
-			rule = new ReplaceOperatorRule(operatorTypeName, element);
-		} else if (element.getTagName().equals("exchangeSubprocesses")) {
-			rule = new ExchangeSubprocessesRule(operatorTypeName, element);
-		} else if (element.getTagName().equals("wireSubprocess")) {
-			rule = new WireAllOperators(operatorTypeName, element);
-		} else if (element.getTagName().equals("switchListEntries")) {
-			rule = new SwitchListEntriesRule(operatorTypeName, element);
-		} else if (element.getTagName().equals("renamePlotterParameters")) {
-			rule = new RenamePlotterParametersRule(operatorTypeName, element);
-		} else if (element.getTagName().equals("replaceRoleParameter")) {
-			rule = new SetRoleByNameRule(operatorTypeName, element);
-		} else if (element.getTagName().equals("replaceByCellAddress")) {
-			rule = new ExcelCellAddressParseRule(operatorTypeName, element);
-
-			/*
-			 * General rules. Will take care of theirselves.
-			 */
-		} else if (element.getTagName().equals("deleteUnnecessaryOperatorChain")) {
-			genericRule = new DeleteUnnecessaryOperatorChainRule();
-		} else if (element.getTagName().equals("passthroughShortcut")) {
-			genericRule = new PassthroughShortcutRule();
-		} else if (element.getTagName().equals("replaceIOMultiplier")) {
-			genericRule = new ReplaceIOMultiplierRule();
-		} else if (element.getTagName().equals("repairOperatorEnabler")) {
-			genericRule = new OperatorEnablerRepairRule();
-		} else {
-			throw new XMLException("Unknown rule tag: <" + element.getTagName() + ">");
-		}
-
-		if (rule != null) {
-			// registering rules applying to one single operator.
-			List<ParseRule> rules = OPERATOR_KEY_RULES_MAP.get(operatorTypeName);
-			if (rules == null) {
-				rules = new LinkedList<ParseRule>();
-				OPERATOR_KEY_RULES_MAP.put(operatorTypeName, rules);
-			}
-			rules.add(rule);
-		}
-
-		if (genericRule != null) {
-			for (String applicableOperatorKeys : genericRule.getApplicableOperatorKeys()) {
-				// registering rules applying to one single operator.
-				List<ParseRule> rules = OPERATOR_KEY_RULES_MAP.get(applicableOperatorKeys);
-				if (rules == null) {
-					rules = new LinkedList<ParseRule>();
-					OPERATOR_KEY_RULES_MAP.put(applicableOperatorKeys, rules);
-				}
-				rules.add(genericRule);
-			}
-		}
-		return rule;
-	}
-
-	private final List<Runnable> jobsAfterAutoWire = new LinkedList<Runnable>();
-	private final List<Runnable> jobsAfterTreeConstruction = new LinkedList<Runnable>();
+	private final List<Runnable> jobsAfterAutoWire = new LinkedList<>();
+	private final List<Runnable> jobsAfterTreeConstruction = new LinkedList<>();
 
 	private boolean mustAutoConnect = false;
 
 	private int total;
-	private final ProgressListener progressListener;
 	private int created = 0;
+	private final ProgressListener progressListener;
+	private final String encryptionContext;
 
 	private final StringBuilder messages = new StringBuilder();
 
 	private boolean operatorAsDirectChildrenDeprecatedReported = false;
 
-	/** Creates a new importer that reports progress to the given listener. */
+
+	/**
+	 * Creates a new importer that reports progress to the given listener and uses the {@link
+	 * EncryptionProvider#DEFAULT_CONTEXT} for decryption.
+	 *
+	 * @param listener the progress listener informed of the load status
+	 */
 	public XMLImporter(ProgressListener listener) {
-		progressListener = listener;
+		this(listener, EncryptionProvider.DEFAULT_CONTEXT);
 	}
 
 	/**
-	 * This constructor will simply ignore the version. It will always use the one of RapidMiner.
+	 * Creates an XMLExporter which exports GUI and other additional information as specified and uses the specified
+	 * encryption context (see {@link com.rapidminer.tools.encryption.EncryptionProvider}.
+	 *
+	 * @param listener the progress listener informed of the load status
+	 * @param encryptionContext the encryption context that will be used to potentially decrypt values (see {@link
+	 *                          com.rapidminer.tools.encryption.EncryptionProvider})
+	 * @since 9.7
 	 */
-	@Deprecated
-	public XMLImporter(ProgressListener listener, int version) {
-		this(listener);
+	public XMLImporter(ProgressListener listener, String encryptionContext) {
+		this.progressListener = listener;
+		this.encryptionContext = encryptionContext;
 	}
 
 	public void addMessage(String msg) {
@@ -289,6 +176,22 @@ public class XMLImporter {
 		Process process = new Process();
 		parse(processElement, process, unknownParameters);
 		return process;
+	}
+
+	public Operator parseOperator(Element opElement, VersionNumber processVersion, Process process,
+			List<UnknownParameterInformation> unknownParameterInformation) throws XMLException {
+		total = opElement.getElementsByTagName("operator").getLength();
+		Operator operator = parseOperator(opElement, null, processVersion, process, unknownParameterInformation);
+		unlockPorts(operator);
+		return operator;
+	}
+
+	public void doAfterAutoWire(Runnable runnable) {
+		jobsAfterAutoWire.add(runnable);
+	}
+
+	public void doAfterTreeConstruction(Runnable runnable) {
+		jobsAfterTreeConstruction.add(runnable);
 	}
 
 	private void parse(Element processElement, Process process, List<UnknownParameterInformation> unknownParameters)
@@ -338,7 +241,7 @@ public class XMLImporter {
 	}
 
 	private ProcessRootOperator parseRootOperator(Element rootOperatorElement, VersionNumber processFileVersion,
-			Process process, List<UnknownParameterInformation> unknownParameters) throws XMLException {
+												  Process process, List<UnknownParameterInformation> unknownParameters) throws XMLException {
 		Operator rootOp = parseOperator(rootOperatorElement, processFileVersion, process, unknownParameters);
 
 		for (Runnable runnable : jobsAfterTreeConstruction) {
@@ -372,7 +275,7 @@ public class XMLImporter {
 	}
 
 	private void parseProcess(Element element, ExecutionUnit executionUnit, VersionNumber processFileVersion,
-			Process process, List<UnknownParameterInformation> unknownParameterInformation) throws XMLException {
+							  Process process, List<UnknownParameterInformation> unknownParameterInformation) throws XMLException {
 		assert "process".equals(element.getTagName());
 
 		if (element.hasAttribute("expanded")) {
@@ -457,14 +360,6 @@ public class XMLImporter {
 		} catch (PortException e) {
 			addMessage("<em class=\"error\">Faild to connect ports: " + e.getMessage() + "</var>.</em>");
 		}
-	}
-
-	public Operator parseOperator(Element opElement, VersionNumber processVersion, Process process,
-			List<UnknownParameterInformation> unknownParameterInformation) throws XMLException {
-		total = opElement.getElementsByTagName("operator").getLength();
-		Operator operator = parseOperator(opElement, null, processVersion, process, unknownParameterInformation);
-		unlockPorts(operator);
-		return operator;
 	}
 
 	private Operator parseOperator(Element opElement, ExecutionUnit addToProcess, VersionNumber processFileVersion,
@@ -578,7 +473,7 @@ public class XMLImporter {
 				ok = true;
 			}
 			for (int i = 0; i < BreakpointListener.BREAKPOINT_POS_NAME.length; i++) {
-				if (breakpointString.indexOf(BreakpointListener.BREAKPOINT_POS_NAME[i]) >= 0) {
+				if (breakpointString.contains(BreakpointListener.BREAKPOINT_POS_NAME[i])) {
 					operator.setBreakpoint(i, true);
 					ok = true;
 				}
@@ -622,12 +517,23 @@ public class XMLImporter {
 				Element inner = (Element) node;
 				if (inner.getTagName().toLowerCase().equals("parameter")) {
 					String[] parameter = parseParameter(inner);
-					boolean knownType = operator.getParameters().setParameter(parameter[0], parameter[1]);
+					String key = parameter[0];
+					String value = parameter[1];
+					if (value != null) {
+						ParameterType parameterType = operator.getParameters().getParameterType(key);
+						// we potentially decrypt already here, because the XML will contain encrypted values, however the internal Parameters expect no encrypted values
+						// encryption in process is deprecated anyway since 9.7, so this should become less and less needed in the future
+						if (parameterType != null) {
+							// null check is for parameters that no longer exist (e.g. when replaced by dummy)
+							value = parameterType.transformNewValue(value, encryptionContext);
+						}
+					}
+					boolean knownType = operator.getParameters().setParameter(key, value);
 					if (!knownType) {
-						if (relevantParameter(className, parameter[0])) {
+						if (relevantParameter(className, key)) {
 							LogService.getRoot().log(Level.INFO,
 									"com.rapidminer.io.process.XMLImporter.attribute_not_found_unknown", new Object[] {
-											parameter[0], operator.getName(), operator.getOperatorDescription().getName() });
+											key, operator.getName(), operator.getOperatorDescription().getName() });
 						}
 					}
 				} else if (inner.getTagName().toLowerCase().equals("list")) {
@@ -750,15 +656,13 @@ public class XMLImporter {
 			}
 		}
 
-		/**
-		 * Apply all parse rules that are applicable for this operator.
-		 */
+		 // Apply all parse rules that are applicable for this operator.
 		String key = operator.getOperatorDescription().getKey();
 		List<ParseRule> list = OPERATOR_KEY_RULES_MAP.get(key);
 		if (list != null) {
 			for (ParseRule rule : list) {
 				String msg = rule.apply(operator, processFileVersion, this);
-				if (msg != null) {
+				if (msg != null && process != null) {
 					process.setProcessConverted(true);
 					addMessage(msg);
 				}
@@ -792,7 +696,7 @@ public class XMLImporter {
 	}
 
 	private List<String> parseList(Element parent, String childName) {
-		List<String> result = new LinkedList<String>();
+		List<String> result = new LinkedList<>();
 		NodeList childNodes = parent.getElementsByTagName(childName);
 		switch (childNodes.getLength()) {
 			case 0:
@@ -824,7 +728,7 @@ public class XMLImporter {
 				NodeList locationNodes = ((Element) childNodes.item(0)).getElementsByTagName("macro");
 				for (int i = 0; i < locationNodes.getLength(); i++) {
 					Element macroElem = (Element) locationNodes.item(i);
-					context.addMacro(new Pair<String, String>(XMLTools.getTagContents(macroElem, "key"),
+					context.addMacro(new Pair<>(XMLTools.getTagContents(macroElem, "key"),
 							XMLTools.getTagContents(macroElem, "value")));
 				}
 				break;
@@ -839,7 +743,7 @@ public class XMLImporter {
 		ParameterType keyType = type.getKeyType();
 		ParameterType valueType = type.getValueType();
 
-		List<String[]> values = new LinkedList<String[]>();
+		List<String[]> values = new LinkedList<>();
 		NodeList children = list.getChildNodes();
 		for (int i = 0; i < children.getLength(); i++) {
 			Node node = children.item(i);
@@ -848,13 +752,13 @@ public class XMLImporter {
 				if (inner.getTagName().toLowerCase().equals("parameter")) {
 					String key = inner.getAttribute("key");
 					String value = inner.getAttribute("value");
-					final String transformedKey = keyType.transformNewValue(key);
-					final String transformedValue = valueType.transformNewValue(value);
+					final String transformedKey = keyType.transformNewValue(key, encryptionContext);
+					final String transformedValue = valueType.transformNewValue(value, encryptionContext);
 					values.add(new String[] { transformedKey, transformedValue });
 				} else {
 					addMessage("<em class=\"error\">Ilegal inner tag for <code>&lt;list&gt;</code>: <code>&lt;"
 							+ inner.getTagName() + "&gt;</code>.</em>");
-					return new ListDescription(list.getAttribute("key"), Collections.<String[]> emptyList());
+					return new ListDescription(list.getAttribute("key"), Collections.emptyList());
 				}
 			}
 		}
@@ -862,18 +766,18 @@ public class XMLImporter {
 	}
 
 	private List<String> parseParameterEnumeration(Element list, ParameterTypeEnumeration type) throws XMLException {
-		List<String> values = new LinkedList<String>();
+		List<String> values = new LinkedList<>();
 		NodeList children = list.getChildNodes();
 		for (int i = 0; i < children.getLength(); i++) {
 			Node node = children.item(i);
 			if (node instanceof Element) {
 				Element inner = (Element) node;
 				if (inner.getTagName().toLowerCase().equals("parameter")) {
-					values.add(type.getValueType().transformNewValue(inner.getAttribute("value")));
+					values.add(type.getValueType().transformNewValue(inner.getAttribute("value"), EncryptionProvider.DEFAULT_CONTEXT));
 				} else {
 					addMessage("<em class=\"error\">Ilegal inner tag for <code>&lt;enumeration&gt;</code>: <code>&lt;"
 							+ inner.getTagName() + "&gt;</code>.</em>");
-					return new LinkedList<String>();
+					return new LinkedList<>();
 				}
 			}
 		}
@@ -887,8 +791,7 @@ public class XMLImporter {
 	private VersionNumber parseVersion(Element element) {
 		if (element.hasAttribute("version")) {
 			try {
-				VersionNumber version = new VersionNumber(element.getAttribute("version"));
-				return version;
+				return new VersionNumber(element.getAttribute("version"));
 			} catch (NumberFormatException e) {
 				addMessage("<em class=\"error\">The version " + element.getAttribute("version")
 						+ " is not a legal RapidMiner version, assuming 4.0.</em>");
@@ -913,14 +816,6 @@ public class XMLImporter {
 		}
 	}
 
-	public void doAfterAutoWire(Runnable runnable) {
-		jobsAfterAutoWire.add(runnable);
-	}
-
-	public void doAfterTreeConstruction(Runnable runnable) {
-		jobsAfterTreeConstruction.add(runnable);
-	}
-
 	private boolean hasMessage() {
 		return messages.length() > 0;
 	}
@@ -929,4 +824,131 @@ public class XMLImporter {
 		return "<html><body><h3>Importing process produced the following messages:</h3><ol>" + messages.toString()
 				+ "</ol></body></html>";
 	}
+	/** Reads the parse rules from parserules.xml */
+	public static void init() {
+		URL rulesResource = XMLImporter.class.getResource("/com/rapidminer/resources/parserules.xml");
+		if (rulesResource != null) {
+			// registering the core rules without name prefix
+			importParseRules(rulesResource, null);
+		} else {
+			LogService.getRoot().log(Level.WARNING, "com.rapidminer.io.process.XMLImporter.cannot_find_default_parse_rules");
+		}
+	}
+
+	/**
+	 * This method adds the parse rules from the given resource to the import rule set. The operator
+	 * name prefix describes the operators coming from plugins. The core operators do not have any
+	 * name prefix, while the plugin operators are registered using <plugin>:<operatorname>
+	 */
+	public static void importParseRules(URL rulesResource, Plugin prover) {
+		if (rulesResource == null) {
+			throw new NullPointerException("Parserules resource must not be null.");
+		} else {
+
+			String operatorNamePrefix = "";
+			if (prover != null) {
+				operatorNamePrefix = prover.getPrefix() + ":";
+			}
+
+			LogService.getRoot().log(Level.CONFIG, "com.rapidminer.io.process.XMLImporter.reading_parse_rules",
+					rulesResource);
+			try {
+				Document doc = XMLTools.createDocumentBuilder().parse(rulesResource.openStream());
+				if (!doc.getDocumentElement().getTagName().equals("parserules")) {
+					LogService.getRoot().log(Level.SEVERE, "com.rapidminer.io.process.XMLImporter.xml_document_start_error",
+							rulesResource);
+				} else {
+					NodeList operatorElements = doc.getDocumentElement().getChildNodes();
+					for (int i = 0; i < operatorElements.getLength(); i++) {
+						if (operatorElements.item(i) instanceof Element) {
+							Element operatorElement = (Element) operatorElements.item(i);
+							String operatorTypeName = operatorElement.getNodeName();
+
+							NodeList ruleElements = operatorElement.getChildNodes();
+							for (int j = 0; j < ruleElements.getLength(); j++) {
+								if (ruleElements.item(j) instanceof Element) {
+									PARSE_RULES.add(constructRuleFromElement(operatorNamePrefix + operatorTypeName,
+											(Element) ruleElements.item(j)));
+								}
+							}
+						}
+					}
+					LogService.getRoot().log(Level.FINE, "com.rapidminer.io.process.XMLImporter.found_rules",
+							PARSE_RULES.size());
+				}
+			} catch (Exception e) {
+				LogService.getRoot()
+						.log(Level.SEVERE,
+								I18N.getMessage(LogService.getRoot().getResourceBundle(),
+										"com.rapidminer.io.process.XMLImporter.error_reading_parse_rules", rulesResource, e),
+								e);
+			}
+		}
+	}
+
+	public static ParseRule constructRuleFromElement(String operatorTypeName, Element element) throws XMLException {
+		ParseRule rule = null;
+		AbstractGenericParseRule genericRule = null;
+		if (element.getTagName().equals("replaceParameter")) {
+			rule = new ReplaceParameterRule(operatorTypeName, element);
+		} else if (element.getTagName().equals("deleteAfterAutowire")) {
+			rule = new DeleteAfterAutoWireRule(operatorTypeName, element);
+		} else if (element.getTagName().equals("setParameter")) {
+			rule = new SetParameterRule(operatorTypeName, element);
+		} else if (element.getTagName().equals("replaceParameterValue")) {
+			rule = new ChangeParameterValueRule(operatorTypeName, element);
+		} else if (element.getTagName().equals("replaceOperator")) {
+			rule = new ReplaceOperatorRule(operatorTypeName, element);
+		} else if (element.getTagName().equals("exchangeSubprocesses")) {
+			rule = new ExchangeSubprocessesRule(operatorTypeName, element);
+		} else if (element.getTagName().equals("wireSubprocess")) {
+			rule = new WireAllOperators(operatorTypeName, element);
+		} else if (element.getTagName().equals("switchListEntries")) {
+			rule = new SwitchListEntriesRule(operatorTypeName, element);
+		} else if (element.getTagName().equals("renamePlotterParameters")) {
+			rule = new RenamePlotterParametersRule(operatorTypeName, element);
+		} else if (element.getTagName().equals("replaceRoleParameter")) {
+			rule = new SetRoleByNameRule(operatorTypeName, element);
+		} else if (element.getTagName().equals("replaceByCellAddress")) {
+			rule = new ExcelCellAddressParseRule(operatorTypeName, element);
+
+			/*
+			 * General rules. Will take care of theirselves.
+			 */
+		} else if (element.getTagName().equals("deleteUnnecessaryOperatorChain")) {
+			genericRule = new DeleteUnnecessaryOperatorChainRule();
+		} else if (element.getTagName().equals("passthroughShortcut")) {
+			genericRule = new PassthroughShortcutRule();
+		} else if (element.getTagName().equals("replaceIOMultiplier")) {
+			genericRule = new ReplaceIOMultiplierRule();
+		} else if (element.getTagName().equals("repairOperatorEnabler")) {
+			genericRule = new OperatorEnablerRepairRule();
+		} else {
+			throw new XMLException("Unknown rule tag: <" + element.getTagName() + ">");
+		}
+
+		if (rule != null) {
+			// registering rules applying to one single operator.
+			List<ParseRule> rules = OPERATOR_KEY_RULES_MAP.get(operatorTypeName);
+			if (rules == null) {
+				rules = new LinkedList<>();
+				OPERATOR_KEY_RULES_MAP.put(operatorTypeName, rules);
+			}
+			rules.add(rule);
+		}
+
+		if (genericRule != null) {
+			for (String applicableOperatorKeys : genericRule.getApplicableOperatorKeys()) {
+				// registering rules applying to one single operator.
+				List<ParseRule> rules = OPERATOR_KEY_RULES_MAP.get(applicableOperatorKeys);
+				if (rules == null) {
+					rules = new LinkedList<>();
+					OPERATOR_KEY_RULES_MAP.put(applicableOperatorKeys, rules);
+				}
+				rules.add(genericRule);
+			}
+		}
+		return rule;
+	}
+
 }

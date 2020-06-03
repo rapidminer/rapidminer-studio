@@ -25,7 +25,7 @@ import com.rapidminer.repository.internal.remote.model.PluginInfo;
 
 
 /**
- * The remote info service can be used to query RapidMiner Server system information.
+ * The remote info service can be used to query RapidMiner AI Hub system information.
  *
  * @author Nils Woehler
  * @since 6.5.0

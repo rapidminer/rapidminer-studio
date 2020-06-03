@@ -35,6 +35,7 @@ import com.rapidminer.Process;
 import com.rapidminer.ProcessLocation;
 import com.rapidminer.ProcessStorageListener;
 import com.rapidminer.RapidMiner;
+import com.rapidminer.RepositoryProcessLocation;
 import com.rapidminer.gui.RapidMinerGUI;
 import com.rapidminer.gui.flow.NewProcessUndoManager;
 import com.rapidminer.gui.flow.processrendering.annotations.model.OperatorAnnotation;
@@ -54,10 +55,10 @@ import com.rapidminer.gui.flow.processrendering.event.ProcessRendererOperatorEve
 import com.rapidminer.gui.processeditor.ExtendedProcessEditor;
 import com.rapidminer.gui.processeditor.ProcessEditor;
 import com.rapidminer.io.process.AnnotationProcessXMLFilter;
-import com.rapidminer.io.process.ProcessOriginProcessXMLFilter;
 import com.rapidminer.io.process.BackgroundImageProcessXMLFilter;
 import com.rapidminer.io.process.GUIProcessXMLFilter;
 import com.rapidminer.io.process.ProcessLayoutXMLFilter;
+import com.rapidminer.io.process.ProcessOriginProcessXMLFilter;
 import com.rapidminer.io.process.ProcessXMLFilterRegistry;
 import com.rapidminer.operator.ExecutionUnit;
 import com.rapidminer.operator.FlagUserData;
@@ -70,6 +71,7 @@ import com.rapidminer.operator.ports.Port;
 import com.rapidminer.tools.FontTools;
 import com.rapidminer.tools.LogService;
 import com.rapidminer.tools.ParameterService;
+import com.rapidminer.tools.encryption.EncryptionProvider;
 import com.rapidminer.tools.parameter.ParameterChangeListener;
 import com.rapidminer.tutorial.Tutorial;
 
@@ -1787,7 +1789,8 @@ public final class ProcessRendererModel {
 			return;
 		}
 		fireDisplayedChainWillChange();
-		undoManager.takeSnapshot(process.getRootOperator().getXML(true), getDisplayedChain(), getSelectedOperators(),
+		// no encryption because each encryption results in a different output for more security, so this would break the "is process changed?" logic
+		undoManager.takeSnapshot(process.getRootOperator().getXML(true, null), getDisplayedChain(), getSelectedOperators(),
 				process.getAllOperators());
 	}
 
@@ -1802,7 +1805,8 @@ public final class ProcessRendererModel {
 			try {
 				ProcessRootOperator rootOperator = process.getRootOperator();
 				UserData<Object> isTutorialProcess = rootOperator.getUserData(Tutorial.KEY_USER_DATA_FLAG);
-				String currentXML = rootOperator.getXML(true);
+				// no encryption because each encryption results in a different output for more security, so this would break the "is process changed?" logic
+				String currentXML = rootOperator.getXML(true, null);
 				ProcessLocation procLoc = process.getProcessLocation();
 				if (!stateXML.equals(currentXML)) {
 					process = undoManager.restoreProcess(index);
@@ -1812,8 +1816,17 @@ public final class ProcessRendererModel {
 						rootOperator.setUserData(Tutorial.KEY_USER_DATA_FLAG, isTutorialProcess);
 					}
 					process.setProcessLocation(procLoc);
-					// check whether the current xml corresponds to the saved one
-					hasChanged = procLoc == null || !rootOperator.getXML(false).equals(procLoc.getRawXML());
+					if (procLoc != null) {
+						// check whether the current xml corresponds to the saved one
+						// we need to divert by creating the process (using encryption context) and getting the fresh XML WITHOUT encryption here as ProcessEntry raw XML is encrypted if repo has encryption
+						// this would break the equals check as our new encryption encrypts the same input differently each time for security reasons
+						String rawXML = procLoc.getRawXML();
+						String encryptionContext = procLoc instanceof RepositoryProcessLocation ? ((RepositoryProcessLocation) procLoc).getRepositoryLocation().getRepository().getEncryptionContext() : EncryptionProvider.DEFAULT_CONTEXT;
+						Process p = new Process(rawXML, encryptionContext);
+						hasChanged = !rootOperator.getXML(false, null).equals(p.getRootOperator().getXML(false, null));
+					} else {
+						hasChanged = true;
+					}
 					fireProcessChanged();
 				}
 

@@ -26,12 +26,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectReader;
-import com.fasterxml.jackson.databind.ObjectWriter;
 import com.rapidminer.connection.ConnectionInformationSerializer;
-import com.rapidminer.tools.ValidationUtil;
 import com.rapidminer.connection.valueprovider.ValueProvider;
+import com.rapidminer.tools.ValidationUtil;
 
 
 /**
@@ -44,14 +41,6 @@ public class ConnectionConfigurationBuilder {
 
 	private ConnectionConfigurationImpl object;
 
-	private static final ObjectReader reader;
-	private static final ObjectWriter writer;
-
-	static {
-		ObjectMapper mapper = ConnectionInformationSerializer.getRemoteObjectMapper();
-		reader = mapper.reader(ConnectionConfigurationImpl.class);
-		writer = mapper.writerWithType(ConnectionConfigurationImpl.class);
-	}
 
 	/**
 	 * Minimal constructor
@@ -78,7 +67,7 @@ public class ConnectionConfigurationBuilder {
 	public ConnectionConfigurationBuilder(ConnectionConfiguration original) throws IOException {
 		ValidationUtil.requireNonNull(original, "original connection configuration");
 		// create a copy using jackson
-		object = reader.readValue(writer.writeValueAsBytes(original));
+		object = ConnectionInformationSerializer.INSTANCE.createDeepCopy((ConnectionConfigurationImpl) original);
 	}
 
 	/**

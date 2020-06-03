@@ -85,7 +85,7 @@ public abstract class AbstractRepositoryAction<T extends Entry> extends Resource
 				enable = false;
 				break;
 			}
-			if (!requiredSelectionType.isInstance(entry)) {
+			if (!requiredSelectionType.isAssignableFrom(entry.getClass())) {
 				enable = false;
 				break;
 			}

@@ -22,6 +22,7 @@ import com.rapidminer.gui.tools.ProgressThread;
 import com.rapidminer.io.process.XMLTools;
 import com.rapidminer.parameter.ParameterHandler;
 import com.rapidminer.parameter.ParameterType;
+import com.rapidminer.parameter.ParameterTypePassword;
 import com.rapidminer.parameter.Parameters;
 import com.rapidminer.parameter.UndefinedParameterError;
 import com.rapidminer.repository.RepositoryException;
@@ -43,6 +44,8 @@ import com.rapidminer.tools.config.actions.ConfigurableAction;
 import com.rapidminer.tools.config.actions.SimpleActionResult;
 import com.rapidminer.tools.config.gui.model.ConfigurableModel;
 import com.rapidminer.tools.container.Pair;
+import com.rapidminer.tools.encryption.EncryptionProvider;
+
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
@@ -268,6 +271,10 @@ public class ConfigurableController {
 							.getParameterTypes(configurator.getParameterHandler(configurable))) {
 						if (type.getKey().equals(key)) {
 							value = type.toString(value);
+							// force encryption
+							if (type instanceof ParameterTypePassword) {
+								value = type.toXMLString(value, EncryptionProvider.DEFAULT_CONTEXT);
+							}
 							break;
 						}
 					}

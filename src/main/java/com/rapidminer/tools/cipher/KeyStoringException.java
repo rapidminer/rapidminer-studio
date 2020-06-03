@@ -22,7 +22,10 @@ package com.rapidminer.tools.cipher;
  * This exception will be thrown if a problem during key storing occurs.
  *
  * @author Nils Woehler
+ * @deprecated since 9.7, use {@link com.rapidminer.tools.encryption.EncryptionProvider} instead for new features
+ * needing encryption!
  */
+@Deprecated
 public class KeyStoringException extends Exception {
 
 	private static final long serialVersionUID = -251163459747969941L;

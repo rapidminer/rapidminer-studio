@@ -19,7 +19,6 @@
 package com.rapidminer.operator.nio;
 
 import java.util.logging.Level;
-
 import javax.swing.SwingUtilities;
 
 import com.rapidminer.example.ExampleSet;
@@ -33,12 +32,12 @@ import com.rapidminer.gui.tools.dialogs.wizards.AbstractWizard.WizardStepDirecti
 import com.rapidminer.gui.tools.dialogs.wizards.dataimport.RepositoryLocationSelectionWizardStep;
 import com.rapidminer.operator.nio.model.DataResultSet;
 import com.rapidminer.operator.nio.model.WizardState;
-import com.rapidminer.repository.Entry;
+import com.rapidminer.repository.DataEntry;
 import com.rapidminer.repository.IOObjectEntry;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryLocation;
+import com.rapidminer.repository.RepositoryLocationBuilder;
 import com.rapidminer.repository.RepositoryManager;
-import com.rapidminer.repository.local.SimpleIOObjectEntry;
 import com.rapidminer.tools.LogService;
 
 
@@ -70,18 +69,12 @@ public final class StoreDataWizardStep extends RepositoryLocationSelectionWizard
 			}
 			final RepositoryLocation location;
 			try {
-				location = new RepositoryLocation(repositoryLocationPath);
-				Entry entry = location.locateEntry();
+				location = new RepositoryLocationBuilder().withExpectedDataEntryType(IOObjectEntry.class).buildFromAbsoluteLocation(repositoryLocationPath);
+				IOObjectEntry entry = location.locateData();
 				if (entry != null) {
-					if (entry instanceof SimpleIOObjectEntry) {
-						// could overwrite, ask for permission
-						if (SwingTools.showConfirmDialog(getOwner(), "overwrite", ConfirmDialog.YES_NO_OPTION,
-								entry.getLocation()) == ConfirmDialog.NO_OPTION) {
-							return false;
-						}
-					} else {
-						// cannot overwrite, inform user
-						SwingTools.showSimpleErrorMessage(getOwner(), "cannot_save_data_no_dataentry", "", entry.getName());
+					// could overwrite, ask for permission
+					if (SwingTools.showConfirmDialog(getOwner(), "overwrite", ConfirmDialog.YES_NO_OPTION,
+							entry.getLocation()) == ConfirmDialog.NO_OPTION) {
 						return false;
 					}
 				}
@@ -114,7 +107,7 @@ public final class StoreDataWizardStep extends RepositoryLocationSelectionWizard
 												.expandToRepositoryLocation(location);
 										// Switch to result
 										try {
-											Entry entry = location.locateEntry();
+											DataEntry entry = location.locateData();
 											if (entry instanceof IOObjectEntry) {
 												OpenAction.showAsResult((IOObjectEntry) entry);
 											}

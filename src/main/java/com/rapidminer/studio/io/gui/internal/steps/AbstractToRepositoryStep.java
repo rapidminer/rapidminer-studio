@@ -49,11 +49,14 @@ import com.rapidminer.gui.tools.ResourceAction;
 import com.rapidminer.gui.tools.SwingTools;
 import com.rapidminer.gui.tools.SwingTools.ResultRunnable;
 import com.rapidminer.gui.tools.dialogs.ConfirmDialog;
+import com.rapidminer.repository.DataEntry;
 import com.rapidminer.repository.Entry;
 import com.rapidminer.repository.Folder;
+import com.rapidminer.repository.IOObjectEntry;
 import com.rapidminer.repository.MalformedRepositoryLocationException;
 import com.rapidminer.repository.RepositoryException;
 import com.rapidminer.repository.RepositoryLocation;
+import com.rapidminer.repository.RepositoryLocationBuilder;
 import com.rapidminer.repository.gui.RepositoryLocationChooser;
 import com.rapidminer.repository.gui.RepositoryTree;
 import com.rapidminer.tools.I18N;
@@ -249,16 +252,15 @@ public abstract class AbstractToRepositoryStep<T extends RepositoryLocationChoos
 		}
 
 		try {
-			final RepositoryLocation entryLocation = new RepositoryLocation(chooser.getRepositoryLocation());
+			final RepositoryLocation entryLocation = new RepositoryLocationBuilder().withExpectedDataEntryType(getDataEntryClass()).buildFromAbsoluteLocation(chooser.getRepositoryLocation());
 			final RepositoryLocation folderLocation = entryLocation.parent();
-			final Entry entry = folderLocation.locateEntry();
-			if (!(entry instanceof Folder)) {
+			final Folder parent = folderLocation.locateFolder();
+			if (parent == null) {
 				fireStateChanged();
 				throw new InvalidConfigurationException();
 			}
 
-			final Folder parent = (Folder) entry;
-			final Entry oldEntry = entryLocation.locateEntry();
+			final DataEntry oldEntry = entryLocation.locateData();
 
 			if (parent.isSpecialConnectionsFolder()) {
 				fireStateChanged();
@@ -403,6 +405,17 @@ public abstract class AbstractToRepositoryStep<T extends RepositoryLocationChoos
 	 */
 	protected abstract ProgressThread getImportThread(final RepositoryLocation entryLocation, final Folder parent)
 			throws InvalidConfigurationException;
+
+	/**
+	 * The {@link DataEntry} (sub-)class that is being imported here. Necessary for overwrite detection. Defaults to
+	 * {@link IOObjectEntry}.
+	 *
+	 * @return the class, never {@code null}
+	 * @since 9.7
+	 */
+	protected Class<? extends DataEntry> getDataEntryClass() {
+		return IOObjectEntry.class;
+	}
 
 	/**
 	 * Shows the card specified by id, e.g. {@link #CARD_ID_CHOOSER} or {@link #CARD_ID_PROGRESS}.

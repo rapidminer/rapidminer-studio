@@ -164,6 +164,12 @@
 				<class>com.rapidminer.operator.generator.UserSpecificationDataGenerator
 				</class>
 			</operator>
+			<operator>
+				<deprecatedSince>9.7</deprecatedSince>
+				<key>send_mail</key>
+				<class>com.rapidminer.operator.tools.SendMailOperator</class>
+				<icon>mail.png</icon>
+			</operator>
 		</group>
 		<group key="data_access">
 			<operator>
@@ -2295,8 +2301,8 @@
 			<group key="misc">
 				<icon>wrench.png</icon>
 				<operator>
-					<key>send_mail</key>
-					<class>com.rapidminer.operator.tools.SendMailOperator</class>
+					<key>send_mail_attachments</key>
+					<class>com.rapidminer.operator.tools.SendMailAttachmentsOperator</class>
 					<icon>mail.png</icon>
 				</operator>
 				<operator>

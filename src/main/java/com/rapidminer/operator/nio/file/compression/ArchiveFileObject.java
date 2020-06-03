@@ -1,21 +1,21 @@
 /**
  * Copyright (C) 2001-2020 by RapidMiner and the contributors
- * 
+ *
  * Complete list of developers available at our web site:
- * 
+ *
  * http://rapidminer.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under the terms of the
  * GNU Affero General Public License as published by the Free Software Foundation, either version 3
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Affero General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Affero General Public License along with this program.
  * If not, see http://www.gnu.org/licenses/.
-*/
+ */
 package com.rapidminer.operator.nio.file.compression;
 
 import java.io.ByteArrayInputStream;
@@ -31,6 +31,7 @@ import java.util.Set;
 
 import com.rapidminer.operator.OperatorException;
 import com.rapidminer.operator.nio.file.FileObject;
+import com.rapidminer.tools.TempFileTools;
 import com.rapidminer.tools.Tools;
 
 
@@ -53,7 +54,7 @@ public abstract class ArchiveFileObject extends FileObject {
 
 	public enum BufferType {
 		MEMORY, FILE
-	};
+	}
 
 	private static final long serialVersionUID = 1L;
 	private static final String TEMP_FILE_PREFIX = "rm_archivefile_";
@@ -83,8 +84,7 @@ public abstract class ArchiveFileObject extends FileObject {
 		switch (bufferType) {
 			case FILE:
 				try {
-					tmpFile = File.createTempFile("rm_archivefile_", ".dump");
-					tmpFile.deleteOnExit();
+					tmpFile = TempFileTools.createTempFile(TEMP_FILE_PREFIX, TEMP_FILE_SUFFIX).toFile();
 					archiveDataStream = new FileOutputStream(tmpFile);
 				} catch (IOException e) {
 					throw new OperatorException("303", e, tmpFile, e.getMessage());
@@ -133,8 +133,7 @@ public abstract class ArchiveFileObject extends FileObject {
 	public File getFile() throws OperatorException {
 		if (tmpFile == null) {
 			try {
-				tmpFile = File.createTempFile(TEMP_FILE_PREFIX, TEMP_FILE_SUFFIX);
-				tmpFile.deleteOnExit();
+				tmpFile = TempFileTools.createTempFile(TEMP_FILE_PREFIX, TEMP_FILE_SUFFIX).toFile();
 			} catch (IOException e) {
 				throw new OperatorException("303", e, "File in " + System.getProperty("java.io.tmpdir"), e.getMessage());
 			}

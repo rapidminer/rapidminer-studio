@@ -46,6 +46,10 @@
 		<group key="rapidminer.preferences.subgroup.system.file_cache">
 			<property key="rapidminer.system.file_cache.connection.keep" />
 		</group>
+		<group key="rapidminer.preferences.subgroup.system.files">
+			<property key="rapidminer.system.files.file_browser" />
+			<property key="rapidminer.system.files.open_file_commands" />
+		</group>
 	</group>
 	<group key="tools">
 		<group key="rapidminer.preferences.subgroup.tools.mail">
